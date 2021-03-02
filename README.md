@@ -1,5 +1,11 @@
 # Real Stereo Extended
 
+## Frontend
+
+### Package Manager
+[NPM](https://www.npmjs.com) is used as the package manager for the webapp.
+
+
 ## Backend
 
 ### Package Manager
