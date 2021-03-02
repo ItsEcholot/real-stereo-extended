@@ -23,7 +23,11 @@
 		"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
 		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 		"python.linting.pylintPath": "${workspaceFolder}/backend/.venv/bin/pylint",
-		"editor.formatOnSave": true
+		"editor.formatOnSave": true,
+		"[python]": {
+			"editor.insertSpaces": true,
+			"editor.tabSize": 4
+		}
 	},
 	"extensions": [
 		"ms-python.python"

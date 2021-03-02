@@ -2,7 +2,8 @@
 .DS_Store
 
 # editor
-.vscode
+.vscode/*
+!.vscode/launch.json
 
 # python
 __pycache__/
