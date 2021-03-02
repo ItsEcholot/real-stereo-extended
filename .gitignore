@@ -1,0 +1,15 @@
+# os
+.DS_Store
+
+# editor
+.vscode/*
+!.vscode/launch.json
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# node
+node_modules
+npm-debug.log*
