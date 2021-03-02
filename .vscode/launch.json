@@ -10,6 +10,17 @@
       "request": "launch",
       "program": "${workspaceFolder}/backend/src",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Frontend Development",
+      "type": "pwa-node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "start"
+      ],
+      "console": "integratedTerminal"
     }
   ]
 }
