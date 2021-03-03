@@ -33,6 +33,6 @@
 		"ms-python.python"
 	],
 	"forwardPorts": [],
-	"postCreateCommand": "cd backend && poetry install",
+	"postCreateCommand": "(cd backend && poetry install) && (cd frontend && yarn install)",
 	"remoteUser": "vscode"
 }
