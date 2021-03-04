@@ -33,6 +33,9 @@
 		"ms-python.python"
 	],
 	"forwardPorts": [],
-	"postCreateCommand": "(cd backend && poetry install) && (cd frontend && yarn install)",
+	"mounts": [
+		"source=real-stereo-extended-node_modules,target=${containerWorkspaceFolder}/frontend/node_modules,type=volume"
+	],
+	"postCreateCommand": "(cd backend && poetry install) && (cd frontend && sudo chown vscode node_modules && yarn install)",
 	"remoteUser": "vscode"
 }
