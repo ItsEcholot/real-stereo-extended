@@ -1,17 +1,12 @@
-import React from 'react';
-import { Layout } from 'antd';
+import { FunctionComponent } from 'react';
+import Layout from './components/Layout';
 import './App.css';
 
-function App() {
+const App: FunctionComponent<{}> = () => {
   return (
     <>
       <Layout>
-        <Layout.Header>
-          Header
-        </Layout.Header>
-        <Layout.Content>
-          Content
-        </Layout.Content>
+
       </Layout>
     </>
   );

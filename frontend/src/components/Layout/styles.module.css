@@ -1,0 +1,7 @@
+.layoutSiderCollapsed {
+  width: 100%;
+}
+
+.layoutSiderExpanded {
+  width: calc(100% + 200px);
+}
