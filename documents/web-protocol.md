@@ -9,19 +9,19 @@ To avoid redundancy and an overcomplex setup for the relatively small web interf
 
 ## Protocol Specification
 
-As [socket.io](https://socket.io/) is used for implementation, their terms will be used to describe the protocols.
+As [socket.io](https://socket.io/) is used for implementation, their terms will be used to describe the protocol.
 
 ### Ressources
 
-- Every resource type has its own `room`.
+- Every resource type has its own `room` in the socket.io server.
 - A resource may be a child resource of another one. In this case, they are concatenated by a forward slash `/`.
-- There can be `rooms` for resource listings (e.g. `cameras`) and single resources (e.g. `cameras/1`).
-- If a client connects to a `room`, the current state will be sent to him.
-- If a resource changes, the new state will be sent to all clients in the `room`. If the resource is related to multiple `rooms`, all related `rooms` will be updated.
+- There can be rooms for resource listings (e.g. `cameras`) and single resources (e.g. `cameras/1`).
+- If a client connects to a room, the current state will be sent to him.
+- If a resource changes, the new state will be sent to all clients in the room. If the resource is related to multiple rooms, all related rooms will be updated.
 
 ### Events
 
-Each resource `room` can implement the following events.
+Each resource room can implement the following events.
 Availability of the events may depend on the actual resource type.
 
 #### Server Events
@@ -45,13 +45,13 @@ Deletes the specified resource. It is only available on a single resource, not o
 
 ```typescript
 // listing
-type Room = {
+type PartialRoom = {
   id: number;
   name: string;
 }
 
 // single
-type SingleRoom = Room & {
+type Room = PartialRoom & {
   nodes: Node[];
   speakers: Speaker[];
 }
@@ -61,14 +61,14 @@ type SingleRoom = Room & {
 
 ```typescript
 // listing
-type Node = {
+type PartialNode = {
   id: number;
   name: string;
   online: boolean;
 }
 
 // single
-type SingleNode = Node & {
+type Node = PartialNode & {
   ip: string;
   hostname: string;
   room: Room;
@@ -121,7 +121,7 @@ type Acknowledgment = {
 Lists all saved rooms.
 
 Available events:
-- `get: () => Room[]`
+- `get: () => PartialRoom[]`
 - `create: (data: Room) => Acknowledgment`
 
 #### `rooms/:id`
@@ -129,8 +129,8 @@ Available events:
 Shows or updates a selected room.
 
 Available events:
-- `get: () => SingleRoom`
-- `update: (data: SingleRoom) => Acknowledgment`
+- `get: () => PartialRoom`
+- `update: (data: Room) => Acknowledgment`
 - `delete: () => Acknowledgment`
 
 #### `nodes`
@@ -138,7 +138,7 @@ Available events:
 Lists all available nodes.
 
 Available events:
-- `get: () => Node[]`
+- `get: () => PartialNode[]`
 - `create: (data: Node) => Acknowledgment`
 
 #### `nodes/:id`
@@ -146,8 +146,8 @@ Available events:
 Shows or updates a selected node.
 
 Available events:
-- `get: () => SingleNode`
-- `update: (data: SingleNode) => Acknowledgment`
+- `get: () => PartialNode`
+- `update: (data: Node) => Acknowledgment`
 - `delete: () => Acknowledgment`
 
 #### `balances`
