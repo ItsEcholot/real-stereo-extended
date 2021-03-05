@@ -1,34 +1,26 @@
-from flask import Flask, send_file
-from flask_restful import Api
-import logging
-
+from pathlib import Path
+import socketio
+import eventlet
 from api.controllers.rooms import RoomsController
 
 # define path of the static frontend files
-frontendPath: str = '../../../frontend/dist'
-
-# disable request log in console
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
-
-# create app
-app: Flask = Flask(__name__, static_url_path='', static_folder=frontendPath)
+frontendPath: str = str(Path(__file__).resolve().parent) + \
+    '/../../../frontend/build'
 
 
-# serve the index.html from the frontend
-@app.route('/')
-def index():
-    try:
-        return send_file(frontendPath + '/index.html')
-    except FileNotFoundError:
-        return 'index.html does not exist'
+# create the server
+server = socketio.Server(cors_allowed_origins='*')
+app = socketio.WSGIApp(server, static_files={
+    '/': frontendPath + '/index.html',
+    '/static': frontendPath + '/static',
+})
 
 
-# register all api routes
-api = Api(app, '/api')
-api.add_resource(RoomsController, '/rooms')
+# register namespaces
+server.register_namespace(RoomsController())
 
 
 # start the web server in a separate thread
 def startApi():
-    app.run('0.0.0.0', 8080)
+    print('Listening on http://localhost:8080')
+    eventlet.wsgi.server(eventlet.listen(('', 8080)), app, log_output=False)
