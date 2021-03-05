@@ -7,7 +7,7 @@ This document describes the protocol used for communication between the web inte
 Since many aspects of the web interface benefit from a real-time implementation, WebSockets will be used for communication.
 To avoid redundancy and an overcomplex setup for the relatively small web interface, all requests will be handled over WebSockets, there will not be a separate RESTful API.
 
-## Protocol Definition
+## Protocol Specification
 
 As [socket.io](https://socket.io/) is used for implementation, their terms will be used to describe the protocols.
 
