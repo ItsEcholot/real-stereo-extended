@@ -1,8 +1,7 @@
 from pathlib import Path
-from threading import Thread
-from queue import Queue
 import socketio
-import eventlet
+from janus import Queue
+from aiohttp import web, MultipartWriter
 from .controllers.rooms import RoomsController
 
 # define path of the static frontend files
@@ -11,72 +10,85 @@ frontendPath: str = str(Path(__file__).resolve().parent) + \
 
 
 class ApiManager:
-    def __init__(self, tracking_manager):
+    def __init__(self, role, tracking_manager):
+        self.role = role
         self.tracking_manager = tracking_manager
-
-        # create the server
-        self.server = socketio.Server(cors_allowed_origins='*')
-        self.app = socketio.WSGIApp(self.server, wsgi_app=self.handle_request, static_files={
-            '/index.html': frontendPath + '/index.html',
-            '/static': frontendPath + '/static',
-        })
         self.thread = None
         self.stream_queues = []
+        self.app = web.Application()
 
-        # register namespaces
-        self.server.register_namespace(RoomsController())
+        if self.role == 'master':
+            # register master routes
+            self.app.add_routes([
+                web.get('/', self.get_index),
+                web.get('/stream.mjpeg', self.get_stream),
+                web.static('/static', frontendPath + '/static'),
+            ])
 
-    def handle_request(self, env, start_response):
-        path = env['PATH_INFO']
+            # attach the socket.io server to the same web server
+            self.server = socketio.AsyncServer(
+                cors_allowed_origins='*', async_mode='aiohttp')
+            self.server.attach(self.app)
 
-        # redirect / to index.html
-        if path == '/':
-            start_response('302 Found', [('Location', '/index.html')])
-            return []
+            # register socket.io namespaces
+            self.server.register_namespace(RoomsController())
+        else:
+            # register slave routes
+            self.app.add_routes([
+                web.get('/stream.mjpeg', self.get_stream),
+            ])
 
-        # start a camera stream
-        if path == '/stream.mjpeg':
-            return self.start_stream(start_response)
+    async def get_index(self, _):
+        return web.FileResponse(frontendPath + '/index.html')
 
-        start_response('404 Not Found', [('Content-Type', 'text/plain')])
-        return ['Not Found']
+    async def get_stream(self, request):
+        # create a mjpeg stream response
+        response = web.StreamResponse(status=200, reason='OK', headers={
+            'Content-Type': 'multipart/x-mixed-replace; '
+            'boundary=--jpgboundary',
+        })
+        response.force_close()
+        await response.prepare(request)
 
-    def start_api(self):
-        print('Listening on http://localhost:8080')
-        self.thread = Thread(target=self.listen)
-        self.thread.start()
-
-    def listen(self):
-        eventlet.wsgi.server(eventlet.listen(
-            ('', 8080)), self.app, log_output=False)
-
-    def on_frame(self, frame):
-        encapsulated = ('--jpgboundary\r\n' +
-                        'Content-Type:image/jpeg\r\n' +
-                        'Content-Length:' + str(frame.size) + '\r\n\r\n').encode() + \
-            frame.tostring() + '\r\n\r\n'.encode()
-
-        for queue in self.stream_queues:
-            queue.put(encapsulated)
-
-    def start_stream(self, start_response):
-        start_response('200 OK', [
-            ('Content-Type', 'multipart/x-mixed-replace; boundary=--jpgboundary'),
-        ])
-
+        # if no other stream request is open, start catching the camera frames
         if len(self.stream_queues) == 0:
             print('starting camera stream')
             self.tracking_manager.set_frame_callback(self.on_frame)
 
-        requestQueue = Queue()
-        self.stream_queues.append(requestQueue)
+        queue = Queue()
+        self.stream_queues.append(queue)
+
         while True:
             try:
-                yield requestQueue.get()
+                # write each frame (from the queue)
+                frame = await queue.async_q.get()
+                with MultipartWriter('image/jpeg', boundary='jpgboundary') as mpwriter:
+                    mpwriter.append(frame, {
+                        'Content-Type': 'image/jpeg'
+                    })
+                    await mpwriter.write(response, close_boundary=False)
+                queue.async_q.task_done()
             except:
-                if requestQueue in self.stream_queues:
-                    self.stream_queues.remove(requestQueue)
-                if len(self.stream_queues) == 0:
-                    self.tracking_manager.set_frame_callback(None)
-                    print('camera stream stopped')
-                return
+                break
+
+        # when the client has closed the connection, remove the queue
+        if queue in self.stream_queues:
+            queue.close()
+            # if no other stream request is active, stop catching the camera frames
+            if len(self.stream_queues) == 1:
+                self.tracking_manager.set_frame_callback(None)
+                print('camera stream stopped')
+            self.stream_queues.remove(queue)
+
+    def start_api(self):
+        # self.thread = Thread(target=self.listen)
+        # self.thread.start()
+        self.listen()
+
+    def listen(self):
+        web.run_app(self.app, host='0.0.0.0', port=8080)
+
+    def on_frame(self, frame):
+        # put the frame into all stream request queues so they can be sent in the get_stream method
+        for queue in self.stream_queues:
+            queue.sync_q.put(frame.tostring())

@@ -1,16 +1,16 @@
-from socketio import Namespace
+from socketio import AsyncNamespace
 
 
-class RoomsController(Namespace):
+class RoomsController(AsyncNamespace):
     def __init__(self):
         super().__init__(namespace='/rooms')
         self.rooms = []
 
-    def on_connect(self, sid, environ):
+    async def on_connect(self, sid, _):
         # send current state to the new client
-        self.emit('get', self.rooms, room=sid)
+        await self.emit('get', self.rooms, room=sid)
 
-    def on_create(self, sid, data):
+    async def on_create(self, _, data):
         # add the new room and send the new state to all clients
         self.rooms.append(data)
-        self.emit('get', self.rooms)
+        await self.emit('get', self.rooms)
