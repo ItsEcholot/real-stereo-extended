@@ -1,4 +1,6 @@
 from pathlib import Path
+from threading import Thread
+import asyncio
 import socketio
 from janus import Queue
 from aiohttp import web, MultipartWriter
@@ -68,7 +70,7 @@ class ApiManager:
                     })
                     await mpwriter.write(response, close_boundary=False)
                 queue.async_q.task_done()
-            except:
+            except:  # pylint: disable=bare-except
                 break
 
         # when the client has closed the connection, remove the queue
@@ -81,12 +83,12 @@ class ApiManager:
             self.stream_queues.remove(queue)
 
     def start_api(self):
-        # self.thread = Thread(target=self.listen)
-        # self.thread.start()
-        self.listen()
+        self.thread = Thread(target=self.listen)
+        self.thread.start()
 
     def listen(self):
-        web.run_app(self.app, host='0.0.0.0', port=8080)
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        web.run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False)
 
     def on_frame(self, frame):
         # put the frame into all stream request queues so they can be sent in the get_stream method
