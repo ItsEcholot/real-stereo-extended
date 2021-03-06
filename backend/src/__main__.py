@@ -1,5 +1,9 @@
-import threading
-from api import startApi
+# from tracking.manager import TrackingManager
+from api.manager import ApiManager
 
 
-threading.Thread(target=startApi).start()
+# tracking = TrackingManager()
+# tracking.startTracking()
+
+api = ApiManager()
+api.startApi()
