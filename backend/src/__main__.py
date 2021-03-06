@@ -1,9 +1,9 @@
-# from tracking.manager import TrackingManager
+from tracking.manager import TrackingManager
 from api.manager import ApiManager
 
 
-# tracking = TrackingManager()
-# tracking.startTracking()
+tracking = TrackingManager()
+tracking.start_tracking()
 
-api = ApiManager()
-api.startApi()
+api = ApiManager(tracking)
+api.start_api()

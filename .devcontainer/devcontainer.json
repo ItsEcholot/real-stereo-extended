@@ -23,6 +23,9 @@
 		"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
 		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 		"python.linting.pylintPath": "${workspaceFolder}/backend/.venv/bin/pylint",
+		"python.linting.pylintArgs": [
+			"--extension-pkg-whitelist=cv2"
+		],
 		"editor.formatOnSave": true,
 		"[python]": {
 			"editor.insertSpaces": true,
