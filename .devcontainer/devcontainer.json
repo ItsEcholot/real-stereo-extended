@@ -32,7 +32,10 @@
 	"extensions": [
 		"ms-python.python"
 	],
-	"forwardPorts": [],
+	"forwardPorts": [
+		8080,
+		3000
+	],
 	"mounts": [
 		"source=real-stereo-extended-node_modules,target=${containerWorkspaceFolder}/frontend/node_modules,type=volume"
 	],
