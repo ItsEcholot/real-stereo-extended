@@ -6,6 +6,7 @@ import {
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './styles.module.css';
+import { useRooms } from '../../services/rooms';
 
 interface MainMenuProps {
   siderBroken: boolean;
@@ -17,6 +18,9 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
   onSiderCollapse,
 }) => {
   const location = useLocation();
+  const rooms = useRooms();
+
+  console.dir(rooms);
 
   return (
     <Menu theme="dark" mode="inline" selectedKeys={[location.pathname]}
