@@ -1,5 +1,11 @@
-import threading
-from api import startApi
+"""Main module which starts the real-stereo application."""
+
+from tracking.manager import TrackingManager
+from api.manager import ApiManager
 
 
-threading.Thread(target=startApi).start()
+tracking = TrackingManager()
+# tracking.start_tracking()
+
+api = ApiManager('master', tracking)
+api.start_api()
