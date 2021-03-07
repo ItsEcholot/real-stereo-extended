@@ -1,16 +1,30 @@
-from socketio import Namespace
+"""Controller for the /rooms namespace."""
+
+from socketio import AsyncNamespace
 
 
-class RoomsController(Namespace):
+class RoomsController(AsyncNamespace):
+    """Controller for the /rooms namespace."""
+
     def __init__(self):
         super().__init__(namespace='/rooms')
         self.rooms = []
 
-    def on_connect(self, sid, environ):
-        # send current state to the new client
-        self.emit('get', self.rooms, room=sid)
+    async def on_connect(self, sid: str, _: dict) -> None:
+        """Handles connection of a new client.
 
-    def on_create(self, sid, data):
+        :param str sid: Session id
+        :param dict env: Connection information
+        """
+        # send current state to the new client
+        await self.emit('get', self.rooms, room=sid)
+
+    async def on_create(self, _: str, data: dict) -> None:
+        """Creates a new room.
+
+        :param str sid: Session id
+        :param dict data: Event data
+        """
         # add the new room and send the new state to all clients
         self.rooms.append(data)
-        self.emit('get', self.rooms)
+        await self.emit('get', self.rooms)
