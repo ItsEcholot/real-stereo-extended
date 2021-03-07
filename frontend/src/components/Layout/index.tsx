@@ -1,9 +1,10 @@
 import { FunctionComponent, useState } from 'react';
-import { Layout as AntdLayout, Menu } from 'antd';
+import { Layout as AntdLayout } from 'antd';
 import Header from '../Header';
 import styles from './styles.module.css';
+import MainMenu from '../MainMenu';
 
-const { Sider } = AntdLayout;
+const { Sider, Content } = AntdLayout;
 
 const Layout: FunctionComponent<{}> = props => {
   const [siderCollapsed, setSiderCollapsed] = useState(false);
@@ -19,24 +20,15 @@ const Layout: FunctionComponent<{}> = props => {
           setSiderBroken(broken);
         }}
         collapsed={siderCollapsed}
-        trigger={null}>
-        <Menu theme="dark" mode="inline">
-          <Menu.Item key="1">
-            nav 1
-        </Menu.Item>
-          <Menu.Item key="2">
-            nav 2
-        </Menu.Item>
-          <Menu.Item key="3">
-            nav 3
-        </Menu.Item>
-          <Menu.Item key="4">
-            nav 4
-        </Menu.Item>
-        </Menu>
+        trigger={null}
+        className={styles.sider}>
+        <MainMenu />
       </Sider>
       <AntdLayout>
         <Header siderCollapsed={siderCollapsed} onSiderCollapse={setSiderCollapsed} />
+        <Content>
+          {props.children}
+        </Content>
       </AntdLayout>
     </AntdLayout>
   );
