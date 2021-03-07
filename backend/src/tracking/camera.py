@@ -12,6 +12,8 @@ class Camera:
     :param int cameraId: Index of the camera to use
     """
 
+    FRAME_WIDTH: int = 500
+
     def __init__(self, cameraId: int = 0):
         self.exiting = False
         self.capture = cv2.VideoCapture(cameraId)
@@ -32,7 +34,7 @@ class Camera:
         try:
             while self.exiting is False and self.capture.isOpened() is True:
                 _, frame = self.capture.read()
-                resized_frame = self.resize(frame, 500)
+                resized_frame = self.resize(frame, self.FRAME_WIDTH)
                 self.detector.detect(resized_frame)
 
                 if self.on_frame is not None:
