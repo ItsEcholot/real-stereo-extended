@@ -1,19 +1,22 @@
-import React from 'react';
-import { Layout } from 'antd';
+import { FunctionComponent } from 'react';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import Layout from './components/Layout';
 import './App.css';
 
-function App() {
+const App: FunctionComponent<{}> = () => {
   return (
-    <>
+    <Router>
       <Layout>
-        <Layout.Header>
-          Header
-        </Layout.Header>
-        <Layout.Content>
-          Content
-        </Layout.Content>
+        <Switch>
+          <Route path="/rooms/edit">
+            <h1>Edit rooms</h1>
+          </Route>
+          <Route path="/">
+            <h1>Overview</h1>
+          </Route>
+        </Switch>
       </Layout>
-    </>
+    </Router>
   );
 }
 

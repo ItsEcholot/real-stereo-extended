@@ -1,0 +1,11 @@
+.layoutSiderCollapsed {
+  width: 100%;
+}
+
+.layoutSiderExpanded {
+  width: calc(100% + 200px);
+}
+
+.sider {
+  min-height: 100vh;
+}
