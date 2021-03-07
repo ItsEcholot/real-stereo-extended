@@ -22,7 +22,7 @@ const Layout: FunctionComponent<{}> = props => {
         collapsed={siderCollapsed}
         trigger={null}
         className={styles.sider}>
-        <MainMenu />
+        <MainMenu siderBroken={siderBroken} onSiderCollapse={setSiderCollapsed} />
       </Sider>
       <AntdLayout>
         <Header siderCollapsed={siderCollapsed} onSiderCollapse={setSiderCollapsed} />

@@ -5,12 +5,23 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
+import styles from './styles.module.css';
 
-const MainMenu: FunctionComponent<{}> = () => {
+interface MainMenuProps {
+  siderBroken: boolean;
+  onSiderCollapse: (siderCollapsed: boolean) => void;
+}
+
+const MainMenu: FunctionComponent<MainMenuProps> = ({
+  siderBroken,
+  onSiderCollapse,
+}) => {
   const location = useLocation();
 
   return (
-    <Menu theme="dark" mode="inline" selectedKeys={[location.pathname]}>
+    <Menu theme="dark" mode="inline" selectedKeys={[location.pathname]}
+      onSelect={() => siderBroken && onSiderCollapse(true)}
+      className={styles.menu}>
       <Menu.Item key="/" icon={<HomeOutlined />}>
         <Link to="/">Overview</Link>
       </Menu.Item>
