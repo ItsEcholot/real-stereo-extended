@@ -1,3 +1,5 @@
+"""Main module which starts the real-stereo application."""
+
 from tracking.manager import TrackingManager
 from api.manager import ApiManager
 
