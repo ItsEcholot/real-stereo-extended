@@ -2,6 +2,7 @@
 
 import cv2
 from numpy import ndarray
+from .people_detector import PeopleDetector
 
 
 class Camera:
@@ -14,6 +15,7 @@ class Camera:
     def __init__(self, cameraId: int = 0):
         self.exiting = False
         self.capture = cv2.VideoCapture(cameraId)
+        self.detector = PeopleDetector()
         self.on_frame = None
 
         if self.capture.isOpened() is not True:
@@ -30,11 +32,25 @@ class Camera:
         try:
             while self.exiting is False and self.capture.isOpened() is True:
                 _, frame = self.capture.read()
+                resized_frame = self.resize(frame, 500)
+                self.detector.detect(resized_frame)
 
                 if self.on_frame is not None:
-                    self.send_frame(frame)
+                    self.send_frame(resized_frame)
         finally:
             self.capture.release()
+
+    @staticmethod
+    def resize(frame: ndarray, new_width: int) -> ndarray:
+        """Resizes the given frame to the specified dimensions.
+
+        :param numpy.ndarray frame: Frame to resize
+        :param int new_width: New width. The height will be calculated automatically to preserve the
+                              image ratio.
+        """
+        height, width, _ = frame.shape
+        new_height = int(new_width / width * height)
+        return cv2.resize(frame, (new_width, new_height))
 
     def send_frame(self, frame: ndarray) -> None:
         """If an `on_frame` callback has been registered, it sends the current frame to it.
