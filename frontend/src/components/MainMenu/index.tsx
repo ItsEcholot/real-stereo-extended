@@ -1,4 +1,4 @@
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useEffect } from 'react';
 import { Menu } from 'antd';
 import {
   HomeOutlined,
@@ -18,9 +18,16 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
   onSiderCollapse,
 }) => {
   const location = useLocation();
-  const rooms = useRooms();
+  const { rooms, createRoom } = useRooms();
 
   console.dir(rooms);
+  useEffect(() => {
+    createRoom({
+      name: `Test${Date.now()}`,
+      nodes: [],
+      speakers: [],
+    });
+  }, [createRoom]);
 
   return (
     <Menu theme="dark" mode="inline" selectedKeys={[location.pathname]}

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { SocketContext } from './socketProvider';
 
 export interface Room {
@@ -18,5 +18,17 @@ export const useRooms = () => {
     };
   }, [roomsSocket]);
 
-  return rooms;
+  const createRoom = useCallback((room: Omit<Room, 'id'>) => {
+    roomsSocket.emit('create', room);
+  }, [roomsSocket]);
+
+  const updateRoom = useCallback((roomId: number, room: Partial<Room>) => {
+    roomsSocket.emit('update', roomId, room);
+  }, [roomsSocket]);
+
+  const deleteRoom = useCallback((roomId: number) => {
+    roomsSocket.emit('delete', roomId);
+  }, [roomsSocket]);
+
+  return { rooms, createRoom, updateRoom, deleteRoom };
 }
