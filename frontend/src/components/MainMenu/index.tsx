@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect } from 'react';
+import { FunctionComponent } from 'react';
 import { Menu } from 'antd';
 import {
   HomeOutlined,
@@ -6,7 +6,6 @@ import {
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './styles.module.css';
-import { useRooms } from '../../services/rooms';
 
 interface MainMenuProps {
   siderBroken: boolean;
@@ -18,16 +17,6 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
   onSiderCollapse,
 }) => {
   const location = useLocation();
-  const { rooms, createRoom } = useRooms();
-
-  console.dir(rooms);
-  useEffect(() => {
-    createRoom({
-      name: `Test${Date.now()}`,
-      nodes: [],
-      speakers: [],
-    });
-  }, [createRoom]);
 
   return (
     <Menu theme="dark" mode="inline" selectedKeys={[location.pathname]}

@@ -9,26 +9,34 @@ export interface Room {
 }
 
 export const useRooms = () => {
-  const { roomsSocket } = useContext(SocketContext);
+  const { getSocket, returnSocket } = useContext(SocketContext);
   const [rooms, setRooms] = useState<Room[]>([]);
   useEffect(() => {
+    const roomsSocket = getSocket('rooms');
     roomsSocket.on('get', setRooms);
     return () => {
       roomsSocket.off('get', setRooms);
+      returnSocket('rooms');
     };
-  }, [roomsSocket]);
+  }, [getSocket, returnSocket]);
 
   const createRoom = useCallback((room: Omit<Room, 'id'>) => {
+    const roomsSocket = getSocket('rooms');
     roomsSocket.emit('create', room);
-  }, [roomsSocket]);
+    returnSocket('rooms');
+  }, [getSocket, returnSocket]);
 
   const updateRoom = useCallback((roomId: number, room: Partial<Room>) => {
+    const roomsSocket = getSocket('rooms');
     roomsSocket.emit('update', roomId, room);
-  }, [roomsSocket]);
+    returnSocket('rooms');
+  }, [getSocket, returnSocket]);
 
   const deleteRoom = useCallback((roomId: number) => {
+    const roomsSocket = getSocket('rooms');
     roomsSocket.emit('delete', roomId);
-  }, [roomsSocket]);
+    returnSocket('rooms');
+  }, [getSocket, returnSocket]);
 
   return { rooms, createRoom, updateRoom, deleteRoom };
 }

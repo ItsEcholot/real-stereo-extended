@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import './App.css';
 import SocketProvider from './services/socketProvider';
+import OverviewPage from './pages/Overview';
 
 const App: FunctionComponent<{}> = () => {
   return (
@@ -14,7 +15,7 @@ const App: FunctionComponent<{}> = () => {
               <h1>Edit rooms</h1>
             </Route>
             <Route path="/">
-              <h1>Overview</h1>
+              <OverviewPage />
             </Route>
           </Switch>
         </Layout>
