@@ -11,8 +11,8 @@ from tracking.manager import TrackingManager
 from .controllers.rooms import RoomsController
 
 # define path of the static frontend files
-frontendPath: str = str(Path(__file__).resolve().parent) + \
-    '/../../../frontend/build'
+frontendPath: Path = (Path(__file__).resolve().parent /
+                      '..' / '..' / '..' / 'frontend' / 'build').resolve()
 
 
 class ApiManager:
@@ -31,13 +31,16 @@ class ApiManager:
         self.stream_queues = []
         self.app = web.Application()
 
+        # register routes for both masters and slaves
+        self.app.add_routes([web.get('/stream.mjpeg', self.get_stream)])
+
         # register master routes
         if self.role == 'master':
-            self.app.add_routes([
-                web.get('/', self.get_index),
-                web.get('/stream.mjpeg', self.get_stream),
-                web.static('/static', frontendPath + '/static'),
-            ])
+            if frontendPath.exists() and (frontendPath / 'static').exists():
+                self.app.add_routes([
+                    web.get('/', self.get_index),
+                    web.static('/static', str(frontendPath / 'static')),
+                ])
 
             # attach the socket.io server to the same web server
             self.server = socketio.AsyncServer(
@@ -47,12 +50,6 @@ class ApiManager:
             # register socket.io namespaces
             self.server.register_namespace(RoomsController())
 
-        # register slave routes
-        else:
-            self.app.add_routes([
-                web.get('/stream.mjpeg', self.get_stream),
-            ])
-
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.
 
@@ -60,7 +57,7 @@ class ApiManager:
         :returns: Response
         :rtype: aiohttp.web.Response
         """
-        return web.FileResponse(frontendPath + '/index.html')
+        return web.FileResponse(str(frontendPath / 'index.html'))
 
     async def get_stream(self, request: web.Request) -> web.Response:
         """Starts a new multipart mjpeg stream response of the video camera.
