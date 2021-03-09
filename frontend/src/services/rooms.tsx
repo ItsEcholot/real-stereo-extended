@@ -9,10 +9,11 @@ export interface Room {
 
 export const useRooms = () => {
   const { getSocket, returnSocket } = useContext(SocketContext);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<Room[]>();
   useEffect(() => {
     const roomsSocket = getSocket('rooms');
     roomsSocket.on('get', setRooms);
+    roomsSocket.emit('get');
     return () => {
       roomsSocket.off('get', setRooms);
       returnSocket('rooms');

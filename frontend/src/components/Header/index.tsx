@@ -7,11 +7,13 @@ import {
 import styles from './styles.module.css';
 
 interface HeaderProps {
+  title: string;
   siderCollapsed: boolean;
   onSiderCollapse: (siderCollapsed: boolean) => void;
 }
 
 const Header: FunctionComponent<HeaderProps> = ({
+  title,
   siderCollapsed,
   onSiderCollapse: onSiderCollapseSwitch
 }) => {
@@ -22,7 +24,7 @@ const Header: FunctionComponent<HeaderProps> = ({
           <MenuUnfoldOutlined onClick={() => onSiderCollapseSwitch(false)} /> :
           <MenuFoldOutlined onClick={() => onSiderCollapseSwitch(true)} />}
 
-        <span className={styles.title}>Real Stereo</span>
+        <span className={styles.title}>{title}</span>
       </Space>
     </Layout.Header>
   );
