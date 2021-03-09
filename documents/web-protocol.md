@@ -25,16 +25,18 @@ Availability of the events may depend on the actual resource type.
 
 #### Server Events
 
+- `get: () => Resource`<br>
+Returns the current resource in the `acknowledgment`.
 - `create: (data: Resource) => Acknowledgment`<br>
-Creates a new resource. It should contain the whole resource in the first argument. It is only available on a resource listing, not on a single resource. The `acknowledgment` will contain information about the creation success and errors.
-- `update: (id: number, data: Resource) => Acknowledgment`<br>
+Creates a new resource. It should contain the whole resource in the first argument. The `acknowledgment` will contain information about the creation success and errors.
+- `update: (data: Resource) => Acknowledgment`<br>
 Updates the specified resource. It should contain the whole resource in the first argument and is only available on a single resource, not on a resource listing. The `acknowledgment` will contain information about the update success and errors.
 - `delete: (id: number) => Acknowledgment`<br>
 Deletes the specified resource. It is only available on a single resource, not on a resource listing. The `acknowledgment` will contain information about the deletion success and errors.
 
 #### Client Events
 
-- `get: (data: Resource | Resource[])`: This event will get fired automatically after joining a namespace and when the resource gets changed. It contains the whole resource as the first argument.
+- `get: (data: Resource | Resource[])`: This event contains the whole resource as the first argument and will be triggered each time a resource gets changed.
 
 ## Protocol Documentation
 
@@ -65,14 +67,18 @@ type Node = {
   room: Room;
 }
 
-type UpdateNode = Node & {
+type CreateNode = {
+  name: string;
+  ip: string;
   // only the `id` attribute of the room is needed
   // more can still be submitted but will be ignored
   room: {
     id: number;
   };
 }
-type CreateNode = Omit<UpdateNode, 'id'>
+type UpdateNode = CreateNode & {
+  id: number;
+}
 ```
 
 #### `Speaker`

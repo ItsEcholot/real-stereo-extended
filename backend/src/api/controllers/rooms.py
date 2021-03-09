@@ -1,9 +1,11 @@
 """Controller for the /rooms namespace."""
 
+from typing import List
 from socketio import AsyncNamespace
 from config import Config
 from models.room import Room
-from models.acknowledgement import Acknowledgement
+from models.acknowledgment import Acknowledgment
+from api.validate import Validate
 
 
 class RoomsController(AsyncNamespace):
@@ -22,50 +24,44 @@ class RoomsController(AsyncNamespace):
         await self.emit('get', list(map(lambda room: room.to_json(True), self.config.rooms)),
                         room=sid)
 
-    def validate(self, data: dict, create: bool) -> Acknowledgement:
+    def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
 
         :param dict data: Input data
         :param bool create: If a new room will be created from this data or an existing updated.
-        :returns: Acknowledgement with the status and possible error messages.
-        :rtype: models.acknowledgement.Acknowledgement
+        :returns: Acknowledgment with the status and possible error messages.
+        :rtype: models.acknowledgment.Acknowledgment
         """
-        ack = Acknowledgement()
+        ack = Acknowledgment()
+        validate = Validate(ack)
         room_id = data.get('id')
         name = data.get('name')
 
-        if isinstance(name, str) is False:
-            ack.add_error('Name must be a string')
-        elif len(name) == 0:
-            ack.add_error('Room name cannot be empty')
-        elif len(name) > 50:
-            ack.add_error('Name must be at most 50 characters long')
-        elif create:
+        validate.string(name, label='Name', min_value=1, max_value=50)
+
+        if create:
             existing = next(filter(lambda r: r.name ==
                                    name, self.config.rooms), None)
             if existing is not None:
                 ack.add_error('A room with this name already exists')
-        elif not create:
+        elif validate.integer(room_id, label='Room id', min_value=1):
             existing = next(filter(lambda r: r.name ==
                                    name, self.config.rooms), None)
 
-            if isinstance(room_id, int) is False:
-                ack.add_error('Room id must be an int')
-            elif self.config.get_room(room_id) is None:
+            if self.config.get_room(room_id) is None:
                 ack.add_error('Room with this id does not exist')
             elif existing and existing.room_id != room_id:
                 ack.add_error('A room with this name already exists')
 
         return ack
 
-    async def on_connect(self, sid: str, _: dict) -> None:
-        """Handles connection of a new client.
+    async def on_get(self, _: str) -> List[Room]:
+        """Returns the current rooms.
 
         :param str sid: Session id
-        :param dict env: Connection information
+        :param dict data: Event data
         """
-        # send current state to the new client
-        await self.send_rooms(sid)
+        return list(map(lambda room: room.to_json(True), self.config.rooms))
 
     async def on_create(self, _: str, data: dict) -> None:
         """Creates a new room.
@@ -113,7 +109,7 @@ class RoomsController(AsyncNamespace):
         :param str sid: Session id
         :param int room_id: Room id
         """
-        ack = Acknowledgement()
+        ack = Acknowledgment()
 
         if self.config.remove_room(room_id):
             await self.send_rooms()

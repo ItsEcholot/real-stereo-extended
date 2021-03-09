@@ -1,7 +1,7 @@
 """Acknowledgment holds the response to a create/update/delete API event."""
 
 
-class Acknowledgement:
+class Acknowledgment:
     """Acknowledgment holds the response to a create/update/delete API event."""
 
     def __init__(self):
