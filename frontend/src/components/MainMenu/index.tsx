@@ -10,7 +10,7 @@ import styles from './styles.module.css';
 
 const { SubMenu } = Menu;
 
-interface MainMenuProps {
+type MainMenuProps = {
   siderBroken: boolean;
   onSiderCollapse: (siderCollapsed: boolean) => void;
 }

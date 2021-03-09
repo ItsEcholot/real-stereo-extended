@@ -2,8 +2,10 @@ import { Button, Col, List, Row } from 'antd';
 import { FunctionComponent } from 'react';
 import { useRooms } from '../../services/rooms';
 import { PlusOutlined } from '@ant-design/icons';
+import { useHistory } from 'react-router-dom';
 
 const EditRoomsPage: FunctionComponent<{}> = () => {
+  const history = useHistory();
   const { rooms } = useRooms();
 
   return (
@@ -23,7 +25,7 @@ const EditRoomsPage: FunctionComponent<{}> = () => {
           footer={
             <List.Item
               actions={[
-                <Button type="primary" shape="circle" icon={<PlusOutlined />} />
+                <Button type="primary" shape="circle" icon={<PlusOutlined />} onClick={() => history.push('/rooms/new/edit')} />
               ]}>
               <List.Item.Meta
                 title="Add new room" />

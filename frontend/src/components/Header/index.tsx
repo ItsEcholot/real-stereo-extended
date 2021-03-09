@@ -6,7 +6,7 @@ import {
 } from '@ant-design/icons';
 import styles from './styles.module.css';
 
-interface HeaderProps {
+type HeaderProps = {
   title: string;
   siderCollapsed: boolean;
   onSiderCollapse: (siderCollapsed: boolean) => void;
