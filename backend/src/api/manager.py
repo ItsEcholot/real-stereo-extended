@@ -2,11 +2,13 @@
 
 from pathlib import Path
 from threading import Thread
+from typing import List
 import asyncio
 import socketio
 from janus import Queue
 from aiohttp import web, MultipartWriter
 from numpy import ndarray
+from config import Config, NodeType
 from tracking.manager import TrackingManager
 from .controllers.rooms import RoomsController
 
@@ -18,24 +20,22 @@ frontendPath: Path = (Path(__file__).resolve().parent /
 class ApiManager:
     """The API manager starts a web server and defines the available routes.
 
-    :param str role: The role of this API. It can either be 'master' or 'slave'.
-                     The master will register all available routes while a slave will only
-                     register the video streaming route.
+    :param Config config: The application config object.
     :param TrackingManager tracking_manager: The instance of an active tracking manager.
     """
 
-    def __init__(self, role: str, tracking_manager: TrackingManager):
-        self.role = role
-        self.tracking_manager = tracking_manager
-        self.thread = None
-        self.stream_queues = []
-        self.app = web.Application()
+    def __init__(self, config: Config, tracking_manager: TrackingManager):
+        self.config: Config = config
+        self.tracking_manager: TrackingManager = tracking_manager
+        self.thread: Thread = None
+        self.stream_queues: List[Queue] = []
+        self.app: web.Application = web.Application()
 
         # register routes for both masters and slaves
         self.app.add_routes([web.get('/stream.mjpeg', self.get_stream)])
 
         # register master routes
-        if self.role == 'master':
+        if self.config.type == NodeType.MASTER or self.config.type == NodeType.UNCONFIGURED:
             if frontendPath.exists() and (frontendPath / 'static').exists():
                 self.app.add_routes([
                     web.get('/', self.get_index),
@@ -48,7 +48,7 @@ class ApiManager:
             self.server.attach(self.app)
 
             # register socket.io namespaces
-            self.server.register_namespace(RoomsController())
+            self.server.register_namespace(RoomsController(config=self.config))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.

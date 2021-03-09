@@ -38,8 +38,7 @@ class Config:
         # load nodes
         for node_data in self.data['nodes']:
             # find room in which the node is located
-            room = next(r for r in self.rooms if r.room_id ==
-                        node_data['room_id'])
+            room = self.get_room(node_data['room_id'])
 
             if room is None:
                 raise ValueError(
@@ -53,8 +52,7 @@ class Config:
         # load speakers
         for speaker_data in self.data['speakers']:
             # find room in which the speaker is located
-            room = next(r for r in self.rooms if r.room_id ==
-                        speaker_data['room_id'])
+            room = self.get_room(speaker_data['room_id'])
 
             if room is None:
                 raise ValueError(
@@ -73,4 +71,31 @@ class Config:
         }
 
         with open(str(self.path), 'w') as file:
-            json.dump(data, file)
+            json.dump(data, file, indent=4)
+
+    def get_room(self, room_id: int) -> Room:
+        room = next(filter(lambda r: r.room_id == room_id, self.rooms), None)
+        return room
+
+    def add_room(self, room: Room) -> None:
+        # assign a new id if the room does not yet have one
+        if room.room_id is None:
+            rooms_sorted = sorted(
+                self.rooms, key=lambda r: r.room_id, reverse=True)
+            room.room_id = 1 if rooms_sorted is None or len(
+                rooms_sorted) == 0 else rooms_sorted[0].room_id + 1
+
+        self.rooms.append(room)
+        self.store()
+
+    def remove_room(self, room_id: int) -> bool:
+        room = self.get_room(room_id)
+
+        if room is not None:
+            # todo: also remove all nodes & speakers that were assigned to this room
+            self.rooms.remove(room)
+            self.store()
+
+            return True
+
+        return False

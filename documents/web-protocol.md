@@ -47,8 +47,10 @@ type Room = {
   id: number;
   name: string;
   nodes: Node[];
-  speakers: Speaker[];
 }
+
+type UpdateRoom = Omit<Room, 'nodes'>
+type CreateRoom = Omit<UpdateRoom, 'id'>
 ```
 
 #### `Node`
@@ -62,6 +64,15 @@ type Node = {
   hostname: string;
   room: Room;
 }
+
+type UpdateNode = Node & {
+  // only the `id` attribute of the room is needed
+  // more can still be submitted but will be ignored
+  room: {
+    id: number;
+  };
+}
+type CreateNode = Omit<UpdateNode, 'id'>
 ```
 
 #### `Speaker`
@@ -70,7 +81,17 @@ type Node = {
 type Speaker = {
   id: number;
   name: string;
+  room: Room;
 }
+
+type UpdateSpeaker = Speaker & {
+  // only the `id` attribute of the room is needed
+  // more can still be submitted but will be ignored
+  room: {
+    id: number;
+  };
+}
+type CreateSpeaker = Omit<UpdateSpeaker, 'id'>
 ```
 
 #### `Balance`
@@ -86,6 +107,7 @@ type Balance = {
 
 ```typescript
 type Settings = {
+  configured: boolean;
   balance: boolean;
 }
 ```
@@ -108,8 +130,8 @@ Lists all saved rooms.
 
 Available events:
 - `get: () => Room[]`
-- `create: (data: Room) => Acknowledgment`
-- `update: (id: number, data: Room) => Acknowledgment`
+- `create: (data: CreateRoom) => Acknowledgment`
+- `update: (data: UpdateRoom) => Acknowledgment`
 - `delete: (id: number) => Acknowledgment`
 
 #### `/nodes`
@@ -117,9 +139,19 @@ Available events:
 Lists all available nodes.
 
 Available events:
-- `get: () => PartialNode[]`
-- `create: (data: Node) => Acknowledgment`
-- `update: (id: number, data: Node) => Acknowledgment`
+- `get: () => Node[]`
+- `create: (data: CreateNode) => Acknowledgment`
+- `update: (data: UpdateNode) => Acknowledgment`
+- `delete: (id: number) => Acknowledgment`
+
+#### `/speakers`
+
+Lists all available speakers.
+
+Available events:
+- `get: () => Speaker[]`
+- `create: (data: CreateSpeaker) => Acknowledgment`
+- `update: (data: UpdateSpeaker) => Acknowledgment`
 - `delete: (id: number) => Acknowledgment`
 
 #### `/balances`
