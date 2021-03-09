@@ -36,10 +36,10 @@ class Node:
         :rtype: Node
         """
         # find room in which the node is located
-        room = config.get_room(data['room_id'], fail=True)
+        room = config.get_room(data.get('room_id'), fail=True)
 
-        node = Node(node_id=data['id'], name=data['name'],
-                    ip_address=data['ip'], hostname=data['hostname'], room=room)
+        node = Node(node_id=data.get('id'), name=data.get('name'),
+                    ip_address=data.get('ip'), hostname=data.get('hostname'), room=room)
         room.nodes.append(node)
         return node
 

@@ -37,18 +37,18 @@ class Config:
 
     def load(self) -> None:
         """Loads the configuration file and parses it into class attributes."""
-        self.type = NodeType[self.data['type'].upper()]
+        self.type = NodeType[self.data.get('type').upper()]
 
         # load rooms
-        for room_data in self.data['rooms']:
+        for room_data in self.data.get('rooms'):
             self.rooms.append(Room.from_json(room_data))
 
         # load nodes
-        for node_data in self.data['nodes']:
+        for node_data in self.data.get('nodes'):
             self.nodes.append(Node.from_json(node_data, self))
 
         # load speakers
-        for speaker_data in self.data['speakers']:
+        for speaker_data in self.data.get('speakers'):
             self.speakers.append(Speaker.from_json(speaker_data, self))
 
     def store(self) -> None:

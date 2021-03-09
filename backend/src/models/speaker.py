@@ -29,9 +29,9 @@ class Speaker:
         :rtype: Speaker
         """
         # find room in which the speaker is located
-        room = config.get_room(data['room_id'], fail=True)
+        room = config.get_room(data.get('room_id'), fail=True)
 
-        return Speaker(speaker_id=data['id'], name=data['name'], room=room)
+        return Speaker(speaker_id=data.get('id'), name=data.get('name'), room=room)
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.

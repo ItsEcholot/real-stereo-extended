@@ -31,27 +31,29 @@ class RoomsController(AsyncNamespace):
         :rtype: models.acknowledgement.Acknowledgement
         """
         ack = Acknowledgement()
+        room_id = data.get('id')
+        name = data.get('name')
 
-        if isinstance(data['name'], str) is False:
+        if isinstance(name, str) is False:
             ack.add_error('Name must be a string')
-        elif len(data['name']) == 0:
+        elif len(name) == 0:
             ack.add_error('Room name cannot be empty')
-        elif len(data['name']) > 50:
+        elif len(name) > 50:
             ack.add_error('Name must be at most 50 characters long')
         elif create:
             existing = next(filter(lambda r: r.name ==
-                                   data['name'], self.config.rooms), None)
+                                   name, self.config.rooms), None)
             if existing is not None:
                 ack.add_error('A room with this name already exists')
         elif not create:
             existing = next(filter(lambda r: r.name ==
-                                   data['name'], self.config.rooms), None)
+                                   name, self.config.rooms), None)
 
-            if isinstance(data['id'], int) is False:
-                ack.add_error('Room id not submitted or not with an int')
-            elif self.config.get_room(data['id']) is None:
+            if isinstance(room_id, int) is False:
+                ack.add_error('Room id must be an int')
+            elif self.config.get_room(room_id) is None:
                 ack.add_error('Room with this id does not exist')
-            elif existing and existing.room_id != data['id']:
+            elif existing and existing.room_id != room_id:
                 ack.add_error('A room with this name already exists')
 
         return ack
@@ -76,7 +78,7 @@ class RoomsController(AsyncNamespace):
 
         # create the new room
         if ack.successful:
-            room = Room(name=data['name'])
+            room = Room(name=data.get('name'))
 
             # add the new room and send the new state to all clients
             self.config.add_room(room)
@@ -96,8 +98,8 @@ class RoomsController(AsyncNamespace):
 
         # update the room
         if ack.successful:
-            room = self.config.get_room(data['id'])
-            room.name = data['name']
+            room = self.config.get_room(data.get('id'))
+            room.name = data.get('name')
 
             # store the update and send the new state to all clients
             self.config.store()

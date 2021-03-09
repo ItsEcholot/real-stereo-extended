@@ -28,7 +28,7 @@ class Room:
         :returns: Room
         :rtype: Room
         """
-        return Room(data['id'], data['name'])
+        return Room(data.get('id'), data.get('name'))
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.
