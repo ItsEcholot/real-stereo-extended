@@ -5,7 +5,6 @@ export interface Room {
   id: number;
   name: string;
   nodes: any[];
-  speakers: any[];
 }
 
 export const useRooms = () => {

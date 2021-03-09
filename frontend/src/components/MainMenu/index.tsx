@@ -5,7 +5,10 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
+import { useRooms } from '../../services/rooms';
 import styles from './styles.module.css';
+
+const { SubMenu } = Menu;
 
 interface MainMenuProps {
   siderBroken: boolean;
@@ -17,6 +20,7 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
   onSiderCollapse,
 }) => {
   const location = useLocation();
+  const { rooms } = useRooms();
 
   return (
     <Menu theme="dark" mode="inline" selectedKeys={[location.pathname]}
@@ -25,6 +29,15 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
       <Menu.Item key="/" icon={<HomeOutlined />}>
         <Link to="/">Overview</Link>
       </Menu.Item>
+      {rooms.map(room => (
+        <SubMenu key={`submenu${room}`} title={room.name}>
+          {room.nodes.map(node => (
+            <Menu.Item key={`/nodes/${node.id}`}>
+              <Link to={`/nodes/${node.id}`}>{node.name}</Link>
+            </Menu.Item>
+          ))}
+        </SubMenu>
+      ))}
       <Menu.Item key="/rooms/edit" icon={<SettingOutlined />}>
         <Link to="/rooms/edit">Edit rooms</Link>
       </Menu.Item>
