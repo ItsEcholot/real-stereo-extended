@@ -1,11 +1,15 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
+import { Node } from './nodes';
 import { SocketContext } from './socketProvider';
 
-export interface Room {
+export type Room = {
   id: number;
   name: string;
-  nodes: any[];
+  nodes: Node[];
 }
+
+export type UpdateRoom = Omit<Room, 'nodes'>
+export type CreateRoom = Omit<UpdateRoom, 'id'>
 
 export const useRooms = () => {
   const { getSocket, returnSocket } = useContext(SocketContext);
@@ -20,15 +24,15 @@ export const useRooms = () => {
     };
   }, [getSocket, returnSocket]);
 
-  const createRoom = useCallback((room: Omit<Room, 'id'>) => {
+  const createRoom = useCallback((room: CreateRoom) => {
     const roomsSocket = getSocket('rooms');
     roomsSocket.emit('create', room);
     returnSocket('rooms');
   }, [getSocket, returnSocket]);
 
-  const updateRoom = useCallback((roomId: number, room: Partial<Room>) => {
+  const updateRoom = useCallback((room: UpdateRoom) => {
     const roomsSocket = getSocket('rooms');
-    roomsSocket.emit('update', roomId, room);
+    roomsSocket.emit('update', room);
     returnSocket('rooms');
   }, [getSocket, returnSocket]);
 
