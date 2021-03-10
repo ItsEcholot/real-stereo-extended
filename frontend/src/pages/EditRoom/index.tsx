@@ -5,14 +5,27 @@ import {
   CloseOutlined,
   CheckOutlined,
 } from '@ant-design/icons';
+import { useHistory } from 'react-router-dom';
 import { useRooms } from '../../services/rooms';
 
 type EditRoomPageProps = {
   roomId?: number;
 }
 
-const EditRoomPage: FunctionComponent<EditRoomPageProps> = () => {
+const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
+  roomId
+}) => {
+  const history = useHistory();
   const { rooms, createRoom, updateRoom } = useRooms();
+  const currentRoom = rooms?.find(room => room.id === roomId);
+
+  const save = (values: { name: string, nodes: string[] }) => {
+    console.dir(values);
+  }
+
+  const startCalibration = () => {
+
+  }
 
   return (
     <Row justify="center">
@@ -20,7 +33,12 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = () => {
         <Form
           labelCol={{ span: 12 }}
           wrapperCol={{ span: 12 }}
-          labelAlign="left">
+          labelAlign="left"
+          onFinish={save}
+          initialValues={{
+            ...currentRoom,
+            nodes: currentRoom?.nodes.map(node => node.id),
+          }}>
           <Form.Item
             label="Room name"
             name="name"
@@ -28,9 +46,16 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = () => {
             <Input />
           </Form.Item>
           <Form.Item
-            label="Assigned Sonos players">
+            label="Assigned Sonos players"
+            name="nodes">
             <Checkbox.Group
-              options={['Sonos 1', 'Sonos 2']} />
+              options={[{ label: 'Sonos 1', value: 1 }, { label: 'Sonos 2', value: 2 }]} />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="default" icon={<CloseOutlined />} onClick={() => history.push('/rooms/edit')}>Cancel</Button>
+              <Button type="primary" icon={<CheckOutlined />} htmlType="submit">Save</Button>
+            </Space>
           </Form.Item>
         </Form>
         <Divider />
@@ -47,12 +72,7 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = () => {
           <br />
           When all positions are calibrated, exit the configuration by pressing the save button.
         </p>
-        <Button type="primary" icon={<RadarChartOutlined />}>Start calibration</Button>
-        <Divider />
-        <Space>
-          <Button type="default" icon={<CloseOutlined />}>Cancel</Button>
-          <Button type="primary" icon={<CheckOutlined />}>Save</Button>
-        </Space>
+        <Button type="primary" icon={<RadarChartOutlined />} onClick={startCalibration}>Start calibration</Button>
       </Col>
     </Row>
   );

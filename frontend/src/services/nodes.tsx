@@ -6,14 +6,16 @@ export type Node = {
   online: boolean;
   ip: string;
   hostname: string;
-  room: Room;
+  room: Omit<Room, 'nodes'>;
 }
 
 export type UpdateNode = Node & {
+  id: number;
+  name: string;
+  ip: string;
   // only the `id` attribute of the room is needed
   // more can still be submitted but will be ignored
   room: {
     id: number;
   };
 }
-export type CreateNode = Omit<UpdateNode, 'id'>
