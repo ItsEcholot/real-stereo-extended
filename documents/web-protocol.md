@@ -25,16 +25,18 @@ Availability of the events may depend on the actual resource type.
 
 #### Server Events
 
+- `get: () => Resource`<br>
+Returns the current resource in the `acknowledgment`.
 - `create: (data: Resource) => Acknowledgment`<br>
-Creates a new resource. It should contain the whole resource in the first argument. It is only available on a resource listing, not on a single resource. The `acknowledgment` will contain information about the creation success and errors.
-- `update: (id: number, data: Resource) => Acknowledgment`<br>
+Creates a new resource. It should contain the whole resource in the first argument. The `acknowledgment` will contain information about the creation success and errors.
+- `update: (data: Resource) => Acknowledgment`<br>
 Updates the specified resource. It should contain the whole resource in the first argument and is only available on a single resource, not on a resource listing. The `acknowledgment` will contain information about the update success and errors.
 - `delete: (id: number) => Acknowledgment`<br>
 Deletes the specified resource. It is only available on a single resource, not on a resource listing. The `acknowledgment` will contain information about the deletion success and errors.
 
 #### Client Events
 
-- `get: (data: Resource | Resource[])`: This event will get fired automatically after joining a namespace and when the resource gets changed. It contains the whole resource as the first argument.
+- `get: (data: Resource | Resource[])`: This event contains the whole resource as the first argument and will be triggered each time a resource gets changed.
 
 ## Protocol Documentation
 
@@ -47,8 +49,10 @@ type Room = {
   id: number;
   name: string;
   nodes: Node[];
-  speakers: Speaker[];
 }
+
+type UpdateRoom = Omit<Room, 'nodes'>
+type CreateRoom = Omit<UpdateRoom, 'id'>
 ```
 
 #### `Node`
@@ -62,6 +66,17 @@ type Node = {
   hostname: string;
   room: Room;
 }
+
+type UpdateNode = {
+  id: number;
+  name: string;
+  ip: string;
+  // only the `id` attribute of the room is needed
+  // more can still be submitted but will be ignored
+  room: {
+    id: number;
+  };
+}
 ```
 
 #### `Speaker`
@@ -70,6 +85,15 @@ type Node = {
 type Speaker = {
   id: number;
   name: string;
+  room: Room;
+}
+
+type UpdateSpeaker = Speaker & {
+  // only the `id` attribute of the room is needed
+  // more can still be submitted but will be ignored
+  room: {
+    id: number;
+  };
 }
 ```
 
@@ -86,6 +110,7 @@ type Balance = {
 
 ```typescript
 type Settings = {
+  configured: boolean;
   balance: boolean;
 }
 ```
@@ -108,8 +133,8 @@ Lists all saved rooms.
 
 Available events:
 - `get: () => Room[]`
-- `create: (data: Room) => Acknowledgment`
-- `update: (id: number, data: Room) => Acknowledgment`
+- `create: (data: CreateRoom) => Acknowledgment`
+- `update: (data: UpdateRoom) => Acknowledgment`
 - `delete: (id: number) => Acknowledgment`
 
 #### `/nodes`
@@ -117,9 +142,17 @@ Available events:
 Lists all available nodes.
 
 Available events:
-- `get: () => PartialNode[]`
-- `create: (data: Node) => Acknowledgment`
-- `update: (id: number, data: Node) => Acknowledgment`
+- `get: () => Node[]`
+- `update: (data: UpdateNode) => Acknowledgment`
+- `delete: (id: number) => Acknowledgment`
+
+#### `/speakers`
+
+Lists all available speakers.
+
+Available events:
+- `get: () => Speaker[]`
+- `update: (data: UpdateSpeaker) => Acknowledgment`
 - `delete: (id: number) => Acknowledgment`
 
 #### `/balances`
