@@ -26,8 +26,7 @@ class SpeakersController(AsyncNamespace):
                         clients will receive the speakers.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(
-            self.emit('get', self.config.speaker_repository.to_json(), room=sid))
+        loop.create_task(self.emit('get', self.config.speaker_repository.to_json(), room=sid))
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -82,10 +81,8 @@ class SpeakersController(AsyncNamespace):
 
         # update the speaker
         if ack.successful:
-            room = self.config.room_repository.get_room(
-                data.get('room').get('id'))
-            speaker = self.config.speaker_repository.get_speaker(
-                data.get('id'))
+            room = self.config.room_repository.get_room(data.get('room').get('id'))
+            speaker = self.config.speaker_repository.get_speaker(data.get('id'))
 
             speaker.name = data.get('name')
 

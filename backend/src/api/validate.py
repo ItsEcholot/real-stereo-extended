@@ -29,11 +29,9 @@ class Validate:
         elif min_value == 1 and len(value) == 0:
             self.ack.add_error(label + ' must not be empty')
         elif min_value is not None and len(value) < min_value:
-            self.ack.add_error(label + ' must be at least ' +
-                               str(min_value) + ' characters long')
+            self.ack.add_error(label + ' must be at least ' + str(min_value) + ' characters long')
         elif max_value is not None and len(value) > max_value:
-            self.ack.add_error(label + ' must be at most ' +
-                               str(max_value) + ' characters long')
+            self.ack.add_error(label + ' must be at most ' + str(max_value) + ' characters long')
 
         return num_errors == len(self.ack.errors)
 

@@ -15,6 +15,9 @@
 		"python.venvPath": "${workspaceFolder}/backend/.venv",
 		"python.pythonPath": "${workspaceFolder}/backend/.venv/bin/python",
 		"python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
+		"python.formatting.autopep8Args": [
+			"--max-line-length=100"
+		],
 		"python.formatting.blackPath": "/usr/local/py-utils/bin/black",
 		"python.formatting.yapfPath": "/usr/local/py-utils/bin/yapf",
 		"python.linting.banditPath": "/usr/local/py-utils/bin/bandit",
