@@ -44,6 +44,7 @@ class Room:
         }
 
         if recursive:
-            json['nodes'] = list(map(lambda node: node.to_json(), self.nodes))
+            json['nodes'] = list(
+                map(lambda node: node.to_json(live=True), self.nodes))
 
         return json

@@ -64,7 +64,8 @@ class Config:
         data = {
             'type': str(self.type).lower().split('.')[1],
             'rooms': list(map(lambda room: room.to_json(), self.rooms)),
-            'nodes': list(map(lambda node: node.to_json(), self.nodes)),
+            'nodes': list(map(lambda node: node.to_json(),
+                              list(filter(lambda node: node.room is not None, self.nodes)))),
             'speakers': list(map(lambda speaker: speaker.to_json(), self.speakers)),
         }
 

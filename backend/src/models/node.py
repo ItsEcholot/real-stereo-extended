@@ -43,11 +43,12 @@ class Node:
         room.nodes.append(node)
         return node
 
-    def to_json(self, recursive: bool = False) -> dict:
+    def to_json(self, recursive: bool = False, live: bool = False) -> dict:
         """Creates a JSON serializable object.
 
         :param bool recursive: If true, all relations will be returned as full objects as well.
                                If false, only the ids of the relations will be returned.
+        :param bool live: If true, live status will be returned.
         :returns: JSON serializable object
         :rtype: dict
         """
@@ -63,5 +64,8 @@ class Node:
                 json['room'] = self.room.to_json()
             else:
                 json['room_id'] = self.room.room_id
+
+        if live:
+            json['online'] = self.online
 
         return json

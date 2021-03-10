@@ -26,7 +26,7 @@ class NodesController(AsyncNamespace):
                         clients will receive the nodes.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(self.emit('get', list(map(lambda node: node.to_json(True),
+        loop.create_task(self.emit('get', list(map(lambda node: node.to_json(True, live=True),
                                                    self.config.nodes)), room=sid))
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
@@ -83,29 +83,7 @@ class NodesController(AsyncNamespace):
         :param str sid: Session id
         :param dict data: Event data
         """
-        return list(map(lambda node: node.to_json(True), self.config.nodes))
-
-    async def on_create(self, _: str, data: dict) -> None:
-        """Creates a new node.
-
-        :param str sid: Session id
-        :param dict data: Event data
-        """
-        # validate
-        ack = self.validate(data, True)
-
-        # create the new node
-        if ack.successful:
-            room = self.config.room_repository.get_room(
-                data.get('room').get('id'))
-            node = Node(name=data.get('name'),
-                        ip_address=data.get('ip'), room=room)
-
-            # add the new node and send the new state to all clients
-            self.config.node_repository.add_node(node)
-            ack.created_id = node.node_id
-
-        return ack.to_json()
+        return list(map(lambda node: node.to_json(True, live=True), self.config.nodes))
 
     async def on_update(self, _: str, data: dict) -> None:
         """Updates a node.

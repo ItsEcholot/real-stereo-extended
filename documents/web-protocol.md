@@ -67,7 +67,8 @@ type Node = {
   room: Room;
 }
 
-type CreateNode = {
+type UpdateNode = {
+  id: number;
   name: string;
   ip: string;
   // only the `id` attribute of the room is needed
@@ -75,9 +76,6 @@ type CreateNode = {
   room: {
     id: number;
   };
-}
-type UpdateNode = CreateNode & {
-  id: number;
 }
 ```
 
@@ -97,7 +95,6 @@ type UpdateSpeaker = Speaker & {
     id: number;
   };
 }
-type CreateSpeaker = Omit<UpdateSpeaker, 'id'>
 ```
 
 #### `Balance`
@@ -146,7 +143,6 @@ Lists all available nodes.
 
 Available events:
 - `get: () => Node[]`
-- `create: (data: CreateNode) => Acknowledgment`
 - `update: (data: UpdateNode) => Acknowledgment`
 - `delete: (id: number) => Acknowledgment`
 
@@ -156,7 +152,6 @@ Lists all available speakers.
 
 Available events:
 - `get: () => Speaker[]`
-- `create: (data: CreateSpeaker) => Acknowledgment`
 - `update: (data: UpdateSpeaker) => Acknowledgment`
 - `delete: (id: number) => Acknowledgment`
 
