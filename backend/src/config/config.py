@@ -8,6 +8,7 @@ from models.node import Node
 from models.speaker import Speaker
 from repositories.room import RoomRepository
 from repositories.node import NodeRepository
+from repositories.speaker import SpeakerRepository
 from .node_type import NodeType
 
 
@@ -26,10 +27,12 @@ class Config:
         self.speakers: List[Speaker] = []
         self.room_repository = RoomRepository(self)
         self.node_repository = NodeRepository(self)
+        self.speaker_repository = SpeakerRepository(self)
 
         # register repository change listeners
         self.room_repository.register_listener(self.store)
         self.node_repository.register_listener(self.store)
+        self.speaker_repository.register_listener(self.store)
 
         # load file if it exists
         if path.exists():
@@ -66,7 +69,9 @@ class Config:
             'rooms': list(map(lambda room: room.to_json(), self.rooms)),
             'nodes': list(map(lambda node: node.to_json(),
                               list(filter(lambda node: node.room is not None, self.nodes)))),
-            'speakers': list(map(lambda speaker: speaker.to_json(), self.speakers)),
+            'speakers': list(map(lambda speaker: speaker.to_json(),
+                                 list(filter(lambda speaker: speaker.room is not None,
+                                             self.speakers)))),
         }
 
         with open(str(self.path), 'w') as file:

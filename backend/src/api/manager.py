@@ -12,6 +12,7 @@ from config import Config, NodeType
 from tracking.manager import TrackingManager
 from .controllers.rooms import RoomsController
 from .controllers.nodes import NodesController
+from .controllers.speakers import SpeakersController
 
 # define path of the static frontend files
 frontendPath: Path = (Path(__file__).resolve().parent /
@@ -51,6 +52,8 @@ class ApiManager:
             # register socket.io namespaces
             self.server.register_namespace(RoomsController(config=self.config))
             self.server.register_namespace(NodesController(config=self.config))
+            self.server.register_namespace(
+                SpeakersController(config=self.config))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.
