@@ -1,5 +1,5 @@
-import { FunctionComponent } from 'react';
-import { Checkbox, Col, Divider, Form, Input, Row, Button, Space } from 'antd';
+import { FunctionComponent, useState } from 'react';
+import { Checkbox, Col, Divider, Form, Input, Row, Button, Space, Alert, Spin } from 'antd';
 import {
   RadarChartOutlined,
   CloseOutlined,
@@ -7,6 +7,7 @@ import {
 } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
 import { useRooms } from '../../services/rooms';
+import { Acknowledgment } from '../../services/acknowledgment';
 
 type EditRoomPageProps = {
   roomId?: number;
@@ -19,8 +20,29 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   const { rooms, createRoom, updateRoom } = useRooms();
   const currentRoom = rooms?.find(room => room.id === roomId);
 
+  const [saving, setSaving] = useState(false);
+  const [saveErrors, setSaveErrors] = useState<string[]>();
+
   const save = (values: { name: string, nodes: string[] }) => {
-    console.dir(values);
+    setSaving(true);
+    if (currentRoom) {
+      updateRoom({ id: currentRoom.id, name: values.name }).then(() => {
+        setSaving(false);
+        setSaveErrors(undefined);
+      }).catch((ack: Acknowledgment) => {
+        setSaving(false);
+        setSaveErrors(ack.errors);
+      })
+    } else {
+      createRoom({ name: values.name }).then(ack => {
+        setSaving(false);
+        setSaveErrors(undefined);
+        history.push(`/rooms/${ack.createdId}/edit`);
+      }).catch((ack: Acknowledgment) => {
+        setSaving(false);
+        setSaveErrors(ack.errors)
+      });
+    }
   }
 
   const startCalibration = () => {
@@ -30,7 +52,10 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   return (
     <Row justify="center">
       <Col xl={8} lg={12} md={16} xs={24}>
-        <Form
+        {saveErrors?.map(error => (
+          <Alert message={error} type="error" />
+        ))}
+        {(roomId && currentRoom) || (!roomId) ? <Form
           labelCol={{ span: 12 }}
           wrapperCol={{ span: 12 }}
           labelAlign="left"
@@ -53,11 +78,11 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="default" icon={<CloseOutlined />} onClick={() => history.push('/rooms/edit')}>Cancel</Button>
-              <Button type="primary" icon={<CheckOutlined />} htmlType="submit">Save</Button>
+              <Button type="default" icon={<CloseOutlined />} onClick={() => history.push('/rooms/edit')} disabled={saving}>Cancel</Button>
+              <Button type="primary" icon={<CheckOutlined />} htmlType="submit" loading={saving}>Save</Button>
             </Space>
           </Form.Item>
-        </Form>
+        </Form> : <Row justify="center"><Spin /></Row>}
         <Divider />
         <p>
           Place the two cameras in a ~90° angle to each other.

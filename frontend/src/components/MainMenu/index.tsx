@@ -30,7 +30,7 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
         <Link to="/">Overview</Link>
       </Menu.Item>
       {rooms?.map(room => (
-        <SubMenu key={`submenu${room}`} title={room.name}>
+        <SubMenu key={`submenu${room.name}`} title={room.name}>
           {room.nodes.map(node => (
             <Menu.Item key={`/nodes/${node.id}`}>
               <Link to={`/nodes/${node.id}`}>{node.name}</Link>
