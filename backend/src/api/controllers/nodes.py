@@ -79,7 +79,7 @@ class NodesController(AsyncNamespace):
         """
         return self.config.node_repository.to_json()
 
-    async def on_update(self, _: str, data: dict) -> None:
+    async def on_update(self, _: str, data: dict) -> dict:
         """Updates a node.
 
         :param str sid: Session id
@@ -109,7 +109,7 @@ class NodesController(AsyncNamespace):
 
         return ack.to_json()
 
-    async def on_delete(self, _: str, node_id: int) -> None:
+    async def on_delete(self, _: str, node_id: int) -> dict:
         """Deletes a node.
 
         :param str sid: Session id
