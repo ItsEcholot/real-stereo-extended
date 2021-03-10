@@ -22,12 +22,10 @@ class RoomRepository(Repository):
         :returns: Room or None if no room could be found with this id
         :rtype: models.room.Room
         """
-        room = next(filter(lambda r: r.room_id ==
-                           room_id, self.config.rooms), None)
+        room = next(filter(lambda r: r.room_id == room_id, self.config.rooms), None)
 
         if fail and room is None:
-            raise ValueError('Room with id ' + str(room_id) +
-                             ' could not be found')
+            raise ValueError('Room with id ' + str(room_id) + ' could not be found')
 
         return room
 
@@ -47,8 +45,7 @@ class RoomRepository(Repository):
         """
         # assign a new id if the room does not yet have one
         if room.room_id is None:
-            rooms_sorted = sorted(
-                self.config.rooms, key=lambda r: r.room_id, reverse=True)
+            rooms_sorted = sorted(self.config.rooms, key=lambda r: r.room_id, reverse=True)
             room.room_id = 1 if rooms_sorted is None or len(
                 rooms_sorted) == 0 else rooms_sorted[0].room_id + 1
 
@@ -79,8 +76,8 @@ class RoomRepository(Repository):
                 self.config.node_repository.call_listeners()
 
             # remove speakers with this room
-            speakers_to_remove = list(filter(
-                lambda s: s.room.room_id == room.room_id, self.config.speakers))
+            speakers_to_remove = list(filter(lambda s: s.room.room_id ==
+                                             room.room_id, self.config.speakers))
             for speaker in speakers_to_remove:
                 self.config.speakers.remove(speaker)
 

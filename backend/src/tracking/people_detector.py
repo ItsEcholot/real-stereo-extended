@@ -16,8 +16,7 @@ class PeopleDetector:
         :param numpy.ndarray frame: Camera frame
         """
         # detect people
-        (rects, _) = self.hog.detectMultiScale(
-            frame, winStride=(2, 2), padding=(8, 8), scale=1.05)
+        (rects, _) = self.hog.detectMultiScale(frame, winStride=(2, 2), padding=(8, 8), scale=1.05)
 
         # draw the bounding boxes
         self.draw_rects(frame, rects)
@@ -30,5 +29,4 @@ class PeopleDetector:
         :param list rects: A list of rects in the form (x, y, width, height)
         """
         for (pos_x, pos_y, width, height) in rects:
-            cv2.rectangle(frame, (pos_x, pos_y), (pos_x + width,
-                                                  pos_y + height), (0, 255, 0), 2)
+            cv2.rectangle(frame, (pos_x, pos_y), (pos_x + width, pos_y + height), (0, 255, 0), 2)
