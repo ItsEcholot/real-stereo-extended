@@ -36,7 +36,7 @@ class Node:
         :rtype: Node
         """
         # find room in which the node is located
-        room = config.get_room(data.get('room_id'), fail=True)
+        room = config.room_repository.get_room(data.get('room_id'), fail=True)
 
         node = Node(node_id=data.get('id'), name=data.get('name'),
                     ip_address=data.get('ip'), hostname=data.get('hostname'), room=room)

@@ -1,6 +1,7 @@
 """Controller for the /rooms namespace."""
 
 from typing import List
+import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.room import Room
@@ -15,14 +16,18 @@ class RoomsController(AsyncNamespace):
         super().__init__(namespace='/rooms')
         self.config: Config = config
 
-    async def send_rooms(self, sid: str = None) -> None:
+        # add room repository change listener
+        config.room_repository.register_listener(self.send_rooms)
+
+    def send_rooms(self, sid: str = None) -> None:
         """Sends the current rooms to all clients or only a specific one.
 
         :param str sid: If specified, rooms will only be sent to this session id. Otherwise, all
                         clients will receive the rooms.
         """
-        await self.emit('get', list(map(lambda room: room.to_json(True), self.config.rooms)),
-                        room=sid)
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.emit('get', list(map(lambda room: room.to_json(True),
+                                                   self.config.rooms)), room=sid))
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -48,7 +53,7 @@ class RoomsController(AsyncNamespace):
             existing = next(filter(lambda r: r.name ==
                                    name, self.config.rooms), None)
 
-            if self.config.get_room(room_id) is None:
+            if self.config.room_repository.get_room(room_id) is None:
                 ack.add_error('Room with this id does not exist')
             elif existing and existing.room_id != room_id:
                 ack.add_error('A room with this name already exists')
@@ -77,9 +82,8 @@ class RoomsController(AsyncNamespace):
             room = Room(name=data.get('name'))
 
             # add the new room and send the new state to all clients
-            self.config.add_room(room)
+            self.config.room_repository.add_room(room)
             ack.created_id = room.room_id
-            await self.send_rooms()
 
         return ack.to_json()
 
@@ -94,12 +98,14 @@ class RoomsController(AsyncNamespace):
 
         # update the room
         if ack.successful:
-            room = self.config.get_room(data.get('id'))
+            room = self.config.room_repository.get_room(data.get('id'))
             room.name = data.get('name')
 
             # store the update and send the new state to all clients
-            self.config.store()
-            await self.send_rooms()
+            self.config.room_repository.call_listeners()
+
+            if len(room.nodes) > 0:
+                self.config.node_repository.call_listeners()
 
         return ack.to_json()
 
@@ -111,9 +117,7 @@ class RoomsController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
-        if self.config.remove_room(room_id):
-            await self.send_rooms()
-        else:
+        if self.config.room_repository.remove_room(room_id) is False:
             ack.add_error('A room with this id does not exist')
 
         return ack.to_json()

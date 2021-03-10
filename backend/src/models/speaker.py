@@ -29,7 +29,7 @@ class Speaker:
         :rtype: Speaker
         """
         # find room in which the speaker is located
-        room = config.get_room(data.get('room_id'), fail=True)
+        room = config.room_repository.get_room(data.get('room_id'), fail=True)
 
         return Speaker(speaker_id=data.get('id'), name=data.get('name'), room=room)
 

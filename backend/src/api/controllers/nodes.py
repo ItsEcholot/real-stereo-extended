@@ -1,6 +1,7 @@
 """Controller for the /nodes namespace."""
 
 from typing import List
+import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.node import Node
@@ -15,14 +16,18 @@ class NodesController(AsyncNamespace):
         super().__init__(namespace='/nodes')
         self.config: Config = config
 
-    async def send_nodes(self, sid: str = None) -> None:
+        # add node repository change listener
+        config.node_repository.register_listener(self.send_nodes)
+
+    def send_nodes(self, sid: str = None) -> None:
         """Sends the current nodes to all clients or only a specific one.
 
         :param str sid: If specified, nodes will only be sent to this session id. Otherwise, all
                         clients will receive the nodes.
         """
-        await self.emit('get', list(map(lambda node: node.to_json(True), self.config.nodes)),
-                        room=sid)
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.emit('get', list(map(lambda node: node.to_json(True),
+                                                   self.config.nodes)), room=sid))
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -44,7 +49,7 @@ class NodesController(AsyncNamespace):
         if data.get('room') is None or isinstance(data.get('room'), dict) is False:
             ack.add_error('Room id must not be empty')
         elif validate.integer(data.get('room').get('id'), label='Room id', min_value=1):
-            if self.config.get_room(data.get('room').get('id')) is None:
+            if self.config.room_repository.get_room(data.get('room').get('id')) is None:
                 ack.add_error('A room with this id does not exist')
 
         if create:
@@ -63,7 +68,7 @@ class NodesController(AsyncNamespace):
             existing_ip = next(
                 filter(lambda r: r.ip_address == ip_address, self.config.nodes), None)
 
-            if self.config.get_node(node_id) is None:
+            if self.config.node_repository.get_node(node_id) is None:
                 ack.add_error('Node with this id does not exist')
             elif existing_name and existing_name.node_id != node_id:
                 ack.add_error('A node with this name already exists')
@@ -91,14 +96,14 @@ class NodesController(AsyncNamespace):
 
         # create the new node
         if ack.successful:
-            room = self.config.get_room(data.get('room').get('id'))
+            room = self.config.room_repository.get_room(
+                data.get('room').get('id'))
             node = Node(name=data.get('name'),
                         ip_address=data.get('ip'), room=room)
 
             # add the new node and send the new state to all clients
-            self.config.add_node(node)
+            self.config.node_repository.add_node(node)
             ack.created_id = node.node_id
-            await self.send_nodes()
 
         return ack.to_json()
 
@@ -113,8 +118,9 @@ class NodesController(AsyncNamespace):
 
         # update the node
         if ack.successful:
-            room = self.config.get_room(data.get('room').get('id'))
-            node = self.config.get_node(data.get('id'))
+            room = self.config.room_repository.get_room(
+                data.get('room').get('id'))
+            node = self.config.node_repository.get_node(data.get('id'))
 
             node.name = data.get('name')
             node.ip_address = data.get('ip')
@@ -126,8 +132,8 @@ class NodesController(AsyncNamespace):
                 node.room.nodes.append(node)
 
             # store the update and send the new state to all clients
-            self.config.store()
-            await self.send_nodes()
+            self.config.node_repository.call_listeners()
+            self.config.room_repository.call_listeners()
 
         return ack.to_json()
 
@@ -139,9 +145,7 @@ class NodesController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
-        if self.config.remove_node(node_id):
-            await self.send_nodes()
-        else:
+        if self.config.node_repository.remove_node(node_id) is False:
             ack.add_error('A node with this id does not exist')
 
         return ack.to_json()
