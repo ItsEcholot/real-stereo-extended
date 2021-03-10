@@ -21,6 +21,7 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   const currentRoom = rooms?.find(room => room.id === roomId);
 
   const [saving, setSaving] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
 
   const save = (values: { name: string, nodes: string[] }) => {
@@ -29,6 +30,8 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
       updateRoom({ id: currentRoom.id, name: values.name }).then(() => {
         setSaving(false);
         setSaveErrors(undefined);
+        setShowSaveSuccess(true);
+        setTimeout(() => setShowSaveSuccess(false), 3000);
       }).catch((ack: Acknowledgment) => {
         setSaving(false);
         setSaveErrors(ack.errors);
@@ -38,6 +41,8 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
         setSaving(false);
         setSaveErrors(undefined);
         history.push(`/rooms/${ack.createdId}/edit`);
+        setShowSaveSuccess(true);
+        setTimeout(() => setShowSaveSuccess(false), 3000);
       }).catch((ack: Acknowledgment) => {
         setSaving(false);
         setSaveErrors(ack.errors)
@@ -52,9 +57,10 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   return (
     <Row justify="center">
       <Col xl={8} lg={12} md={16} xs={24}>
-        {saveErrors?.map(error => (
-          <Alert message={error} type="error" />
+        {saveErrors?.map((error, index) => (
+          <Alert key={index} message={error} type="error" showIcon />
         ))}
+        {showSaveSuccess ? <Alert message="Saved successfully" type="success" showIcon /> : null}
         {(roomId && currentRoom) || (!roomId) ? <Form
           labelCol={{ span: 12 }}
           wrapperCol={{ span: 12 }}

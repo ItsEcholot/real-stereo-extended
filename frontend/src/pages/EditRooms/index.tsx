@@ -32,9 +32,9 @@ const EditRoomsPage: FunctionComponent<{}> = () => {
         {Object.keys(deleteErrors)
           .map(roomIdErrors => deleteErrors[parseInt(roomIdErrors, 10)])
           .flat()
-          .map(error => (
+          .map((error, index) => (
             <>
-              <Alert key={`${error}`} message={error} type="error" />
+              <Alert key={index} message={error} type="error" showIcon />
             </>
           ))}
         <List
