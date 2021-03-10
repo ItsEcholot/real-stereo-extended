@@ -48,7 +48,7 @@ Deletes the specified resource. It is only available on a single resource, not o
 type Room = {
   id: number;
   name: string;
-  nodes: Node[];
+  nodes: Omit<Node, 'room'>[];
 }
 
 type UpdateRoom = Omit<Room, 'nodes'>
@@ -64,7 +64,7 @@ type Node = {
   online: boolean;
   ip: string;
   hostname: string;
-  room: Room;
+  room: Omit<Room, 'nodes'>;
 }
 
 type UpdateNode = {
@@ -85,7 +85,7 @@ type UpdateNode = {
 type Speaker = {
   id: number;
   name: string;
-  room: Room;
+  room: Omit<Room, 'nodes'>;
 }
 
 type UpdateSpeaker = Speaker & {
