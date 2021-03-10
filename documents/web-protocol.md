@@ -113,6 +113,10 @@ type Settings = {
   configured: boolean;
   balance: boolean;
 }
+
+type UpdateSettings = {
+  balance: boolean;
+}
 ```
 
 #### `Acknowledgment`

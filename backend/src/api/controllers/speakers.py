@@ -71,7 +71,7 @@ class SpeakersController(AsyncNamespace):
         """
         return self.config.speaker_repository.to_json()
 
-    async def on_update(self, _: str, data: dict) -> None:
+    async def on_update(self, _: str, data: dict) -> dict:
         """Updates a speaker.
 
         :param str sid: Session id
@@ -98,7 +98,7 @@ class SpeakersController(AsyncNamespace):
 
         return ack.to_json()
 
-    async def on_delete(self, _: str, speaker_id: int) -> None:
+    async def on_delete(self, _: str, speaker_id: int) -> dict:
         """Deletes a speaker.
 
         :param str sid: Session id

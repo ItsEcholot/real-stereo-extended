@@ -65,7 +65,7 @@ class RoomsController(AsyncNamespace):
         """
         return self.config.room_repository.to_json()
 
-    async def on_create(self, _: str, data: dict) -> None:
+    async def on_create(self, _: str, data: dict) -> dict:
         """Creates a new room.
 
         :param str sid: Session id
@@ -84,7 +84,7 @@ class RoomsController(AsyncNamespace):
 
         return ack.to_json()
 
-    async def on_update(self, _: str, data: dict) -> None:
+    async def on_update(self, _: str, data: dict) -> dict:
         """Updates a room.
 
         :param str sid: Session id
@@ -106,7 +106,7 @@ class RoomsController(AsyncNamespace):
 
         return ack.to_json()
 
-    async def on_delete(self, _: str, room_id: int) -> None:
+    async def on_delete(self, _: str, room_id: int) -> dict:
         """Deletes a room.
 
         :param str sid: Session id
