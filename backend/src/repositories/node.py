@@ -31,6 +31,24 @@ class NodeRepository(Repository):
 
         return node
 
+    def get_node_by_name(self, name: str) -> Node:
+        """Returns the node with the given name.
+
+        :param str name: Node name
+        :returns: Node or None if no node could be found with this name
+        :rtype: models.node.Node
+        """
+        return next(filter(lambda n: n.name == name, self.config.nodes), None)
+
+    def get_node_by_ip(self, ip_address: str) -> Node:
+        """Returns the node with the given ip address.
+
+        :param str ip: Node ip address
+        :returns: Node or None if no node could be found with this ip address
+        :rtype: models.node.Node
+        """
+        return next(filter(lambda n: n.ip_address == ip_address, self.config.nodes), None)
+
     def add_node(self, node: Node) -> None:
         """Adds a new node and stores the config file.
 
@@ -76,3 +94,11 @@ class NodeRepository(Repository):
             return True
 
         return False
+
+    def to_json(self) -> dict:
+        """Returns the list of all nodes in JSON serializable objects.
+
+        :returns: JSON serializable object
+        :rtype: dict
+        """
+        return list(map(lambda node: node.to_json(True, live=True), self.config.nodes))

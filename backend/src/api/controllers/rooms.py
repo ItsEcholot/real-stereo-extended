@@ -26,8 +26,8 @@ class RoomsController(AsyncNamespace):
                         clients will receive the rooms.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(self.emit('get', list(map(lambda room: room.to_json(True),
-                                                   self.config.rooms)), room=sid))
+        loop.create_task(
+            self.emit('get', self.config.room_repository.to_json(), room=sid))
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -45,13 +45,10 @@ class RoomsController(AsyncNamespace):
         validate.string(name, label='Name', min_value=1, max_value=50)
 
         if create:
-            existing = next(filter(lambda r: r.name ==
-                                   name, self.config.rooms), None)
-            if existing is not None:
+            if self.config.room_repository.get_room_by_name(name) is not None:
                 ack.add_error('A room with this name already exists')
         elif validate.integer(room_id, label='Room id', min_value=1):
-            existing = next(filter(lambda r: r.name ==
-                                   name, self.config.rooms), None)
+            existing = self.config.room_repository.get_room_by_name(name)
 
             if self.config.room_repository.get_room(room_id) is None:
                 ack.add_error('Room with this id does not exist')
@@ -66,7 +63,7 @@ class RoomsController(AsyncNamespace):
         :param str sid: Session id
         :param dict data: Event data
         """
-        return list(map(lambda room: room.to_json(True), self.config.rooms))
+        return self.config.room_repository.to_json()
 
     async def on_create(self, _: str, data: dict) -> None:
         """Creates a new room.

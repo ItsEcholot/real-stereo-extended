@@ -31,6 +31,15 @@ class RoomRepository(Repository):
 
         return room
 
+    def get_room_by_name(self, name: str) -> Room:
+        """Returns the room with the given name.
+
+        :param str name: Room name
+        :returns: Room or None if no room could be found with this name
+        :rtype: models.room.Room
+        """
+        return next(filter(lambda r: r.name == name, self.config.rooms), None)
+
     def add_room(self, room: Room) -> None:
         """Adds a new room and stores the config file.
 
@@ -80,3 +89,11 @@ class RoomRepository(Repository):
             return True
 
         return False
+
+    def to_json(self) -> dict:
+        """Returns the list of all rooms in JSON serializable objects.
+
+        :returns: JSON serializable object
+        :rtype: dict
+        """
+        return list(map(lambda room: room.to_json(True), self.config.rooms))

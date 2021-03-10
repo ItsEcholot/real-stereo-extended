@@ -26,8 +26,8 @@ class NodesController(AsyncNamespace):
                         clients will receive the nodes.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(self.emit('get', list(map(lambda node: node.to_json(True, live=True),
-                                                   self.config.nodes)), room=sid))
+        loop.create_task(
+            self.emit('get', self.config.node_repository.to_json(), room=sid))
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -53,20 +53,14 @@ class NodesController(AsyncNamespace):
                 ack.add_error('A room with this id does not exist')
 
         if create:
-            existing_name = next(
-                filter(lambda r: r.name == name, self.config.nodes), None)
-            existing_ip = next(
-                filter(lambda r: r.ip_address == ip_address, self.config.nodes), None)
-
-            if existing_name is not None:
+            if self.config.node_repository.get_node_by_name(name) is not None:
                 ack.add_error('A node with this name already exists')
-            if existing_ip is not None:
+            if self.config.node_repository.get_node_by_ip(ip_address) is not None:
                 ack.add_error('A node with this ip already exists')
         elif validate.integer(node_id, label='Node id', min_value=1):
-            existing_name = next(
-                filter(lambda r: r.name == name, self.config.nodes), None)
-            existing_ip = next(
-                filter(lambda r: r.ip_address == ip_address, self.config.nodes), None)
+            existing_name = self.config.node_repository.get_node_by_name(name)
+            existing_ip = self.config.node_repository.get_node_by_ip(
+                ip_address)
 
             if self.config.node_repository.get_node(node_id) is None:
                 ack.add_error('Node with this id does not exist')
@@ -83,7 +77,7 @@ class NodesController(AsyncNamespace):
         :param str sid: Session id
         :param dict data: Event data
         """
-        return list(map(lambda node: node.to_json(True, live=True), self.config.nodes))
+        return self.config.node_repository.to_json()
 
     async def on_update(self, _: str, data: dict) -> None:
         """Updates a node.
