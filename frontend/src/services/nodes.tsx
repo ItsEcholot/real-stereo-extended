@@ -1,4 +1,7 @@
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { Acknowledgment } from './acknowledgment';
 import { Room } from './rooms';
+import { SocketContext } from './socketProvider';
 
 export type Node = {
   id: number;
@@ -9,7 +12,7 @@ export type Node = {
   room: Omit<Room, 'nodes'>;
 }
 
-export type UpdateNode = Node & {
+export type UpdateNode = {
   id: number;
   name: string;
   ip: string;
@@ -18,4 +21,42 @@ export type UpdateNode = Node & {
   room: {
     id: number;
   };
+}
+
+export const useNodes = () => {
+  const { getSocket, returnSocket } = useContext(SocketContext);
+  const [nodes, setNodes] = useState<Node[]>();
+  useEffect(() => {
+    const nodesSocket = getSocket('nodes');
+    nodesSocket.emit('get', setNodes);
+    nodesSocket.on('get', setNodes);
+    return () => {
+      nodesSocket.off('get', setNodes);
+      returnSocket('nodes');
+    };
+  }, [getSocket, returnSocket]);
+
+  const updateNode = useCallback((node: UpdateNode): Promise<Acknowledgment> => {
+    const nodesSocket = getSocket('nodes');
+    return new Promise((resolve, reject) => {
+      nodesSocket.emit('update', node, (ack: Acknowledgment) => {
+        if (ack.successful) resolve(ack);
+        else reject(ack);
+        returnSocket('nodes');
+      });
+    });
+  }, [getSocket, returnSocket]);
+
+  const deleteNode = useCallback((nodeId: number): Promise<Acknowledgment> => {
+    const nodesSocket = getSocket('nodes');
+    return new Promise((resolve, reject) => {
+      nodesSocket.emit('delete', nodeId, (ack: Acknowledgment) => {
+        if (ack.successful) resolve(ack);
+        else reject(ack);
+        returnSocket('nodes');
+      });
+    });
+  }, [getSocket, returnSocket]);
+
+  return { nodes, updateNode, deleteNode };
 }

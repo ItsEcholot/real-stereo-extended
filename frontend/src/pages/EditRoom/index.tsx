@@ -8,6 +8,8 @@ import {
 import { useHistory } from 'react-router-dom';
 import { useRooms } from '../../services/rooms';
 import { Acknowledgment } from '../../services/acknowledgment';
+import Text from 'antd/lib/typography/Text';
+import { useSpeakers } from '../../services/speakers';
 
 type EditRoomPageProps = {
   roomId?: number;
@@ -18,36 +20,42 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
 }) => {
   const history = useHistory();
   const { rooms, createRoom, updateRoom } = useRooms();
+  const { speakers, updateSpeaker } = useSpeakers();
   const currentRoom = rooms?.find(room => room.id === roomId);
+  const currentRoomSpeakers = speakers?.filter(speaker => speaker.room.id === currentRoom?.id);
 
   const [saving, setSaving] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
 
-  const save = (values: { name: string, nodes: string[] }) => {
+  const save = (values: { name: string, speakers: string[] }) => {
     setSaving(true);
     if (currentRoom) {
-      updateRoom({ id: currentRoom.id, name: values.name }).then(() => {
-        setSaving(false);
-        setSaveErrors(undefined);
-        setShowSaveSuccess(true);
-        setTimeout(() => setShowSaveSuccess(false), 3000);
-      }).catch((ack: Acknowledgment) => {
-        setSaving(false);
-        setSaveErrors(ack.errors);
-      })
+      updateRoom({ id: currentRoom.id, name: values.name }).then(ack => {
+        afterSave(ack);
+      }).catch(ack => {
+        afterFailedSave(ack);
+      });
     } else {
       createRoom({ name: values.name }).then(ack => {
-        setSaving(false);
-        setSaveErrors(undefined);
-        history.push(`/rooms/${ack.createdId}/edit`);
-        setShowSaveSuccess(true);
-        setTimeout(() => setShowSaveSuccess(false), 3000);
-      }).catch((ack: Acknowledgment) => {
-        setSaving(false);
-        setSaveErrors(ack.errors)
+        afterSave(ack, true);
+      }).catch(ack => {
+        afterFailedSave(ack);
       });
     }
+  }
+
+  const afterSave = (ack: Acknowledgment, redirect: boolean = false) => {
+    setSaving(false);
+    setSaveErrors(undefined);
+    setShowSaveSuccess(true);
+    setTimeout(() => setShowSaveSuccess(false), 3000);
+    if (redirect) history.push(`/rooms/${ack.createdId}/edit`);
+  }
+
+  const afterFailedSave = (ack: Acknowledgment) => {
+    setSaving(false);
+    setSaveErrors(ack.errors);
   }
 
   const startCalibration = () => {
@@ -61,14 +69,14 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           <Alert key={index} message={error} type="error" showIcon />
         ))}
         {showSaveSuccess ? <Alert message="Saved successfully" type="success" showIcon /> : null}
-        {(roomId && currentRoom) || (!roomId) ? <Form
+        {((roomId && currentRoom) || (!roomId)) && speakers !== undefined ? <Form
           labelCol={{ span: 12 }}
           wrapperCol={{ span: 12 }}
           labelAlign="left"
           onFinish={save}
           initialValues={{
             ...currentRoom,
-            nodes: currentRoom?.nodes.map(node => node.id),
+            speakers: currentRoomSpeakers?.map(speaker => speaker.id),
           }}>
           <Form.Item
             label="Room name"
@@ -78,9 +86,9 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           </Form.Item>
           <Form.Item
             label="Assigned Sonos players"
-            name="nodes">
-            <Checkbox.Group
-              options={[{ label: 'Sonos 1', value: 1 }, { label: 'Sonos 2', value: 2 }]} />
+            name="speakers">
+            {speakers.length > 0 ? <Checkbox.Group
+              options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, disabled: !!speaker.room }))} /> : <Text disabled>No speakers</Text>}
           </Form.Item>
           <Form.Item>
             <Space>

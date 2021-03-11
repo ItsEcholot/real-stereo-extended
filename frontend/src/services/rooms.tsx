@@ -36,7 +36,7 @@ export const useRooms = () => {
     });
   }, [getSocket, returnSocket]);
 
-  const updateRoom = useCallback((room: UpdateRoom) => {
+  const updateRoom = useCallback((room: UpdateRoom): Promise<Acknowledgment> => {
     const roomsSocket = getSocket('rooms');
     return new Promise((resolve, reject) => {
       roomsSocket.emit('update', room, (ack: Acknowledgment) => {
@@ -47,7 +47,7 @@ export const useRooms = () => {
     });
   }, [getSocket, returnSocket]);
 
-  const deleteRoom = useCallback((roomId: number) => {
+  const deleteRoom = useCallback((roomId: number): Promise<Acknowledgment> => {
     const roomsSocket = getSocket('rooms');
     return new Promise((resolve, reject) => {
       roomsSocket.emit('delete', roomId, (ack: Acknowledgment) => {
