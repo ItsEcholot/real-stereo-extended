@@ -1,8 +1,8 @@
 import { FunctionComponent, useState } from 'react';
 import { Layout as AntdLayout } from 'antd';
 import Header from '../Header';
-import styles from './styles.module.css';
 import MainMenu from '../MainMenu';
+import styles from './styles.module.css';
 
 const { Sider, Content } = AntdLayout;
 
@@ -25,8 +25,8 @@ const Layout: FunctionComponent<{}> = props => {
         <MainMenu siderBroken={siderBroken} onSiderCollapse={setSiderCollapsed} />
       </Sider>
       <AntdLayout>
-        <Header siderCollapsed={siderCollapsed} onSiderCollapse={setSiderCollapsed} />
-        <Content>
+        <Header title="Real Stereo" siderCollapsed={siderCollapsed} onSiderCollapse={setSiderCollapsed} />
+        <Content className={styles.content}>
           {props.children}
         </Content>
       </AntdLayout>
