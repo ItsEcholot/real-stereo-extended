@@ -37,7 +37,7 @@ class Validate:
 
         return num_errors == len(self.ack.errors)
 
-    def integer(self, value: int, label: str, min_value: int = None, max_value: int = None) -> None:
+    def integer(self, value: int, label: str, min_value: int = None, max_value: int = None) -> bool:
         """Validates if a value is an integer and in the given boundaries.
 
         :param int value: Input value that should be validated
@@ -57,3 +57,17 @@ class Validate:
             self.ack.add_error(label + ' must be at most ' + str(max_value))
 
         return num_errors == len(self.ack.errors)
+
+    def boolean(self, value: bool, label: str) -> None:
+        """Validates if a value is a boolean.
+
+        :param int value: Input value that should be validated
+        :param str label: Label that will be shown in error messages
+        :returns: Whether the input validates
+        :rtype: bool
+        """
+        if isinstance(value, bool) is False:
+            self.ack.add_error(label + ' must be a boolean')
+            return False
+
+        return True

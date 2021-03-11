@@ -48,7 +48,7 @@ class Speaker:
 
         if self.room is not None:
             if recursive:
-                json['room'] = self.room
+                json['room'] = self.room.to_json()
             else:
                 json['room_id'] = self.room.room_id
 

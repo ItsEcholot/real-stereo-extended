@@ -79,10 +79,13 @@ class RoomRepository(Repository):
                 self.config.node_repository.call_listeners()
 
             # remove speakers with this room
-            speakers_to_remove = filter(
-                lambda s: s.room.room_id == room.room_id, self.config.speakers)
+            speakers_to_remove = list(filter(
+                lambda s: s.room.room_id == room.room_id, self.config.speakers))
             for speaker in speakers_to_remove:
                 self.config.speakers.remove(speaker)
+
+            if len(speakers_to_remove) > 0:
+                self.config.speaker_repository.call_listeners()
 
             self.call_listeners()
 

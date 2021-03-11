@@ -14,22 +14,14 @@ class NodeRepository(Repository):
         super().__init__()
         self.config = config
 
-    def get_node(self, node_id: int, fail: bool = False) -> Node:
+    def get_node(self, node_id: int) -> Node:
         """Returns the node with the specified id.
 
         :param int node_id: Node id
-        :param bool fail: If true, a ValueError will be raised if the node could not be found
         :returns: Node or None if no node could be found with this id
         :rtype: models.node.Node
         """
-        node = next(filter(lambda r: r.node_id ==
-                           node_id, self.config.nodes), None)
-
-        if fail and node is None:
-            raise ValueError('Node with id ' + str(node_id) +
-                             ' could not be found')
-
-        return node
+        return next(filter(lambda r: r.node_id == node_id, self.config.nodes), None)
 
     def get_node_by_name(self, name: str) -> Node:
         """Returns the node with the given name.
