@@ -1,18 +1,23 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
+import { Node } from './nodes';
 import { SocketContext } from './socketProvider';
+import { Acknowledgment } from './acknowledgment';
 
-export interface Room {
+export type Room = {
   id: number;
   name: string;
-  nodes: any[];
-  speakers: any[];
+  nodes: Omit<Node, 'room'>[];
 }
+
+export type UpdateRoom = Omit<Room, 'nodes'>
+export type CreateRoom = Omit<UpdateRoom, 'id'>
 
 export const useRooms = () => {
   const { getSocket, returnSocket } = useContext(SocketContext);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<Room[]>();
   useEffect(() => {
     const roomsSocket = getSocket('rooms');
+    roomsSocket.emit('get', setRooms);
     roomsSocket.on('get', setRooms);
     return () => {
       roomsSocket.off('get', setRooms);
@@ -20,22 +25,37 @@ export const useRooms = () => {
     };
   }, [getSocket, returnSocket]);
 
-  const createRoom = useCallback((room: Omit<Room, 'id'>) => {
+  const createRoom = useCallback((room: CreateRoom): Promise<Acknowledgment> => {
     const roomsSocket = getSocket('rooms');
-    roomsSocket.emit('create', room);
-    returnSocket('rooms');
+    return new Promise((resolve, reject) => {
+      roomsSocket.emit('create', room, (ack: Acknowledgment) => {
+        if (ack.successful) resolve(ack);
+        else reject(ack);
+        returnSocket('rooms');
+      });
+    });
   }, [getSocket, returnSocket]);
 
-  const updateRoom = useCallback((roomId: number, room: Partial<Room>) => {
+  const updateRoom = useCallback((room: UpdateRoom) => {
     const roomsSocket = getSocket('rooms');
-    roomsSocket.emit('update', roomId, room);
-    returnSocket('rooms');
+    return new Promise((resolve, reject) => {
+      roomsSocket.emit('update', room, (ack: Acknowledgment) => {
+        if (ack.successful) resolve(ack);
+        else reject(ack);
+        returnSocket('rooms');
+      });
+    });
   }, [getSocket, returnSocket]);
 
   const deleteRoom = useCallback((roomId: number) => {
     const roomsSocket = getSocket('rooms');
-    roomsSocket.emit('delete', roomId);
-    returnSocket('rooms');
+    return new Promise((resolve, reject) => {
+      roomsSocket.emit('delete', roomId, (ack: Acknowledgment) => {
+        if (ack.successful) resolve(ack);
+        else reject(ack);
+        returnSocket('rooms');
+      });
+    });
   }, [getSocket, returnSocket]);
 
   return { rooms, createRoom, updateRoom, deleteRoom };

@@ -13,3 +13,6 @@ __pycache__/
 # node
 node_modules
 npm-debug.log*
+
+# backend config
+config.json
