@@ -54,5 +54,5 @@ export const useSpeakers = () => {
     });
   }, [getSocket, returnSocket]);
 
-  return { speakers: speakers, updateSpeaker, deleteSpeaker };
+  return { speakers, updateSpeaker, deleteSpeaker };
 }

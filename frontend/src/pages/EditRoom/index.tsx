@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from 'react';
-import { Checkbox, Col, Divider, Form, Input, Row, Button, Space, Alert, Spin } from 'antd';
+import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin } from 'antd';
 import {
   RadarChartOutlined,
   CloseOutlined,
@@ -74,43 +74,42 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   }
 
   return (
-    <Row justify="center">
-      <Col xl={8} lg={12} md={16} xs={24}>
-        {saveErrors?.map((error, index) => (
-          <Alert key={index} message={error} type="error" showIcon />
-        ))}
-        {showSaveSuccess ? <Alert message="Saved successfully" type="success" showIcon /> : null}
-        {((roomId && currentRoom) || (!roomId)) && speakers !== undefined ? <Form
-          labelCol={{ span: 12 }}
-          wrapperCol={{ span: 12 }}
-          labelAlign="left"
-          onFinish={save}
-          initialValues={{
-            ...currentRoom,
-            speakers: currentRoomSpeakers?.map(speaker => speaker.id),
-          }}>
-          <Form.Item
-            label="Room name"
-            name="name"
-            rules={[{ required: true, message: 'Please input a name' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Assigned Sonos players"
-            name="speakers">
-            {speakers.length > 0 ? <Checkbox.Group
-              options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, /*disabled: speaker.room && speaker.room.id !== currentRoom?.id*/ }))} /> : <Text disabled>No speakers</Text>}
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="default" icon={<CloseOutlined />} onClick={() => history.push('/rooms/edit')} disabled={saving}>Cancel</Button>
-              <Button type="primary" icon={<CheckOutlined />} htmlType="submit" loading={saving}>Save</Button>
-            </Space>
-          </Form.Item>
-        </Form> : <Row justify="center"><Spin /></Row>}
-        <Divider />
-        <p>
-          Place the two cameras in a ~90° angle to each other.
+    <>
+      {saveErrors?.map((error, index) => (
+        <Alert key={index} message={error} type="error" showIcon />
+      ))}
+      {showSaveSuccess ? <Alert message="Saved successfully" type="success" showIcon /> : null}
+      {((roomId && currentRoom) || (!roomId)) && speakers !== undefined ? <Form
+        labelCol={{ span: 12 }}
+        wrapperCol={{ span: 12 }}
+        labelAlign="left"
+        onFinish={save}
+        initialValues={{
+          ...currentRoom,
+          speakers: currentRoomSpeakers?.map(speaker => speaker.id),
+        }}>
+        <Form.Item
+          label="Room name"
+          name="name"
+          rules={[{ required: true, message: 'Please input a name' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Assigned Sonos players"
+          name="speakers">
+          {speakers.length > 0 ? <Checkbox.Group
+            options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, /*disabled: speaker.room && speaker.room.id !== currentRoom?.id*/ }))} /> : <Text disabled>No speakers</Text>}
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="default" icon={<CloseOutlined />} onClick={() => history.push('/rooms/edit')} disabled={saving}>Cancel</Button>
+            <Button type="primary" icon={<CheckOutlined />} htmlType="submit" loading={saving}>Save</Button>
+          </Space>
+        </Form.Item>
+      </Form> : <Row justify="center"><Spin /></Row>}
+      <Divider />
+      <p>
+        Place the two cameras in a ~90° angle to each other.
           <br />
           Make sure that it is as quiet as possible inside the room.
           <br />
@@ -122,9 +121,8 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           <br />
           When all positions are calibrated, exit the configuration by pressing the save button.
         </p>
-        <Button type="primary" icon={<RadarChartOutlined />} onClick={startCalibration}>Start calibration</Button>
-      </Col>
-    </Row>
+      <Button type="primary" icon={<RadarChartOutlined />} onClick={startCalibration}>Start calibration</Button>
+    </>
   );
 }
 
