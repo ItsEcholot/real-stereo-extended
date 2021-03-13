@@ -41,8 +41,10 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
 
       if (speakers && currentRoomId) {
         await Promise.all(speakers.map(speaker => {
-          if (speaker.room.id !== currentRoomId && values.speakers.includes(speaker.id)) {
-            return updateSpeaker({ ...speaker, room: { id: currentRoomId } });
+          if (values.speakers.includes(speaker.id)) {
+            if (speaker.room.id !== currentRoomId) {
+              return updateSpeaker({ ...speaker, room: { id: currentRoomId } });
+            }
           } else if (speaker.room.id === currentRoomId) {
             return deleteSpeaker(speaker.id);
           }
@@ -98,7 +100,7 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           label="Assigned Sonos players"
           name="speakers">
           {speakers.length > 0 ? <Checkbox.Group
-            options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, /*disabled: speaker.room && speaker.room.id !== currentRoom?.id*/ }))} /> : <Text disabled>No speakers</Text>}
+            options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, disabled: speaker.room && speaker.room.id !== currentRoom?.id }))} /> : <Text disabled>No speakers</Text>}
         </Form.Item>
         <Form.Item>
           <Space>

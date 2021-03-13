@@ -26,8 +26,7 @@ class NodesController(AsyncNamespace):
                         clients will receive the nodes.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(
-            self.emit('get', self.config.node_repository.to_json(), room=sid))
+        loop.create_task(self.emit('get', self.config.node_repository.to_json(), room=sid))
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -59,8 +58,7 @@ class NodesController(AsyncNamespace):
                 ack.add_error('A node with this ip already exists')
         elif validate.integer(node_id, label='Node id', min_value=1):
             existing_name = self.config.node_repository.get_node_by_name(name)
-            existing_ip = self.config.node_repository.get_node_by_ip(
-                ip_address)
+            existing_ip = self.config.node_repository.get_node_by_ip(ip_address)
 
             if self.config.node_repository.get_node(node_id) is None:
                 ack.add_error('Node with this id does not exist')
@@ -90,8 +88,7 @@ class NodesController(AsyncNamespace):
 
         # update the node
         if ack.successful:
-            room = self.config.room_repository.get_room(
-                data.get('room').get('id'))
+            room = self.config.room_repository.get_room(data.get('room').get('id'))
             node = self.config.node_repository.get_node(data.get('id'))
 
             node.name = data.get('name')

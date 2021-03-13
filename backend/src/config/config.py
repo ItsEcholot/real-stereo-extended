@@ -45,8 +45,7 @@ class Config:
 
         # otherwise, create the file from a default configuration
         else:
-            print('Config ' + str(path) +
-                  ' does not exist, creating default configuration')
+            print('Config ' + str(path) + ' does not exist, creating default configuration')
             self.store()
 
     def load(self) -> None:

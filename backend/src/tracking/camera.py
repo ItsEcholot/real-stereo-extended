@@ -21,8 +21,7 @@ class Camera:
         self.on_frame = None
 
         if self.capture.isOpened() is not True:
-            raise RuntimeError('Camera with id ' +
-                               str(cameraId) + ' is not available')
+            raise RuntimeError('Camera with id ' + str(cameraId) + ' is not available')
 
     def stop(self) -> None:
         """Stops reading from the camera after the current frame has been processed."""
@@ -64,8 +63,7 @@ class Camera:
             self.on_frame(jpeg_frame)
         except TypeError:
             self.on_frame = None
-            print(
-                'Error occurred in the on_frame callback, it will automatically get unregistered')
+            print('Error occurred in the on_frame callback, it will automatically get unregistered')
 
     def set_frame_callback(self, on_frame: callable) -> None:
         """Sets the `on_frame` callback that will receive every processed frame.

@@ -46,17 +46,14 @@ class ApiManager:
                 ])
 
             # attach the socket.io server to the same web server
-            self.server = socketio.AsyncServer(
-                cors_allowed_origins='*', async_mode='aiohttp')
+            self.server = socketio.AsyncServer(cors_allowed_origins='*', async_mode='aiohttp')
             self.server.attach(self.app)
 
             # register socket.io namespaces
             self.server.register_namespace(RoomsController(config=self.config))
             self.server.register_namespace(NodesController(config=self.config))
-            self.server.register_namespace(
-                SpeakersController(config=self.config))
-            self.server.register_namespace(
-                SettingsController(config=self.config))
+            self.server.register_namespace(SpeakersController(config=self.config))
+            self.server.register_namespace(SettingsController(config=self.config))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.

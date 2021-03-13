@@ -48,8 +48,7 @@ class NodeRepository(Repository):
         """
         # assign a new id if the node does not yet have one
         if node.node_id is None:
-            nodes_sorted = sorted(
-                self.config.nodes, key=lambda r: r.node_id, reverse=True)
+            nodes_sorted = sorted(self.config.nodes, key=lambda r: r.node_id, reverse=True)
             node.node_id = 1 if nodes_sorted is None or len(
                 nodes_sorted) == 0 else nodes_sorted[0].node_id + 1
 
