@@ -1,4 +1,4 @@
-"""Client for the cluster protocol."""
+"""Slave for the cluster protocol."""
 
 from time import sleep
 from socket import socket, gethostname, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST
@@ -6,25 +6,25 @@ from ..socket import ClusterSocket
 from ..constants import PORT
 
 
-class ClusterClient(ClusterSocket):
-    """Client for the cluster protocol."""
+class ClusterSlave(ClusterSocket):
+    """Slave for the cluster protocol."""
 
     def __init__(self):
         super().__init__()
         self.send_socket = None
 
     def init(self) -> None:
-        """Initializes the client socket and starts listening."""
+        """Initializes the slave socket and starts listening."""
         self.running = True
         self.send_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.send_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
 
-        print('Cluster client started')
+        print('Cluster slave started')
 
         self.run()
 
     def run(self) -> None:
-        """Run logic of the client socket."""
+        """Run logic of the slave socket."""
         message = self.build_message()
         message.serviceAnnouncement.hostname = gethostname()
 

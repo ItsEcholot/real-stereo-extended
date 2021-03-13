@@ -4,19 +4,19 @@ from sys import argv
 from tracking.manager import TrackingManager
 from api.manager import ApiManager
 from config import Config, NodeType
-from protocol.server import ClusterServer
-from protocol.client import ClusterClient
+from protocol.master import ClusterMaster
+from protocol.slave import ClusterSlave
 
 
 config = Config()
 
 print('Starting as ' + str(config.type))
 if config.type == NodeType.MASTER or '--master' in argv:
-    cluster_server = ClusterServer()
-    cluster_server.start()
+    cluster_master = ClusterMaster()
+    cluster_master.start()
 else:
-    cluster_client = ClusterClient()
-    cluster_client.start()
+    cluster_slave = ClusterSlave()
+    cluster_slave.start()
 
 tracking = TrackingManager()
 # tracking.start_tracking()
