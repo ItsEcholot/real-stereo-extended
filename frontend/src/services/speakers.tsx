@@ -9,10 +9,12 @@ export type Speaker = {
   room: Omit<Room, 'speakers'>;
 }
 
-export type UpdateSpeaker = Speaker & {
+export type UpdateSpeaker = {
+  id: number;
+  name: string;
   // only the `id` attribute of the room is needed
   // more can still be submitted but will be ignored
-  room: {
+  room: Partial<Room> & {
     id: number;
   };
 }

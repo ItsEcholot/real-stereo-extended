@@ -20,7 +20,7 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
 }) => {
   const history = useHistory();
   const { rooms, createRoom, updateRoom } = useRooms();
-  const { speakers, updateSpeaker } = useSpeakers();
+  const { speakers, updateSpeaker, deleteSpeaker } = useSpeakers();
   const currentRoom = rooms?.find(room => room.id === roomId);
   const currentRoomSpeakers = speakers?.filter(speaker => speaker.room.id === currentRoom?.id);
 
@@ -28,20 +28,31 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
 
-  const save = (values: { name: string, speakers: string[] }) => {
+  const save = async (values: { name: string, speakers: number[] }) => {
     setSaving(true);
-    if (currentRoom) {
-      updateRoom({ id: currentRoom.id, name: values.name }).then(ack => {
-        afterSave(ack);
-      }).catch(ack => {
-        afterFailedSave(ack);
-      });
-    } else {
-      createRoom({ name: values.name }).then(ack => {
-        afterSave(ack, true);
-      }).catch(ack => {
-        afterFailedSave(ack);
-      });
+    let ack;
+    try {
+      if (currentRoom) {
+        ack = await updateRoom({ id: currentRoom.id, name: values.name })
+      } else {
+        ack = await createRoom({ name: values.name });
+      }
+      const currentRoomId = currentRoom ? currentRoom.id : ack.createdId;
+
+      if (speakers && currentRoomId) {
+        await Promise.all(speakers.map(speaker => {
+          if (speaker.room.id !== currentRoomId && values.speakers.includes(speaker.id)) {
+            return updateSpeaker({ ...speaker, room: { id: currentRoomId } });
+          } else if (speaker.room.id === currentRoomId) {
+            return deleteSpeaker(speaker.id);
+          }
+          return undefined;
+        }));
+      }
+
+      afterSave(ack, !currentRoom);
+    } catch (ack) {
+      afterFailedSave(ack);
     }
   }
 
@@ -88,7 +99,7 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
             label="Assigned Sonos players"
             name="speakers">
             {speakers.length > 0 ? <Checkbox.Group
-              options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, disabled: !!speaker.room }))} /> : <Text disabled>No speakers</Text>}
+              options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, /*disabled: speaker.room && speaker.room.id !== currentRoom?.id*/ }))} /> : <Text disabled>No speakers</Text>}
           </Form.Item>
           <Form.Item>
             <Space>
