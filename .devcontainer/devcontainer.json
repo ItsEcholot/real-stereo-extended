@@ -27,7 +27,8 @@
 		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 		"python.linting.pylintPath": "${workspaceFolder}/backend/.venv/bin/pylint",
 		"python.linting.pylintArgs": [
-			"--extension-pkg-whitelist=cv2"
+			"--extension-pkg-whitelist=cv2",
+			"--load-plugins=pylint_protobuf"
 		],
 		"editor.formatOnSave": true,
 		"[python]": {

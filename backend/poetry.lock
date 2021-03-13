@@ -184,6 +184,19 @@ toml = ">=0.7.1"
 docs = ["sphinx (==3.5.1)", "python-docs-theme (==2020.12)"]
 
 [[package]]
+name = "pylint-protobuf"
+version = "0.18.3"
+description = "A plugin for making Pylint aware of the fields of protobuf-generated classes"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+astroid = "*"
+protobuf = "*"
+pylint = "*"
+
+[[package]]
 name = "python-engineio"
 version = "4.0.0"
 description = "Engine.IO server"
@@ -258,7 +271,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "02c1e905d44b4e5ed23ffb00e61c1526c2a92646a03aeaf2b6b875fceb410e90"
+content-hash = "ddeeddb7d9cdb4cd007bb00108edc78a899a6385a66f4caa046ba798d2658fd5"
 
 [metadata.files]
 aiohttp = [
@@ -483,6 +496,10 @@ protobuf = [
 pylint = [
     {file = "pylint-2.7.2-py3-none-any.whl", hash = "sha256:d09b0b07ba06bcdff463958f53f23df25e740ecd81895f7d2699ec04bbd8dc3b"},
     {file = "pylint-2.7.2.tar.gz", hash = "sha256:0e21d3b80b96740909d77206d741aa3ce0b06b41be375d92e1f3244a274c1f8a"},
+]
+pylint-protobuf = [
+    {file = "pylint-protobuf-0.18.3.tar.gz", hash = "sha256:ea673e5528623d341257c9734290f3787a9e4010683171a7664531b4cfe6c659"},
+    {file = "pylint_protobuf-0.18.3-py2.py3-none-any.whl", hash = "sha256:9c405e2fa3667a8cf774c2af9aa3c54f0de15d82f416944926017db08b68801e"},
 ]
 python-engineio = [
     {file = "python-engineio-4.0.0.tar.gz", hash = "sha256:9f34afa4170f5ba6e3d9ff158752ccf8fbb2145f16554b2f0fc84646675be99a"},
