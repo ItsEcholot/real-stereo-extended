@@ -46,7 +46,7 @@ Those messages will be broadcasted over the whole network on port `5605`.
 
 ```
 message ServiceAnnouncement {
-  string hostname = 2;
+  string hostname = 1;
 }
 ```
 
