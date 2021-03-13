@@ -36,7 +36,8 @@
 		}
 	},
 	"extensions": [
-		"ms-python.python"
+		"ms-python.python",
+		"zxh404.vscode-proto3"
 	],
 	"forwardPorts": [
 		8080,
