@@ -1,9 +1,13 @@
-import { Col, Divider, Row, Switch, Spin, Alert } from 'antd';
+import { Col, Divider, Row, Switch, Spin, Alert, Progress, Typography } from 'antd';
 import { FunctionComponent, useState } from 'react';
 import { useSettings } from '../../services/settings';
+import { useBalances } from '../../services/balances';
+
+const { Title } = Typography;
 
 const OverviewPage: FunctionComponent<{}> = () => {
   const { settings, updateSettings } = useSettings();
+  const { balances } = useBalances();
   const [saving, setSaving] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
 
@@ -30,6 +34,15 @@ const OverviewPage: FunctionComponent<{}> = () => {
         </Col>
       </Row> : <Row justify="center"><Spin /></Row>}
       <Divider />
+      Current balance:
+      {balances?.map(balance => (
+        <Row>
+          <Col>{balance.speaker.name}</Col>
+          <Col>
+            <Progress percent={balance.volume} showInfo={false} />
+          </Col>
+        </Row>
+      ))}
     </>
   );
 }
