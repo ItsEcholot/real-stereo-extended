@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from 'react';
-import { Layout as AntdLayout } from 'antd';
+import { Layout as AntdLayout, Row, Col } from 'antd';
 import Header from '../Header';
 import MainMenu from '../MainMenu';
 import styles from './styles.module.css';
@@ -27,7 +27,11 @@ const Layout: FunctionComponent<{}> = props => {
       <AntdLayout>
         <Header title="Real Stereo" siderCollapsed={siderCollapsed} onSiderCollapse={setSiderCollapsed} />
         <Content className={styles.content}>
-          {props.children}
+          <Row justify="center">
+            <Col xl={8} lg={12} md={16} xs={24}>
+              {props.children}
+            </Col>
+          </Row>
         </Content>
       </AntdLayout>
     </AntdLayout>

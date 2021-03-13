@@ -1,4 +1,4 @@
-import { Button, Col, List, Row, Space, Alert } from 'antd';
+import { Button, List, Space, Alert } from 'antd';
 import { FunctionComponent, useState } from 'react';
 import { useRooms } from '../../services/rooms';
 import {
@@ -27,44 +27,42 @@ const EditRoomsPage: FunctionComponent<{}> = () => {
   }
 
   return (
-    <Row justify="center">
-      <Col xl={8} lg={12} md={16} xs={24}>
-        {Object.keys(deleteErrors)
-          .map(roomIdErrors => deleteErrors[parseInt(roomIdErrors, 10)])
-          .flat()
-          .map((error, index) => (
-            <>
-              <Alert key={index} message={error} type="error" showIcon />
-            </>
-          ))}
-        <List
-          loading={!rooms}
-          itemLayout="horizontal"
-          dataSource={rooms}
-          locale={{ emptyText: 'No rooms' }}
-          renderItem={room => (
-            <List.Item
-              actions={[
-                <Space>
-                  <Button danger shape="circle" icon={<DeleteOutlined />} loading={deletingRooms[room.id]} onClick={() => deleteRoomWith(room.id)} />
-                  <Button shape="circle" icon={<SettingOutlined />} disabled={deletingRooms[room.id]} onClick={() => history.push(`/rooms/${room.id}/edit`)} />
-                </Space>
-              ]}>
-              <List.Item.Meta
-                title={room.name} />
-            </List.Item>
-          )}
-          footer={
-            <List.Item
-              actions={[
-                <Button type="primary" shape="circle" icon={<PlusOutlined />} onClick={() => history.push('/rooms/new/edit')} />
-              ]}>
-              <List.Item.Meta
-                title="Add new room" />
-            </List.Item>
-          } />
-      </Col>
-    </Row>
+    <>
+      {Object.keys(deleteErrors)
+        .map(roomIdErrors => deleteErrors[parseInt(roomIdErrors, 10)])
+        .flat()
+        .map((error, index) => (
+          <>
+            <Alert key={index} message={error} type="error" showIcon />
+          </>
+        ))}
+      <List
+        loading={!rooms}
+        itemLayout="horizontal"
+        dataSource={rooms}
+        locale={{ emptyText: 'No rooms' }}
+        renderItem={room => (
+          <List.Item
+            actions={[
+              <Space>
+                <Button danger shape="circle" icon={<DeleteOutlined />} loading={deletingRooms[room.id]} onClick={() => deleteRoomWith(room.id)} />
+                <Button shape="circle" icon={<SettingOutlined />} disabled={deletingRooms[room.id]} onClick={() => history.push(`/rooms/${room.id}/edit`)} />
+              </Space>
+            ]}>
+            <List.Item.Meta
+              title={room.name} />
+          </List.Item>
+        )}
+        footer={
+          <List.Item
+            actions={[
+              <Button type="primary" shape="circle" icon={<PlusOutlined />} onClick={() => history.push('/rooms/new/edit')} />
+            ]}>
+            <List.Item.Meta
+              title="Add new room" />
+          </List.Item>
+        } />
+    </>
   );
 }
 
