@@ -1,9 +1,7 @@
-import { Col, Divider, Row, Switch, Spin, Alert, Progress, Typography } from 'antd';
+import { Col, Divider, Row, Switch, Spin, Alert, Progress } from 'antd';
 import { FunctionComponent, useState } from 'react';
 import { useSettings } from '../../services/settings';
 import { useBalances } from '../../services/balances';
-
-const { Title } = Typography;
 
 const OverviewPage: FunctionComponent<{}> = () => {
   const { settings, updateSettings } = useSettings();
