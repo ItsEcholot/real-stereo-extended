@@ -47,6 +47,14 @@ message ServiceAcquisition {
 
 `detect` indicates the current desired service status. If true, the slave will immediately start detecting people in its camera. If false, the slave will wait for a [service status update](#service-status-update) message until he starts the detection.
 
+### Service release
+
+When a master no longer requires the service of a slave, he can release it. The slave will then stop detection and go back into the [auto service discovery](#auto-service-discovery) mode.
+
+```
+message ServiceRelease {}
+```
+
 ### Position updates
 
 As soon as someone has been detected in the camera attached to the slave and this person has moved, a position update message will be sent to the master. This can be as frequent as every processed camera frame (multiple times per second) but at least once every 15 seconds (see [ping](#ping)).
