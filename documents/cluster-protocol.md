@@ -14,6 +14,31 @@ As protocol buffers are not self-delimiting and there is no need in the defined 
 
 ## Messages
 
+Since protocol buffers don't implement a way to determine which message has been sent, each message will be encapsulated in a wrapper so it can be properly decoded.
+
+```
+message Wrapper {
+  uint32 app = 1;
+  uint32 version = 2;
+  oneof message {
+    ServiceAnnouncement serviceAnnouncement = 3;
+    ServiceAcquisition serviceAcquisition = 4;
+    ServiceRelease serviceRelease = 5;
+    PositionUpdate positionUpdate = 6;
+    ServiceUpdate serviceUpdate = 7;
+    Ping ping = 8;
+  }
+}
+```
+
+There are additional attributes on the wrapper message.
+
+`app` is a static magic number always set to `828369` (ascii for `RSE` or `R`eal`S`tereo`E`xtended concatenated).
+With this, it can be ensured that a real stereo service is running on port `5605` and not something else.
+
+`version` contains the currently running version of real stereo.
+While protocol buffers are generally forwards- and backwards-compatible, this information can be useful to display a node as `outdated` in the administration interface.
+
 ### Auto service discovery
 
 When a node has not been acquired by a master, it will send auto service announcement messages every 15 seconds.
@@ -21,13 +46,10 @@ Those messages will be broadcasted over the whole network on port `5605`.
 
 ```
 message ServiceAnnouncement {
-  uint32 app = 1;
   string hostname = 2;
 }
 ```
 
-`app` will be a static magic number always set to `828369` (ascii for `RSE` or `R`eal`S`tereo`E`xtended concatenated).
-With this, it can be ensured that a real stereo service is running on port `5605` and not something else.
 `hostname` holds the hostname of the announcement sender.
 The IP address can be extracted from the UDP packet header.
 
