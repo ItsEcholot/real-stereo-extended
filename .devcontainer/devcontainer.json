@@ -27,7 +27,8 @@
 		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 		"python.linting.pylintPath": "${workspaceFolder}/backend/.venv/bin/pylint",
 		"python.linting.pylintArgs": [
-			"--extension-pkg-whitelist=cv2"
+			"--extension-pkg-whitelist=cv2",
+			"--load-plugins=pylint_protobuf"
 		],
 		"editor.formatOnSave": true,
 		"[python]": {
@@ -36,7 +37,8 @@
 		}
 	},
 	"extensions": [
-		"ms-python.python"
+		"ms-python.python",
+		"zxh404.vscode-proto3"
 	],
 	"forwardPorts": [
 		8080,
@@ -45,6 +47,6 @@
 	"mounts": [
 		"source=real-stereo-extended-node_modules,target=${containerWorkspaceFolder}/frontend/node_modules,type=volume"
 	],
-	"postCreateCommand": "(cd backend && poetry install) && (cd frontend && sudo chown vscode node_modules && yarn install)",
+	"postCreateCommand": "./backend/install.sh && (cd frontend && sudo chown vscode node_modules && yarn install)",
 	"remoteUser": "vscode"
 }

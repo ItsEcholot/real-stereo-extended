@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package realstereo;
+
+message Wrapper {
+  uint32 app = 1;
+  uint32 version = 2;
+  oneof message {
+    ServiceAnnouncement serviceAnnouncement = 3;
+    ServiceAcquisition serviceAcquisition = 4;
+    ServiceRelease serviceRelease = 5;
+    PositionUpdate positionUpdate = 6;
+    ServiceUpdate serviceUpdate = 7;
+    Ping ping = 8;
+  }
+}
+
+message ServiceAnnouncement {
+  string hostname = 1;
+}
+
+message ServiceAcquisition {
+  bool detect = 1;
+}
+
+message ServiceRelease {}
+
+message PositionUpdate {
+  uint32 coordinate = 1;
+}
+
+message ServiceUpdate {
+  bool detect = 1;
+}
+
+message Ping {}
