@@ -2,7 +2,8 @@ import { FunctionComponent } from 'react';
 import { Menu } from 'antd';
 import {
   HomeOutlined,
-  SettingOutlined
+  SettingOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { useRooms } from '../../services/rooms';
@@ -38,6 +39,9 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
           ))}
         </SubMenu>
       ))}
+      <Menu.Item key="/nodes/add" icon={<PlusOutlined />}>
+        <Link to="/nodes/add">Add camera nodes</Link>
+      </Menu.Item>
       <Menu.Item key="/rooms/edit" icon={<SettingOutlined />}>
         <Link to="/rooms/edit">Edit rooms</Link>
       </Menu.Item>

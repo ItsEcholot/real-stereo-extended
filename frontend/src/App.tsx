@@ -6,6 +6,7 @@ import OverviewPage from './pages/Overview';
 import EditRoomsPage from './pages/EditRooms';
 import EditRoomPage from './pages/EditRoom';
 import './App.css';
+import AddCameraNodesPages from './pages/AddCameraNodes';
 
 const App: FunctionComponent<{}> = () => {
   return (
@@ -15,6 +16,9 @@ const App: FunctionComponent<{}> = () => {
           <Switch>
             <Route exact path="/">
               <OverviewPage />
+            </Route>
+            <Route exact path="/nodes/add">
+              <AddCameraNodesPages />
             </Route>
             <Route exact path="/rooms/edit">
               <EditRoomsPage />
