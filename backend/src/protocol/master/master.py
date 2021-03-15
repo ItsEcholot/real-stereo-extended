@@ -15,6 +15,7 @@ class ClusterMaster(ClusterSocket):
     def __init__(self, config: Config):
         super().__init__()
         self.receive_socket = None
+        self.config = config
         self.node_registry = NodeRegistry(config, self)
         self.hostname = gethostname()
         self.slave_sockets = {}
@@ -78,7 +79,7 @@ class ClusterMaster(ClusterSocket):
         :param str address: IP Address of the node to acquire
         """
         message = self.build_message()
-        message.serviceAcquisition.detect = False
+        message.serviceAcquisition.detect = self.config.balance
         message.serviceAcquisition.hostname = self.hostname
 
         self.get_slave_socket(address).sendall(message.SerializeToString())
