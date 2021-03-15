@@ -5,6 +5,8 @@ import SocketProvider from './services/socketProvider';
 import OverviewPage from './pages/Overview';
 import EditRoomsPage from './pages/EditRooms';
 import EditRoomPage from './pages/EditRoom';
+import AddCameraNodesPages from './pages/AddCameraNodes';
+import EditNodePage from './pages/EditNode';
 import './App.css';
 
 const App: FunctionComponent<{}> = () => {
@@ -16,6 +18,12 @@ const App: FunctionComponent<{}> = () => {
             <Route exact path="/">
               <OverviewPage />
             </Route>
+            <Route exact path="/nodes/add">
+              <AddCameraNodesPages />
+            </Route>
+            <Route exact path="/nodes/:nodeId" render={props => (
+              <EditNodePage nodeId={parseInt(props.match.params.nodeId, 10)} />
+            )} />
             <Route exact path="/rooms/edit">
               <EditRoomsPage />
             </Route>
