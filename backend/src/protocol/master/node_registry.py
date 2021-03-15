@@ -5,7 +5,7 @@ from socket import gethostname, gethostbyname
 import asyncio
 from config import Config
 from models.node import Node
-from ..constants import PING_INTERVAL, AVAILABILITY_CHECK_INTERVAL
+from ..constants import MASTER_PING_INTERVAL, NODE_AVAILABILITY_CHECK_INTERVAL
 from ..cluster_pb2 import Wrapper
 
 
@@ -52,7 +52,7 @@ class NodeRegistry:
                 if node.online and node.ip_address != self.master_ip \
                     and (node.ip_address not in self.last_pings
                          or self.last_pings[node.ip_address] +
-                         AVAILABILITY_CHECK_INTERVAL < time()):
+                         NODE_AVAILABILITY_CHECK_INTERVAL < time()):
                     node.online = False
                     self.config.node_repository.call_listeners()
                     self.config.room_repository.call_listeners()
@@ -63,12 +63,12 @@ class NodeRegistry:
                         self.config.node_repository.remove_node(node.node_id)
                         self.log(node, 'removed from registry')
 
-            sleep(AVAILABILITY_CHECK_INTERVAL / 2)
+            sleep(NODE_AVAILABILITY_CHECK_INTERVAL / 2)
 
     def ping_slaves(self) -> None:
         """Send a ping message to all slaves."""
         while self.running:
-            sleep(PING_INTERVAL)
+            sleep(MASTER_PING_INTERVAL)
 
     def add_self(self) -> None:
         """Adds the master as a node since it also runs a camera node instance."""
