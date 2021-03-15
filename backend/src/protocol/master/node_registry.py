@@ -73,7 +73,12 @@ class NodeRegistry:
     def add_self(self) -> None:
         """Adds the master as a node since it also runs a camera node instance."""
         hostname = gethostname()
-        self.master_ip = gethostbyname(hostname)
+
+        try:
+            self.master_ip = gethostbyname(hostname)
+        except:  # pylint: disable=bare-except
+            self.master_ip = '127.0.0.1'
+
         self.update_node(hostname, self.master_ip)
 
     def on_service_announcement(self, message: Wrapper, address: str) -> None:
