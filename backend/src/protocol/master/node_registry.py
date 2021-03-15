@@ -4,7 +4,7 @@ from time import time, sleep
 import asyncio
 from config import Config
 from models.node import Node
-from ..constants import PINT_INTERVAL, AVAILABILITY_CHECK_INTERVAL
+from ..constants import PING_INTERVAL, AVAILABILITY_CHECK_INTERVAL
 from ..cluster_pb2 import Wrapper
 
 
@@ -61,7 +61,7 @@ class NodeRegistry:
     def ping_slaves(self) -> None:
         """Send a ping message to all slaves."""
         while self.running:
-            sleep(PINT_INTERVAL)
+            sleep(PING_INTERVAL)
 
     def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """When a service announcment is received, create or update the node in the registry.
