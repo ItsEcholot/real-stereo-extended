@@ -92,3 +92,10 @@ class NodeRegistry:
             self.log(node, 'is online')
 
         self.last_pings[address] = time()
+
+    def on_ping(self, address: str) -> None:
+        """Records a new ping received from the given ip address.
+
+        :param str address: Sender IP address
+        """
+        self.last_pings[address] = time()

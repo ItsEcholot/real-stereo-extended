@@ -37,7 +37,15 @@ class ClusterMaster(ClusterSocket):
     def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """On service announcement received.
 
-        :param protocol.cluster_pb2.Wrapper wrapper: Message
+        :param protocol.cluster_pb2.Wrapper message: Message
         :param str address: Sender IP
         """
         self.node_registry.on_service_announcement(message, address)
+
+    def on_position_update(self, _: Wrapper, address: str) -> None:
+        """Handle position updates. Also, record a received ping.
+
+        :param protocol.cluster_pb2.Wrapper message: Message
+        :param str address: Sender IP
+        """
+        self.node_registry.on_ping(address)
