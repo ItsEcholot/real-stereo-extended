@@ -1,17 +1,21 @@
 """Master for the cluster protocol."""
 
 from socket import socket, AF_INET, SOCK_DGRAM
+import asyncio
+from config import Config
 from ..socket import ClusterSocket
 from ..constants import PORT
 from ..cluster_pb2 import Wrapper
+from .node_registry import NodeRegistry
 
 
 class ClusterMaster(ClusterSocket):
     """Master for the cluster protocol."""
 
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__()
         self.receive_socket = None
+        self.node_registry = NodeRegistry(config)
 
     def init(self) -> None:
         """Initializes the master socket and starts listening."""
@@ -25,6 +29,8 @@ class ClusterMaster(ClusterSocket):
 
     def run(self) -> None:
         """Run logic of the master socket."""
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
         while self.running:
             self.receive_message(self.receive_socket)
 
@@ -34,4 +40,4 @@ class ClusterMaster(ClusterSocket):
         :param protocol.cluster_pb2.Wrapper wrapper: Message
         :param str address: Sender IP
         """
-        print('new service announcement from ' + address + ': ' + str(message))
+        self.node_registry.on_service_announcement(message, address)

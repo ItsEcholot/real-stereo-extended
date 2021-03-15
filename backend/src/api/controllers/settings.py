@@ -35,7 +35,10 @@ class SettingsController(AsyncNamespace):
                         clients will receive the settings.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(self.emit('get', self.build_settings(), room=sid))
+        task = loop.create_task(self.emit('get', self.build_settings(), room=sid))
+
+        if loop.is_running() is False:
+            loop.run_until_complete(task)
 
     def validate(self, data: dict) -> Acknowledgment:  # pylint: disable=no-self-use
         """Validates the input data.

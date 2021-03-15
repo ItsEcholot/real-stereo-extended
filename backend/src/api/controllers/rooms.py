@@ -26,7 +26,10 @@ class RoomsController(AsyncNamespace):
                         clients will receive the rooms.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(self.emit('get', self.config.room_repository.to_json(), room=sid))
+        task = loop.create_task(self.emit('get', self.config.room_repository.to_json(), room=sid))
+
+        if loop.is_running() is False:
+            loop.run_until_complete(task)
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.

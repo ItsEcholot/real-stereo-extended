@@ -32,6 +32,15 @@ class NodeRepository(Repository):
         """
         return next(filter(lambda n: n.name == name, self.config.nodes), None)
 
+    def get_node_by_hostname(self, hostname: str) -> Node:
+        """Returns the node with the given hostname.
+
+        :param str hostname: Node hostname
+        :returns: Node or None if no node could be found with this hostname
+        :rtype: models.node.Node
+        """
+        return next(filter(lambda n: n.hostname == hostname, self.config.nodes), None)
+
     def get_node_by_ip(self, ip_address: str) -> Node:
         """Returns the node with the given ip address.
 
