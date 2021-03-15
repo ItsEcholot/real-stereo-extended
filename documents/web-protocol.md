@@ -64,13 +64,12 @@ type Node = {
   online: boolean;
   ip: string;
   hostname: string;
-  room: Omit<Room, 'nodes'>;
+  room?: Omit<Room, 'nodes'>;
 }
 
 type UpdateNode = {
   id: number;
   name: string;
-  ip: string;
   // only the `id` attribute of the room is needed
   // more can still be submitted but will be ignored
   room: {

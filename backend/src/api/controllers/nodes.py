@@ -26,7 +26,10 @@ class NodesController(AsyncNamespace):
                         clients will receive the nodes.
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(self.emit('get', self.config.node_repository.to_json(), room=sid))
+        task = loop.create_task(self.emit('get', self.config.node_repository.to_json(), room=sid))
+
+        if loop.is_running() is False:
+            loop.run_until_complete(task)
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -40,10 +43,8 @@ class NodesController(AsyncNamespace):
         validate = Validate(ack)
         node_id = data.get('id')
         name = data.get('name')
-        ip_address = data.get('ip')
 
         validate.string(name, label='Name', min_value=1, max_value=50)
-        validate.string(ip_address, label='Ip', min_value=3, max_value=45)
 
         if data.get('room') is None or isinstance(data.get('room'), dict) is False:
             ack.add_error('Room id must not be empty')
@@ -54,18 +55,13 @@ class NodesController(AsyncNamespace):
         if create:
             if self.config.node_repository.get_node_by_name(name) is not None:
                 ack.add_error('A node with this name already exists')
-            if self.config.node_repository.get_node_by_ip(ip_address) is not None:
-                ack.add_error('A node with this ip already exists')
         elif validate.integer(node_id, label='Node id', min_value=1):
             existing_name = self.config.node_repository.get_node_by_name(name)
-            existing_ip = self.config.node_repository.get_node_by_ip(ip_address)
 
             if self.config.node_repository.get_node(node_id) is None:
                 ack.add_error('Node with this id does not exist')
             elif existing_name and existing_name.node_id != node_id:
                 ack.add_error('A node with this name already exists')
-            elif existing_ip and existing_ip.node_id != node_id:
-                ack.add_error('A node with this ip already exists')
 
         return ack
 
@@ -92,11 +88,11 @@ class NodesController(AsyncNamespace):
             node = self.config.node_repository.get_node(data.get('id'))
 
             node.name = data.get('name')
-            node.ip_address = data.get('ip')
 
             # update room reference if necessary
-            if node.room.room_id != room.room_id:
-                node.room.nodes.remove(node)
+            if node.room is None or node.room.room_id != room.room_id:
+                if node.room is not None:
+                    node.room.nodes.remove(node)
                 node.room = room
                 node.room.nodes.append(node)
 
@@ -114,7 +110,16 @@ class NodesController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
-        if self.config.node_repository.remove_node(node_id) is False:
+        node = self.config.node_repository.get_node(node_id)
+        if node is None:
             ack.add_error('A node with this id does not exist')
+
+        if node.room is not None:
+            node.room.nodes.remove(node)
+            node.room = None
+
+            # store the update and send the new state to all clients
+            self.config.node_repository.call_listeners()
+            self.config.room_repository.call_listeners()
 
         return ack.to_json()

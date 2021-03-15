@@ -12,7 +12,7 @@ config = Config()
 
 print('Starting as ' + str(config.type))
 if config.type == NodeType.MASTER or '--master' in argv:
-    cluster_master = ClusterMaster()
+    cluster_master = ClusterMaster(config)
     cluster_master.start()
 else:
     cluster_slave = ClusterSlave()
