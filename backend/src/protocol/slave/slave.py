@@ -19,7 +19,7 @@ class ClusterSlave(ClusterSocket):
         self.send_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.send_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
 
-        print('Cluster slave started')
+        print('[Cluster Slave] Listening on port ' + str(PORT))
 
         self.run()
 

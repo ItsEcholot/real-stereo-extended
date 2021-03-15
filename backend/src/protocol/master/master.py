@@ -23,7 +23,7 @@ class ClusterMaster(ClusterSocket):
         self.receive_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.receive_socket.bind(('0.0.0.0', PORT))
 
-        print('Cluster master started on port ' + str(PORT))
+        print('[Cluster Master] Listening on port ' + str(PORT))
 
         self.run()
 

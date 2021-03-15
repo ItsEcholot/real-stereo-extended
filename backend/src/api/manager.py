@@ -118,7 +118,8 @@ class ApiManager:
     def listen(self) -> None:
         """Start listening on 0.0.0.0:8080."""
         asyncio.set_event_loop(asyncio.new_event_loop())
-        web.run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False)
+        print('[Web API] Listening on http://localhost:8080')
+        web.run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None)
 
     def on_frame(self, frame: ndarray) -> None:
         """`on_frame` callback of a `Camera` instance. Will send the frame to all connected clients
