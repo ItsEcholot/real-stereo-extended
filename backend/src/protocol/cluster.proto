@@ -21,9 +21,12 @@ message ServiceAnnouncement {
 
 message ServiceAcquisition {
   bool detect = 1;
+  string hostname = 2;
 }
 
-message ServiceRelease {}
+message ServiceRelease {
+  string hostname = 1;
+}
 
 message PositionUpdate {
   uint32 coordinate = 1;
@@ -33,4 +36,6 @@ message ServiceUpdate {
   bool detect = 1;
 }
 
-message Ping {}
+message Ping {
+  string hostname = 1;
+}
