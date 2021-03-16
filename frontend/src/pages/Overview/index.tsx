@@ -37,7 +37,7 @@ const OverviewPage: FunctionComponent<{}> = () => {
         <Row>
           <Col>{balance.speaker.name}</Col>
           <Col>
-            <Progress percent={balance.volume} showInfo={false} />
+            <Progress trailColor="white" percent={balance.volume} showInfo={false} />
           </Col>
         </Row>
       ))}
