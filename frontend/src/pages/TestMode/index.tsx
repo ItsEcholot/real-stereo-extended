@@ -1,5 +1,5 @@
 import { Row, Col, Switch, Divider, Spin, Progress, Space } from 'antd';
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { useSettings } from '../../services/settings';
 
 const TestModePage: FunctionComponent = () => {
