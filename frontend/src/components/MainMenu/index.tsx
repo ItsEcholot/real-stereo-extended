@@ -3,7 +3,8 @@ import { Menu } from 'antd';
 import {
   HomeOutlined,
   SettingOutlined,
-  PlusOutlined
+  PlusOutlined,
+  ExperimentOutlined
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { useRooms } from '../../services/rooms';
@@ -44,6 +45,9 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
       </Menu.Item>
       <Menu.Item key="/rooms/edit" icon={<SettingOutlined />}>
         <Link to="/rooms/edit">Edit rooms</Link>
+      </Menu.Item>
+      <Menu.Item key="/testmode" icon={<ExperimentOutlined />}>
+        <Link to="/testmode">Test mode</Link>
       </Menu.Item>
     </Menu>
   );

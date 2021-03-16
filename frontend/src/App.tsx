@@ -8,6 +8,7 @@ import EditRoomPage from './pages/EditRoom';
 import AddCameraNodesPages from './pages/AddCameraNodes';
 import EditNodePage from './pages/EditNode';
 import './App.css';
+import TestModePage from './pages/TestMode';
 
 const App: FunctionComponent<{}> = () => {
   return (
@@ -33,6 +34,9 @@ const App: FunctionComponent<{}> = () => {
             <Route exact path="/rooms/:roomId/edit" render={props => (
               <EditRoomPage roomId={parseInt(props.match.params.roomId, 10)} />
             )} />
+            <Route exact path="/testmode">
+              <TestModePage />
+            </Route>
           </Switch>
         </Layout>
       </Router>
