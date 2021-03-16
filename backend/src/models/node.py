@@ -25,6 +25,7 @@ class Node:
         self.ip_address: str = ip_address
         self.hostname: str = hostname
         self.room: models.room.Room = room
+        self.acquired: bool = False
 
     @staticmethod
     def from_json(data: dict, config):

@@ -1,6 +1,6 @@
 """Master for the cluster protocol."""
 
-from socket import socket, AF_INET, SOCK_DGRAM
+from socket import socket, gethostname, AF_INET, SOCK_DGRAM, SOCK_STREAM, MSG_DONTWAIT, MSG_PEEK
 import asyncio
 from config import Config
 from ..socket import ClusterSocket
@@ -15,7 +15,10 @@ class ClusterMaster(ClusterSocket):
     def __init__(self, config: Config):
         super().__init__()
         self.receive_socket = None
-        self.node_registry = NodeRegistry(config)
+        self.config = config
+        self.node_registry = NodeRegistry(config, self)
+        self.hostname = gethostname()
+        self.slave_sockets = {}
 
     def init(self) -> None:
         """Initializes the master socket and starts listening."""
@@ -33,6 +36,73 @@ class ClusterMaster(ClusterSocket):
 
         while self.running:
             self.receive_message(self.receive_socket)
+
+    def get_slave_socket(self, address: str) -> None:
+        """Returns a TCP socket for the given slave.
+        If it doesn't already exist or is no longer open, a new connection will be opened.
+
+        :param str address: IP Address of the slave
+        """
+        if address not in self.slave_sockets or self.is_socket_closed(self.slave_sockets[address]):
+            slave_socket = socket(family=AF_INET, type=SOCK_STREAM)
+            slave_socket.connect((address, PORT))
+            self.slave_sockets[address] = slave_socket
+
+        return self.slave_sockets[address]
+
+    def is_socket_closed(self, sock: socket) -> bool:  # pylint: disable=no-self-use
+        """Checks whether a socket is closed or still open.
+
+        :param socket.socket socket: Socket to check
+        """
+        try:
+            # this will try to read bytes without blocking and also without removing
+            # them from buffer (peek only)
+            data = sock.recv(16, MSG_DONTWAIT | MSG_PEEK)
+            if len(data) == 0:
+                return True
+        except BlockingIOError:
+            # socket is open and reading from it would block
+            return False
+        except ConnectionResetError:
+            # socket was closed for some other reason
+            return True
+        except Exception as error:  # pylint: disable=broad-except
+            print('[Cluster Master] unexpected exception when checking if a socket is closed')
+            print(error)
+            return False
+        return False
+
+    def send_acquisition(self, address: str) -> None:
+        """Sends a service acquisition message to a node.
+
+        :param str address: IP Address of the node to acquire
+        """
+        message = self.build_message()
+        message.serviceAcquisition.detect = self.config.balance
+        message.serviceAcquisition.hostname = self.hostname
+
+        self.get_slave_socket(address).sendall(message.SerializeToString())
+
+    def send_release(self, address: str) -> None:
+        """Sends a service release message to a node.
+
+        :param str address: IP Address of the node to release
+        """
+        message = self.build_message()
+        message.serviceRelease.hostname = self.hostname
+
+        self.get_slave_socket(address).sendall(message.SerializeToString())
+
+    def send_ping(self, address: str) -> None:
+        """Sends a ping message to a node.
+
+        :param str address: IP Address of the node
+        """
+        message = self.build_message()
+        message.ping.hostname = self.hostname
+
+        self.get_slave_socket(address).sendall(message.SerializeToString())
 
     def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """On service announcement received.

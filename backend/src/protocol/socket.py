@@ -39,27 +39,31 @@ class ClusterSocket:
 
         return wrapper
 
-    def receive_message(self, socket, call_events: bool = True) -> (Wrapper, str):
+    def receive_message(self, socket, call_events: bool = True, address: str = '') -> \
+            (Wrapper, str):
         """Waits until the next message and parses it.
 
         :param socket socket: Listening socket
         :param bool call_events: If true, the `on_` events will be called on the class.
+        :param str address: Address of the sender if already known
         :returns: Message and the sending IP
         :rtype: (protocol.cluster_pb2.Wrapper, str)
         """
         try:
-            data, address = socket.recvfrom(BUFFER_SIZE)
+            data, data_address = socket.recvfrom(BUFFER_SIZE)
+            sender_address = data_address[0] if data_address is not None else address
+
             message = Wrapper()
             message.ParseFromString(data)
 
             # ignore message if it is not from real stereo
             if message.app != APP:
-                return None, address[0]
+                return None, sender_address
 
             if call_events:
-                self.call_events(message, address[0])
+                self.call_events(message, sender_address)
 
-            return message, address[0]
+            return message, sender_address
         except RuntimeError as error:
             print(error)
             return None, None
@@ -79,7 +83,7 @@ class ClusterSocket:
 
         # check if the event has been implemented
         event = 'on_' + message_type
-        event_method = getattr(self, event)
+        event_method = getattr(self, event, None)
 
         if event_method is not None:
             event_method(message, address)

@@ -13,11 +13,13 @@ class NodeRegistry:
     """Holds information about all available nodes and their state.
 
     :param config.Config config: Config instance
+    :param protocol.master.ClusterMaster master: Cluster master instance
     """
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, master):
         self.running = True
         self.config = config
+        self.master = master
         self.last_pings = {}
         self.check_thread = Thread(target=self.check_availability)
         self.check_thread.start()
@@ -25,19 +27,40 @@ class NodeRegistry:
         self.ping_thread.start()
         self.master_ip = ''
 
+        # add node repository change listener
+        config.node_repository.register_listener(self.update_acquisition_status)
+
     def stop(self) -> None:
         """Stops the node registry."""
         self.running = False
         self.check_thread.join()
         self.ping_thread.join()
 
-    def log(self, node: Node, message: str) -> None:
+    def log(self, node: Node, message: str) -> None:  # pylint: disable=no-self-use
         """Prints a log message to the console.
 
         :param models.node.Node node: Related node
         :param str message: Log message
         """
         print('[Node Registry] ' + node.hostname + ' (' + node.ip_address + ') ' + message)
+
+    def update_acquisition_status(self) -> None:
+        """Checks if the acquisition state for all nodes is correct
+        or acquire/release them if necessary.
+        """
+        for node in self.config.nodes:
+            # acquire if necessary
+            if node.room is not None and node.acquired is False and node.online:
+                self.master.send_acquisition(node.ip_address)
+                node.acquired = True
+                self.log(node, 'acquired')
+
+            # release if necessary
+            elif node.room is None and node.acquired and node.ip_address != self.master_ip and \
+                    node.online:
+                self.master.send_release(node.ip_address)
+                node.acquired = False
+                self.log(node, 'released')
 
     def check_availability(self) -> None:
         """Checks if all nodes are still available or marks them offline if not."""
@@ -54,6 +77,7 @@ class NodeRegistry:
                          or self.last_pings[node.ip_address] +
                          NODE_AVAILABILITY_CHECK_INTERVAL < time()):
                     node.online = False
+                    node.acquired = False
                     self.config.node_repository.call_listeners()
                     self.config.room_repository.call_listeners()
                     self.log(node, 'is offline')
@@ -68,6 +92,10 @@ class NodeRegistry:
     def ping_slaves(self) -> None:
         """Send a ping message to all slaves."""
         while self.running:
+            for node in self.config.nodes:
+                if node.online and node.ip_address != self.master_ip and node.acquired:
+                    self.master.send_ping(node.ip_address)
+
             sleep(MASTER_PING_INTERVAL)
 
     def add_self(self) -> None:
@@ -115,9 +143,17 @@ class NodeRegistry:
         # update node state
         if node.online is False:
             node.online = True
+            self.log(node, 'is online')
             self.config.node_repository.call_listeners()
             self.config.room_repository.call_listeners()
-            self.log(node, 'is online')
+
+        # acquire node if necessary
+        if node.room is not None and node.acquired is False:
+            if node.ip_address != self.master_ip:
+                self.master.send_acquisition(node.ip_address)
+
+            node.acquired = True
+            self.log(node, 'acquired')
 
     def on_ping(self, address: str) -> None:
         """Records a new ping received from the given ip address.
