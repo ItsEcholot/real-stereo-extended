@@ -27,6 +27,9 @@ class NodeRegistry:
         self.ping_thread.start()
         self.master_ip = ''
 
+        # add the master as a node since it also runs a camera node instance
+        self.add_self()
+
         # add node repository change listener
         config.node_repository.register_listener(self.update_acquisition_status)
 
@@ -51,23 +54,23 @@ class NodeRegistry:
         for node in self.config.nodes:
             # acquire if necessary
             if node.room is not None and node.acquired is False and node.online:
-                self.master.send_acquisition(node.ip_address)
+                if node.ip_address != self.master_ip:
+                    self.master.send_acquisition(node.ip_address)
+
                 node.acquired = True
                 self.log(node, 'acquired')
 
             # release if necessary
-            elif node.room is None and node.acquired and node.ip_address != self.master_ip and \
-                    node.online:
-                self.master.send_release(node.ip_address)
+            elif node.room is None and node.acquired and node.online:
+                if node.ip_address != self.master_ip:
+                    self.master.send_release(node.ip_address)
+
                 node.acquired = False
                 self.log(node, 'released')
 
     def check_availability(self) -> None:
         """Checks if all nodes are still available or marks them offline if not."""
         asyncio.set_event_loop(asyncio.new_event_loop())
-
-        # add the master as a node since it also runs a camera node instance
-        self.add_self()
 
         while self.running:
             for node in self.config.nodes:
