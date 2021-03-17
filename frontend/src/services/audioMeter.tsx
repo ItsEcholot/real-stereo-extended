@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+const AudioContext = window.AudioContext // Default
+  || (window as any).webkitAudioContext // Safari and old versions of Chrome;
 let audioContext: AudioContext | undefined;
 
 const getMicrophoneStream = async (): Promise<MediaStream> => {
@@ -19,7 +21,7 @@ const getMicrophoneSource = (stream: MediaStream): MediaStreamAudioSourceNode =>
 const getAnalyserNode = (fftSize: number): AnalyserNode => {
   if (!audioContext) audioContext = new AudioContext();
   const analyzer = audioContext.createAnalyser();
-  analyzer.fftSize = fftSize;
+  //analyzer.fftSize = fftSize;
   return analyzer;
 }
 
@@ -29,8 +31,47 @@ const closeAudioContext = async () => {
   audioContext = undefined;
 }
 
-export const useAudioMeter = () => {
-  useEffect(() => {
+const getVolume = (fftData: Uint8Array) => {
+  const sum = fftData.reduce((a, b) => a + b);
+  return (sum / fftData.length);
+}
 
-  }, []);
+export const useAudioMeter = (enabled: boolean) => {
+  const [audioMeterErrors, setAudioMeterErrors] = useState<String[]>([]);
+  const [volume, setVolume] = useState(0);
+
+  useEffect(() => {
+    if (!enabled) {
+      setVolume(0);
+      setAudioMeterErrors([]);
+      return;
+    }
+    let microphoneStream: MediaStream;
+    let analyseInterval: NodeJS.Timeout;
+    (async () => {
+      try {
+        microphoneStream = await getMicrophoneStream();
+        const microphoneSource = getMicrophoneSource(microphoneStream);
+        const analyserNode = getAnalyserNode(128);
+        microphoneSource.connect(analyserNode);
+
+        const bufferData = new Uint8Array(analyserNode.frequencyBinCount);
+        analyseInterval = setInterval(() => {
+          analyserNode.getByteFrequencyData(bufferData);
+          const volume = getVolume(bufferData);
+          setVolume(volume);
+        }, 50);
+      } catch (err) {
+        setAudioMeterErrors(a => [...a, err.toString()])
+      }
+    })();
+
+    return () => {
+      if (analyseInterval) clearInterval(analyseInterval);
+      if (microphoneStream) stopStream(microphoneStream);
+      closeAudioContext();
+    }
+  }, [enabled]);
+
+  return { volume, audioMeterErrors };
 };

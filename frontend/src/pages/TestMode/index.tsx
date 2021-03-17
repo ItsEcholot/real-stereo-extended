@@ -1,5 +1,6 @@
-import { Row, Col, Switch, Divider, Spin, Progress, Space } from 'antd';
+import { Row, Col, Switch, Divider, Spin, Progress, Space, Alert } from 'antd';
 import { FunctionComponent, useEffect, useState } from 'react';
+import { useAudioMeter } from '../../services/audioMeter';
 import { useSettings } from '../../services/settings';
 
 const TestModePage: FunctionComponent = () => {
@@ -7,7 +8,7 @@ const TestModePage: FunctionComponent = () => {
 
   const [previousSettingsBalancing, setPreviousSettingsBalancing] = useState<boolean>();
   const [testModeEnabled, setTestModeEnabled] = useState(false);
-  const [currentVolume, setCurrentVolume] = useState(0);
+  const { volume, audioMeterErrors } = useAudioMeter(testModeEnabled);
 
   const onChangeEnableTestMode = (checked: boolean) => {
     if (checked) {
@@ -22,6 +23,9 @@ const TestModePage: FunctionComponent = () => {
 
   return (
     <>
+      {audioMeterErrors.map((error, index) => (
+        <Alert key={index} message={error} type="error" showIcon />
+      ))}
       {settings ? <Row>
         <Col flex="auto">Enable test mode</Col>
         <Col>
@@ -33,7 +37,7 @@ const TestModePage: FunctionComponent = () => {
         <Row>
           <Col span={12}>Current volume</Col>
           <Col flex="auto">
-            <Progress trailColor="white" percent={currentVolume} showInfo={false} />
+            <Progress trailColor="white" percent={Math.round(volume * 100) / 100} />
           </Col>
         </Row>
         <img
