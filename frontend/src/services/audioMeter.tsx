@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 
+const targetFrequency = 1000;
+const fftWindowSize = 4096;
+
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
 let audioContext: AudioContext | undefined;
@@ -21,7 +24,7 @@ const getMicrophoneSource = (stream: MediaStream): MediaStreamAudioSourceNode =>
 const getAnalyserNode = (fftSize: number): AnalyserNode => {
   if (!audioContext) audioContext = new AudioContext();
   const analyzer = audioContext.createAnalyser();
-  //analyzer.fftSize = fftSize;
+  analyzer.fftSize = fftSize;
   return analyzer;
 }
 
@@ -31,9 +34,16 @@ const closeAudioContext = async () => {
   audioContext = undefined;
 }
 
-const getVolume = (fftData: Uint8Array) => {
+// eslint-disable-next-line
+const getTotalVolume = (fftData: Uint8Array): number => {
   const sum = fftData.reduce((a, b) => a + b);
-  return (sum / fftData.length);
+  const avg = (sum / fftData.length);
+  return 100 * avg / 255;
+}
+
+const getFrequencyVolume = (fftData: Uint8Array, lowerFrequencyIndex: number, higherFrequencyIndex: number): number => {
+  const avg = (fftData[lowerFrequencyIndex] + fftData[higherFrequencyIndex]) / 2;
+  return 100 * avg / 255;
 }
 
 export const useAudioMeter = (enabled: boolean) => {
@@ -52,13 +62,19 @@ export const useAudioMeter = (enabled: boolean) => {
       try {
         microphoneStream = await getMicrophoneStream();
         const microphoneSource = getMicrophoneSource(microphoneStream);
-        const analyserNode = getAnalyserNode(128);
+        const analyserNode = getAnalyserNode(fftWindowSize);
         microphoneSource.connect(analyserNode);
 
         const bufferData = new Uint8Array(analyserNode.frequencyBinCount);
+        if (!audioContext) throw new Error(`Can't get frequency volume: Missing AudioContext`);
+        const frequencyPerArrayItem = (audioContext.sampleRate / 2) / analyserNode.frequencyBinCount;
+        const lowerFrequencyIndex = Math.floor(targetFrequency / frequencyPerArrayItem)
+        const higherFrequencyIndex = lowerFrequencyIndex + 1;
+
         analyseInterval = setInterval(() => {
           analyserNode.getByteFrequencyData(bufferData);
-          const volume = getVolume(bufferData);
+          //const volume = getTotalVolume(bufferData);
+          const volume = getFrequencyVolume(bufferData, lowerFrequencyIndex, higherFrequencyIndex);
           setVolume(volume);
         }, 50);
       } catch (err) {

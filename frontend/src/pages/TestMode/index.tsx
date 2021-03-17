@@ -1,5 +1,5 @@
 import { Row, Col, Switch, Divider, Spin, Progress, Space, Alert } from 'antd';
-import { FunctionComponent, useEffect, useState } from 'react';
+import { FunctionComponent, useState } from 'react';
 import { useAudioMeter } from '../../services/audioMeter';
 import { useSettings } from '../../services/settings';
 
