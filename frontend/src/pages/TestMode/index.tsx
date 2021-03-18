@@ -10,17 +10,6 @@ const TestModePage: FunctionComponent = () => {
   const [testModeEnabled, setTestModeEnabled] = useState(false);
   const { volume, audioMeterErrors } = useAudioMeter(testModeEnabled);
 
-  const onChangeEnableTestMode = (checked: boolean) => {
-    if (checked) {
-      setPreviousSettingsBalancing(settings?.balance);
-      updateSettings({ balance: false });
-    } else if (previousSettingsBalancing !== undefined) {
-      updateSettings({ balance: previousSettingsBalancing });
-      setPreviousSettingsBalancing(undefined);
-    }
-    setTestModeEnabled(checked);
-  }
-
   return (
     <>
       {audioMeterErrors.map((error, index) => (
@@ -29,7 +18,7 @@ const TestModePage: FunctionComponent = () => {
       {settings ? <Row>
         <Col flex="auto">Enable test mode</Col>
         <Col>
-          <Switch onChange={onChangeEnableTestMode} />
+          <Switch onChange={setTestModeEnabled} />
         </Col>
       </Row> : <Row justify="center"><Spin /></Row>}
       <Divider />

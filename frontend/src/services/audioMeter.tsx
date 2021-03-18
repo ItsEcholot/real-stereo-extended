@@ -78,7 +78,7 @@ export const useAudioMeter = (enabled: boolean) => {
           setVolume(volume);
         }, 50);
       } catch (err) {
-        setAudioMeterErrors(a => [...a, err.toString()])
+        setAudioMeterErrors(a => [...a, err.toString()]);
       }
     })();
 
