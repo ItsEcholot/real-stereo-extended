@@ -4,7 +4,7 @@ set -e
 
 PROJECT_DIR="$HOME/real-stereo-extended"
 PROJECT_GIT="https://github.com/ItsEcholot/real-stereo-extended.git"
-PROJECT_BRANCH="main"
+PROJECT_BRANCH="${PROJECT_BRANCH:-main}"
 
 # update packages and distribution
 sudo apt-get update
