@@ -75,5 +75,10 @@ if [[ ! -d "$HOME/.ssh" ]]; then
   chmod 600 "$HOME/.ssh/authorized_keys"
 fi
 
+# change the hostname
+if [[ $(hostname) == 'raspberrypi' ]]; then
+  echo "rse-$(hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random)" | sudo dd of=/etc/hostname
+fi
+
 # reboot to apply all config changes
 sudo shutdown -r now
