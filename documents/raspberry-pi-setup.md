@@ -1,6 +1,6 @@
 # Raspberry PI Setup
 
-This document will provide a guide to set up a Raspberry Pi with the Real Stereo Application.
+This document provides a guide to set up a Raspberry Pi with the Real Stereo Application.
 
 ## Prepare operating system
 
@@ -18,7 +18,7 @@ This document will provide a guide to set up a Raspberry Pi with the Real Stereo
 1. Run the install script by executing: `curl -sSL https://raw.githubusercontent.com/ItsEcholot/real-stereo-extended/master/scripts/pi-install.sh | bash -`
 1. When the installation has finished, the Raspberry Pi will restart and is ready to use
 
-### Wifi setup
+### Wifi setup
 
 Until the feature has been implement into real stereo that the web interface provides a way to connect to a wifi network, you have to do it manually.
 
