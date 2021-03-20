@@ -43,6 +43,9 @@ if [[ ! -d "$HOME/.poetry" ]]; then
 fi
 source "$HOME/.profile"
 
+# set up node
+sudo npm install --global yarn
+
 # set up real stereo
 if [[ ! -d "$PROJECT_DIR" ]]; then
   git clone $PROJECT_GIT $PROJECT_DIR
@@ -51,7 +54,7 @@ else
   (cd "$PROJECT_DIR" && git pull)
 fi
 bash "$PROJECT_DIR/backend/install.sh" --pip
-(cd "$PROJECT_DIR/frontend" && npm install && npm run build)
+(cd "$PROJECT_DIR/frontend" && yarn install && yarn run build)
 if [[ ! -f "/etc/systemd/system/real-stereo.service" ]]; then
   sudo ln -s "$PROJECT_DIR/scripts/config/real-stereo.service" /etc/systemd/system/real-stereo.service
 fi
