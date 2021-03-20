@@ -52,6 +52,11 @@ else
 fi
 bash "$PROJECT_DIR/backend/install.sh" --pip
 (cd "$PROJECT_DIR/frontend" && npm install && npm run build)
+if [[ ! -f "/etc/systemd/system/real-stereo.service" ]]; then
+  sudo ln -s "$PROJECT_DIR/scripts/real-stereo.service" /etc/systemd/system/real-stereo.service
+fi
+sudo systemctl enable real-stereo
+sudo systemctl start real-stereo
 
 # set up wifi
 if [[ ! $(sudo cat /etc/wpa_supplicant/wpa_supplicant.conf | grep 'country') ]]; then
@@ -71,4 +76,4 @@ if [[ ! -d "$HOME/.ssh" ]]; then
 fi
 
 # reboot to apply all config changes
-shutdown -r now
+sudo shutdown -r now
