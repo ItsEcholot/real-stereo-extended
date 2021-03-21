@@ -1,14 +1,13 @@
 [Unit]
 Description=Real Stereo
 After=network.target
-StartLimitIntervalSec=0
 
 [Service]
 Type=simple
 Restart=always
 RestartSec=3
 StartLimitBurst=20
-StartLimitIntervalSec=120
+StartLimitInterval=120
 User=pi
 Group=pi
 WorkingDirectory=/home/pi/real-stereo-extended/backend/
