@@ -15,7 +15,7 @@ This document provides a guide to set up a Raspberry Pi with the Real Stereo App
 1. Login with user `pi` and password `raspberry` (note that the keyboard layout might have switched the `y` and `z` key)
 1. (optional) To change the keyboard layout, run `sudo raspi-config` -> `5 Localisation Options` -> `L3 Keyboard`
 1. Connect the Raspberry Pi to the internet with an ethernet cable
-1. Run the install script by executing: `curl -sSL https://raw.githubusercontent.com/ItsEcholot/real-stereo-extended/master/scripts/pi-install.sh | bash -`
+1. Run the install script by executing: `curl -sSL https://raw.githubusercontent.com/ItsEcholot/real-stereo-extended/main/scripts/pi-install.sh | bash -`
 1. When the installation has finished, the Raspberry Pi will restart and is ready to use. The real stereo application will start automatically and listens on port `8080`.
 
 ### Wifi setup
