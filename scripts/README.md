@@ -20,6 +20,9 @@ Any additional arguments will directly be passed to the script.
 For example, forcing a pi to run as master can be achieved like this:
 `./pi-run-backend.sh 192.168.x.x --master`
 
+Running this script stops the real-stereo system service to be able to attach to the application and show the output.
+After a reboot, the service will be running again. Alternatively, it can also be started with `systemctl` again.
+
 ## `pi-update-frontend.sh`
 
 Usage: `./pi-update-frontend.sh <ip-address>`
