@@ -10,7 +10,7 @@ from protocol.slave import ClusterSlave
 
 
 config = Config()
-balancing = BalancingManager()
+balancing = BalancingManager(config)
 
 print('Starting as ' + str(config.type))
 if config.type == NodeType.MASTER or '--master' in argv:
