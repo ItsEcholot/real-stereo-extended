@@ -1,0 +1,17 @@
+[Unit]
+Description=Real Stereo
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=3
+StartLimitBurst=20
+StartLimitInterval=120
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/real-stereo-extended/backend/
+ExecStart=/usr/bin/env python /home/pi/real-stereo-extended/backend/src
+
+[Install]
+WantedBy=multi-user.target
