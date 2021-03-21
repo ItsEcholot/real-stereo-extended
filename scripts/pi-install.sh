@@ -6,6 +6,10 @@ PROJECT_DIR="$HOME/real-stereo-extended"
 PROJECT_GIT="https://github.com/ItsEcholot/real-stereo-extended.git"
 PROJECT_BRANCH="${PROJECT_BRANCH:-main}"
 
+echo "Project directory: $PROJECT_DIR"
+echo "Project git repository: $PROJECT_GIT"
+echo "Project branch: $PROJECT_BRANCH"
+
 # update packages and distribution
 sudo apt-get update
 sudo apt-get dist-upgrade --yes
