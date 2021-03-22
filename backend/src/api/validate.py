@@ -56,7 +56,7 @@ class Validate:
 
         return num_errors == len(self.ack.errors)
 
-    def boolean(self, value: bool, label: str) -> None:
+    def boolean(self, value: bool, label: str) -> bool:
         """Validates if a value is a boolean.
 
         :param int value: Input value that should be validated

@@ -56,7 +56,7 @@ class SpeakersController(AsyncNamespace):
         if create:
             if self.config.speaker_repository.get_speaker(speaker_id) is not None:
                 ack.add_error('A speaker with this name already exists')
-        elif validate.integer(speaker_id, label='Speaker id', min_value=1):
+        elif validate.string(speaker_id, label='Speaker id'):
             existing = self.config.speaker_repository.get_speaker_by_name(name)
 
             if self.config.speaker_repository.get_speaker(speaker_id) is None:
@@ -91,7 +91,7 @@ class SpeakersController(AsyncNamespace):
             speaker.name = data.get('name')
 
             # update room reference if necessary
-            if speaker.room.room_id != room.room_id:
+            if speaker.room is None or speaker.room.room_id != room.room_id:
                 speaker.room = room
 
             # store the update and send the new state to all clients
@@ -99,7 +99,7 @@ class SpeakersController(AsyncNamespace):
 
         return ack.to_json()
 
-    async def on_delete(self, _: str, speaker_id: int) -> dict:
+    async def on_delete(self, _: str, speaker_id: str) -> dict:
         """Deletes a speaker.
 
         :param str sid: Session id

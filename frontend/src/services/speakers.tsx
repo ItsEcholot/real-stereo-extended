@@ -4,13 +4,13 @@ import { Room } from './rooms';
 import { SocketContext } from './socketProvider';
 
 export type Speaker = {
-  id: number;
+  id: string;
   name: string;
   room: Omit<Room, 'speakers'>;
 }
 
 export type UpdateSpeaker = {
-  id: number;
+  id: string;
   name: string;
   // only the `id` attribute of the room is needed
   // more can still be submitted but will be ignored
@@ -43,7 +43,7 @@ export const useSpeakers = () => {
     });
   }, [getSocket, returnSocket]);
 
-  const deleteSpeaker = useCallback((speakerId: number): Promise<Acknowledgment> => {
+  const deleteSpeaker = useCallback((speakerId: string): Promise<Acknowledgment> => {
     const speakersSocket = getSocket('speakers');
     return new Promise((resolve, reject) => {
       speakersSocket.emit('delete', speakerId, (ack: Acknowledgment) => {

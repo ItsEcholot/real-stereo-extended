@@ -22,13 +22,13 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   const { rooms, createRoom, updateRoom } = useRooms();
   const { speakers, updateSpeaker, deleteSpeaker } = useSpeakers();
   const currentRoom = rooms?.find(room => room.id === roomId);
-  const currentRoomSpeakers = speakers?.filter(speaker => speaker.room.id === currentRoom?.id);
+  const currentRoomSpeakers = speakers?.filter(speaker => speaker.room?.id === currentRoom?.id);
 
   const [saving, setSaving] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
 
-  const save = async (values: { name: string, speakers: number[] }) => {
+  const save = async (values: { name: string, speakers: string[] }) => {
     setSaving(true);
     let ack;
     try {
@@ -42,7 +42,7 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
       if (speakers && currentRoomId) {
         await Promise.all(speakers.map(speaker => {
           if (values.speakers.includes(speaker.id)) {
-            if (speaker.room.id !== currentRoomId) {
+            if (!speaker.room || speaker.room.id !== currentRoomId) {
               return updateSpeaker({ ...speaker, room: { id: currentRoomId } });
             }
           } else if (speaker.room.id === currentRoomId) {

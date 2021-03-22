@@ -14,10 +14,10 @@ class SpeakerRepository(Repository):
         super().__init__()
         self.config = config
 
-    def get_speaker(self, speaker_id: int) -> Speaker:
+    def get_speaker(self, speaker_id: str) -> Speaker:
         """Returns the speaker with the specified id.
 
-        :param int speaker_id: Speaker id
+        :param str speaker_id: Speaker id
         :returns: Speaker or None if no speaker could be found with this id
         :rtype: models.speaker.Speaker
         """
@@ -32,10 +32,10 @@ class SpeakerRepository(Repository):
         """
         return next(filter(lambda s: s.name == name, self.config.speakers), None)
 
-    def remove_speaker(self, speaker_id: int) -> bool:
+    def remove_speaker(self, speaker_id: str) -> bool:
         """Removes a speaker and stores the config file.
 
-        :param int speaker_id: Speaker id
+        :param str speaker_id: Speaker id
         :returns: False if no speaker could be found with this id and so no removal was possible,
                   otherwise True.
         :rtype: bool
@@ -50,6 +50,18 @@ class SpeakerRepository(Repository):
             return True
 
         return False
+
+    def add_speaker(self, speaker: Speaker) -> None:
+        """Adds a speaker and stores the config file.
+        If a speaker with the same id already exists a ValueError is thrown.
+
+        :param str speaker_id: Speaker id
+        """
+        if self.get_speaker(speaker.speaker_id) is not None:
+            raise ValueError('Speaker id already exists in repository')
+
+        self.config.speakers.append(speaker)
+        self.call_listeners()
 
     def to_json(self) -> dict:
         """Returns the list of all speakers in JSON serializable objects.
