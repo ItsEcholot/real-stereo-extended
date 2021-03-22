@@ -44,7 +44,7 @@ class SpeakerRepository(Repository):
 
         if speaker is not None:
             # remove speaker
-            self.config.speakers.remove(speaker)
+            speaker.room = None
             self.call_listeners()
 
             return True

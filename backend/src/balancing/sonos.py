@@ -23,7 +23,9 @@ class Sonos:
                 existing_speaker = self.config.speaker_repository.get_speaker(player.uid)
                 if existing_speaker is not None and existing_speaker.name == player.player_name:
                     continue
-                elif existing_speaker is not None:  # -- Update speaker name
+                elif existing_speaker is not None:
+                    existing_speaker.name = player.player_name
+                    self.config.speaker_repository.call_listeners()
                     continue
                 print('[Balancing] Discovered new Sonos player {} with uid {} at {}, Coordinator: {}'
                       .format(
