@@ -1,7 +1,7 @@
 import { createContext, FunctionComponent } from 'react';
 import io from 'socket.io-client';
 
-const baseSocketUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:8080' : '';
+const baseSocketUrl = process.env.REACT_APP_BACKEND_URL ? process.env.REACT_APP_BACKEND_URL : '';
 
 const sockets: { [key: string]: SocketIOClient.Socket } = {};
 const socketsReferences: { [key: string]: number } = {};

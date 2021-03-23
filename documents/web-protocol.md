@@ -82,13 +82,13 @@ type UpdateNode = {
 
 ```typescript
 type Speaker = {
-  id: number;
+  id: string;
   name: string;
   room: Omit<Room, 'nodes'>;
 }
 
 type UpdateSpeaker = {
-  id: number;
+  id: string;
   name: string;
   // only the `id` attribute of the room is needed
   // more can still be submitted but will be ignored

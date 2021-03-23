@@ -4,18 +4,20 @@ import models.room
 
 
 class Speaker:
-    """Implements the state of a single room.
+    """Implements the state of a single speaker.
 
     :param int speaker_id: Speaker id
     :param str name: Name of the speaker
     :param models.room.Room room: Room to which the speaker belongs to
     """
 
-    def __init__(self, speaker_id: int = None, name: str = '', room=None):
+    def __init__(self, speaker_id: str, name: str = '', room=None):
+        if len(speaker_id) == 0:
+            raise ValueError('Speaker id cannot be empty')
         if len(name) == 0:
             raise ValueError('Speaker name cannot be empty')
 
-        self.speaker_id: int = speaker_id
+        self.speaker_id: str = speaker_id
         self.name: str = name
         self.room: models.room.Room = room
 
