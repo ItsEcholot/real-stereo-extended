@@ -21,10 +21,13 @@ class Sonos:
             players: set[soco.SoCo] = soco.discover()
             for player in players:
                 existing_speaker = self.config.speaker_repository.get_speaker(player.uid)
-                if existing_speaker is not None and existing_speaker.name == player.player_name:
+                if existing_speaker is not None and \
+                        existing_speaker.name == player.player_name and \
+                        existing_speaker.ip_address == player.ip_address:
                     continue
                 elif existing_speaker is not None:
                     existing_speaker.name = player.player_name
+                    existing_speaker.ip_address = player.ip_address
                     self.config.speaker_repository.call_listeners()
                     continue
                 print('[Balancing] Discovered new Sonos player {} with uid {} at {}, Coordinator: {}'
@@ -34,7 +37,8 @@ class Sonos:
                           player.ip_address,
                           player.is_coordinator
                       ))
-                speaker = Speaker(speaker_id=player.uid, name=player.player_name)
+                speaker = Speaker(speaker_id=player.uid, name=player.player_name,
+                                  ip_address=player.ip_address)
                 self.config.speaker_repository.add_speaker(speaker)
             sleep(15)
 
