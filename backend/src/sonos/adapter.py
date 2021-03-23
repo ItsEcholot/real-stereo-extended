@@ -18,3 +18,20 @@ class SonosAdapter(ABC):
         :rtype: set[models.speaker.Speaker]
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def set_volume(self, speaker: Speaker, volume: int):
+        """Sets volume for passed Sonos speaker
+
+        :param models.speaker.Speaker speaker: Speaker to control
+        :param int volume: Volume to set
+        """
+        raise NotImplementedError()
+
+    def ramp_to_volume(self, speaker: Speaker, volume: int):
+        """Ramps volume to target volume for the passed Sonos speaker
+
+        :param models.speaker.Speaker speaker: Speaker to control
+        :param int volume: Volume to ramp up or down to
+        """
+        raise NotImplementedError()

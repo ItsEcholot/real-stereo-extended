@@ -6,6 +6,7 @@ from config import Config
 from models.speaker import Speaker
 from sonos.adapter import SonosAdapter
 from sonos.adapter_soco import SonosSocoAdapter
+from .sonos_command import SonosCommand
 
 
 class Sonos:
@@ -53,8 +54,13 @@ class Sonos:
         """Starts the control loop which consumes all control commands in the queue"""
         self.control_loop_exiting = False
         while not self.control_loop_exiting:
-            command = self.control_queue.get()
+            command: SonosCommand = self.control_queue.get()
+            command.run(self.sonos_adapter)
 
     def stop_control_loop(self):
         """Sets the flag to stop the control loop"""
         self.control_loop_exiting = True
+
+    def send_command(self, command: SonosCommand):
+        """Adds the command to the control queue"""
+        self.control_queue.put(command)

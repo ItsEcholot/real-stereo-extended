@@ -34,13 +34,13 @@ class BalancingManager:
         if self.control_thread is not None:
             return
         print('[Balancing] Starting sonos control loop')
-        self.control_thread = Thread(target=self.sonos.discover_loop)
+        self.control_thread = Thread(target=self.sonos.control_loop)
         self.control_thread.start()
 
     def stop_control(self) -> None:
         """Stop the control loop"""
         if self.control_thread is not None:
             print('[Balancing] Stopping sonos control loop')
-            self.sonos.stop_discover_loop()
+            self.sonos.stop_control_loop()
             self.control_thread.join()
             self.control_thread = None

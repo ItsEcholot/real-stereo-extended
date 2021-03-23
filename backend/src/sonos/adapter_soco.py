@@ -20,3 +20,21 @@ class SonosSocoAdapter(SonosAdapter):
             speakers.add(Speaker(speaker_id=speaker.uid,
                                  name=speaker.player_name, ip_address=speaker.ip_address))
         return speakers
+
+    def set_volume(self, speaker: Speaker, volume: int):
+        """Sets volume for passed Sonos speaker
+
+        :param models.speaker.Speaker speaker: Speaker to control
+        :param int volume: Volume to set
+        """
+        soco_instance = soco.SoCo(speaker.ip_address)
+        soco_instance.volume = volume
+
+    def ramp_to_volume(self, speaker: Speaker, volume: int):
+        """Ramps volume to target volume for the passed Sonos speaker
+
+        :param models.speaker.Speaker speaker: Speaker to control
+        :param int volume: Volume to ramp up or down to
+        """
+        soco_instance = soco.SoCo(speaker.ip_address)
+        soco_instance.ramp_to_volume(volume)
