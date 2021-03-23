@@ -41,7 +41,7 @@ class ApiManager:
         if self.config.type == NodeType.MASTER or self.config.type == NodeType.UNCONFIGURED:
             if frontendPath.exists() and (frontendPath / 'static').exists():
                 self.app.add_routes([
-                    web.get('/', self.get_index),
+                    web.get('/{tail:(?!static|socket).*}', self.get_index),
                     web.static('/static', str(frontendPath / 'static')),
                 ])
 
