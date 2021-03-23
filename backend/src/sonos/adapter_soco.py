@@ -17,8 +17,14 @@ class SonosSocoAdapter(SonosAdapter):
         speakers = set()
         speaker: soco.SoCo
         for speaker in soco.discover(include_invisible=True):
-            speakers.add(Speaker(speaker_id=speaker.uid,
-                                 name=speaker.player_name, ip_address=speaker.ip_address))
+            name = speaker.player_name
+            speaker_instance = Speaker(speaker_id=speaker.uid,
+                                       name=name, ip_address=speaker.ip_address)
+            if not speaker.is_visible and len({x for x in speaker.group if x.is_visible and x.player_name == name}) == 1:
+                speaker_instance.name = name + ' (R)'
+            elif len(self.get_stereo_pair_slaves(speaker)) == 1:
+                speaker_instance.name = name + ' (L)'
+            speakers.add(speaker_instance)
         return speakers
 
     def set_volume(self, speaker: Speaker, volume: int):
@@ -49,7 +55,7 @@ class SonosSocoAdapter(SonosAdapter):
 
     def get_stereo_pair_slaves(self, speaker: Speaker) -> Set[soco.SoCo]:
         """Checks if the passed speaker is a stereo pair coordinator and
-           returns the all speakers which could be the pair slave.
+           returns the all speakers which could be a pair slave.
 
         :param models.speaker.Speaker speaker: Speaker to check
         :returns: Slave speaker of stereo pair
@@ -59,4 +65,5 @@ class SonosSocoAdapter(SonosAdapter):
         if not soco_instance.is_visible or soco_instance.group is None:
             return {}
         speaker_group: soco.groups.ZoneGroup = soco_instance.group
-        return {x for x in speaker_group if not x.is_visible}
+        return {x for x in speaker_group if not x.is_visible and
+                x.player_name == soco_instance.player_name}
