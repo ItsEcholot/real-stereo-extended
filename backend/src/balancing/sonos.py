@@ -1,5 +1,5 @@
 """Implements Sonos discovery and control"""
-from time import sleep
+
 import asyncio
 from config import Config
 from models.speaker import Speaker
@@ -13,10 +13,10 @@ class Sonos:
         self.discover_loop_exiting = False
         self.config = config
 
-    def discover_loop(self):
+    async def discover_loop(self):
         """Starts the discover loop which runs every 15 seconds until stopped"""
         self.discover_loop_exiting = False
-        asyncio.set_event_loop(asyncio.new_event_loop())
+
         while not self.discover_loop_exiting:
             players: set[soco.SoCo] = soco.discover()
             for player in players:
@@ -25,7 +25,7 @@ class Sonos:
                     continue
                 elif existing_speaker is not None:
                     existing_speaker.name = player.player_name
-                    self.config.speaker_repository.call_listeners()
+                    await self.config.speaker_repository.call_listeners()
                     continue
                 print('[Balancing] Discovered new Sonos player {} with uid {} at {}, Coordinator: {}'
                       .format(
@@ -35,8 +35,8 @@ class Sonos:
                           player.is_coordinator
                       ))
                 speaker = Speaker(speaker_id=player.uid, name=player.player_name)
-                self.config.speaker_repository.add_speaker(speaker)
-            sleep(15)
+                await self.config.speaker_repository.add_speaker(speaker)
+            await asyncio.sleep(15)
 
     def stop_discover_loop(self):
         """Sets the flag to stop the discover loop"""

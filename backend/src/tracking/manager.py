@@ -1,6 +1,5 @@
 """Handles the camera processing."""
 
-from threading import Thread
 from .camera import Camera
 
 
@@ -9,19 +8,16 @@ class TrackingManager:
 
     def __init__(self):
         self.camera = None
-        self.thread = None
 
-    def start_tracking(self) -> None:
+    async def start(self) -> None:
         """Start the camera tracking."""
         self.camera = Camera(1)
-        self.thread = Thread(target=self.camera.process)
-        self.thread.start()
+        await self.camera.process()
 
-    def stop_tracking(self) -> None:
+    def stop(self) -> None:
         """Stop the current camera tracking."""
         if self.camera is not None:
             self.camera.stop()
-            self.thread.join()
 
     def set_frame_callback(self, on_frame: callable) -> None:
         """Sets the `on_frame` callback that will receive every processed frame.

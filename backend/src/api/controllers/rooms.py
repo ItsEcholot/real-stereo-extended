@@ -1,7 +1,6 @@
 """Controller for the /rooms namespace."""
 
 from typing import List
-import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.room import Room
@@ -19,17 +18,13 @@ class RoomsController(AsyncNamespace):
         # add room repository change listener
         config.room_repository.register_listener(self.send_rooms)
 
-    def send_rooms(self, sid: str = None) -> None:
+    async def send_rooms(self, sid: str = None) -> None:
         """Sends the current rooms to all clients or only a specific one.
 
         :param str sid: If specified, rooms will only be sent to this session id. Otherwise, all
                         clients will receive the rooms.
         """
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(self.emit('get', self.config.room_repository.to_json(), room=sid))
-
-        if loop.is_running() is False:
-            loop.run_until_complete(task)
+        await self.emit('get', self.config.room_repository.to_json(), room=sid)
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -81,7 +76,7 @@ class RoomsController(AsyncNamespace):
             room = Room(name=data.get('name'))
 
             # add the new room and send the new state to all clients
-            self.config.room_repository.add_room(room)
+            await self.config.room_repository.add_room(room)
             ack.created_id = room.room_id
 
         return ack.to_json()
@@ -101,10 +96,10 @@ class RoomsController(AsyncNamespace):
             room.name = data.get('name')
 
             # store the update and send the new state to all clients
-            self.config.room_repository.call_listeners()
+            await self.config.room_repository.call_listeners()
 
             if len(room.nodes) > 0:
-                self.config.node_repository.call_listeners()
+                await self.config.node_repository.call_listeners()
 
         return ack.to_json()
 
@@ -116,7 +111,7 @@ class RoomsController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
-        if self.config.room_repository.remove_room(room_id) is False:
+        if await self.config.room_repository.remove_room(room_id) is False:
             ack.add_error('A room with this id does not exist')
 
         return ack.to_json()

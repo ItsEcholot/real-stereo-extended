@@ -32,7 +32,7 @@ class SpeakerRepository(Repository):
         """
         return next(filter(lambda s: s.name == name, self.config.speakers), None)
 
-    def remove_speaker(self, speaker_id: str) -> bool:
+    async def remove_speaker(self, speaker_id: str) -> bool:
         """Removes a speaker and stores the config file.
 
         :param str speaker_id: Speaker id
@@ -45,13 +45,13 @@ class SpeakerRepository(Repository):
         if speaker is not None:
             # remove speaker
             speaker.room = None
-            self.call_listeners()
+            await self.call_listeners()
 
             return True
 
         return False
 
-    def add_speaker(self, speaker: Speaker) -> None:
+    async def add_speaker(self, speaker: Speaker) -> None:
         """Adds a speaker and stores the config file.
         If a speaker with the same id already exists a ValueError is thrown.
 
@@ -61,7 +61,7 @@ class SpeakerRepository(Repository):
             raise ValueError('Speaker id already exists in repository')
 
         self.config.speakers.append(speaker)
-        self.call_listeners()
+        await self.call_listeners()
 
     def to_json(self) -> dict:
         """Returns the list of all speakers in JSON serializable objects.

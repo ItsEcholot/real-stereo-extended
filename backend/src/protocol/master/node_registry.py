@@ -47,7 +47,7 @@ class NodeRegistry:
         """
         print('[Node Registry] ' + node.hostname + ' (' + node.ip_address + ') ' + message)
 
-    def update_acquisition_status(self) -> None:
+    async def update_acquisition_status(self) -> None:
         """Checks if the acquisition state for all nodes is correct
         or acquire/release them if necessary.
         """
@@ -68,7 +68,7 @@ class NodeRegistry:
                 node.acquired = False
                 self.log(node, 'released')
 
-    def check_availability(self) -> None:
+    async def check_availability(self) -> None:
         """Checks if all nodes are still available or marks them offline if not."""
         asyncio.set_event_loop(asyncio.new_event_loop())
 
@@ -81,13 +81,13 @@ class NodeRegistry:
                          NODE_AVAILABILITY_CHECK_INTERVAL < time()):
                     node.online = False
                     node.acquired = False
-                    self.config.node_repository.call_listeners()
-                    self.config.room_repository.call_listeners()
+                    await self.config.node_repository.call_listeners()
+                    await self.config.room_repository.call_listeners()
                     self.log(node, 'is offline')
 
                     # if the node is not assigned to a room, remove it from the list
                     if node.room is None:
-                        self.config.node_repository.remove_node(node.node_id)
+                        await self.config.node_repository.remove_node(node.node_id)
                         self.log(node, 'removed from registry')
 
             sleep(NODE_AVAILABILITY_CHECK_INTERVAL / 2)
@@ -124,7 +124,7 @@ class NodeRegistry:
         self.update_node(hostname, address)
         self.last_pings[address] = time()
 
-    def update_node(self, hostname: str, ip_address: str) -> None:
+    async def update_node(self, hostname: str, ip_address: str) -> None:
         """Updates the given node or creates a new one if it does not yet exist.
 
         :param str hostname: Hostname of the node
@@ -136,19 +136,19 @@ class NodeRegistry:
         # create or update the node
         if node is None:
             node = Node(name=hostname, online=True, ip_address=ip_address, hostname=hostname)
-            self.config.node_repository.add_node(node)
+            await self.config.node_repository.add_node(node)
             self.log(node, 'added to registry')
         elif node.ip_address != ip_address:
             node.ip_address = ip_address
-            self.config.node_repository.call_listeners()
+            await self.config.node_repository.call_listeners()
             self.log(node, 'ip address has changed')
 
         # update node state
         if node.online is False:
             node.online = True
             self.log(node, 'is online')
-            self.config.node_repository.call_listeners()
-            self.config.room_repository.call_listeners()
+            await self.config.node_repository.call_listeners()
+            await self.config.room_repository.call_listeners()
 
         # acquire node if necessary
         if node.room is not None and node.acquired is False:

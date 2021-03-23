@@ -113,14 +113,6 @@ requirements_deprecated_finder = ["pipreqs", "pip-api"]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
 
 [[package]]
-name = "janus"
-version = "0.6.1"
-description = "Mixed sync-async queue to interoperate between asyncio tasks and classic threads"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[[package]]
 name = "lazy-object-proxy"
 version = "1.5.2"
 description = "A fast and thorough lazy object proxy."
@@ -322,7 +314,7 @@ typing-extensions = {version = ">=3.7.4", markers = "python_version < \"3.8\""}
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "5edd0c43ec11c6bbdde44e5c6f0bc96e2585d9da5b1df8fbf4eb2f7c12d70a23"
+content-hash = "928b10b8bee0e037022b49d2699a97fb3a6e32db94e6ac5d8a0b3560bd99625c"
 
 [metadata.files]
 aiohttp = [
@@ -399,10 +391,6 @@ ifaddr = [
 isort = [
     {file = "isort-5.7.0-py3-none-any.whl", hash = "sha256:fff4f0c04e1825522ce6949973e83110a6e907750cd92d128b0d14aaaadbffdc"},
     {file = "isort-5.7.0.tar.gz", hash = "sha256:c729845434366216d320e936b8ad6f9d681aab72dc7cbc2d51bedc3582f3ad1e"},
-]
-janus = [
-    {file = "janus-0.6.1-py3-none-any.whl", hash = "sha256:6dae3f1fd68a92dab49c1b93d269f22d2232feddf3a3b8842a881a6e67500c16"},
-    {file = "janus-0.6.1.tar.gz", hash = "sha256:4712e0ef75711fe5947c2db855bc96221a9a03641b52e5ae8e25c2b705dd1d0c"},
 ]
 lazy-object-proxy = [
     {file = "lazy-object-proxy-1.5.2.tar.gz", hash = "sha256:5944a9b95e97de1980c65f03b79b356f30a43de48682b8bdd90aa5089f0ec1f4"},
