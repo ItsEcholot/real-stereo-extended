@@ -28,6 +28,7 @@ class SonosAdapter(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def ramp_to_volume(self, speaker: Speaker, volume: int):
         """Ramps volume to target volume for the passed Sonos speaker
 
