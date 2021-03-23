@@ -1,5 +1,4 @@
 """Implements the state of a single speaker."""
-
 import models.room
 
 
