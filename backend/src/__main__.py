@@ -28,6 +28,7 @@ async def main():
             # tracking.start(),
             api.start(),
             balancing.start_discovery(),
+            balancing.start_control(),
         )
     else:
         cluster_slave = ClusterSlave()
