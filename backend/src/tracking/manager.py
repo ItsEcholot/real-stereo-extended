@@ -11,7 +11,7 @@ class TrackingManager:
 
     async def start(self) -> None:
         """Start the camera tracking."""
-        self.camera = Camera(1)
+        self.camera = Camera()
         await self.camera.process()
 
     def stop(self) -> None:

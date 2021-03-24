@@ -25,7 +25,7 @@ async def main():
 
         await asyncio.gather(
             cluster_master.start(),
-            # tracking.start(),
+            tracking.start(),
             api.start(),
             balancing.start_discovery(),
             balancing.start_control(),
