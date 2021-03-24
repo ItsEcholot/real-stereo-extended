@@ -50,7 +50,7 @@ class NodeRepository(Repository):
         """
         return next(filter(lambda n: n.ip_address == ip_address, self.config.nodes), None)
 
-    def add_node(self, node: Node) -> None:
+    async def add_node(self, node: Node) -> None:
         """Adds a new node and stores the config file.
 
         :param models.node.Node node: Node instance
@@ -65,12 +65,12 @@ class NodeRepository(Repository):
         if node.room is not None:
             if node.room not in node.room.nodes:
                 node.room.nodes.append(node)
-            self.config.room_repository.call_listeners()
+            await self.config.room_repository.call_listeners()
 
         self.config.nodes.append(node)
-        self.call_listeners()
+        await self.call_listeners()
 
-    def remove_node(self, node_id: int) -> bool:
+    async def remove_node(self, node_id: int) -> bool:
         """Removes a node and stores the config file.
 
         :param int node_id: Node id
@@ -87,9 +87,9 @@ class NodeRepository(Repository):
             # remove reference on room
             if node.room is not None:
                 node.room.nodes.remove(node)
-                self.config.room_repository.call_listeners()
+                await self.config.room_repository.call_listeners()
 
-            self.call_listeners()
+            await self.call_listeners()
 
             return True
 

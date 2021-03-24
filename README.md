@@ -12,14 +12,14 @@
 [Poetry](https://python-poetry.org) is used as the package manager to alleviate a lot of problems that pip, pipenv etc. introduce.
 
 ### Webserver
-The main script starts a webserver using the [Flask](https://flask.palletsprojects.com) framework in a separate thread. This webserver provides the whole API needed for the frontend and can additionally serve the webapp located at `frontend/dist`.
+The main script starts a webserver using the [aiohttp](https://docs.aiohttp.org/en/stable/) library. This webserver provides the whole API needed for the frontend and can additionally serve the webapp located at `frontend/build`.
 
 
 ## Development
 
 ### Devcontainers
-Devcontainers are made for development using VSCode.  
-The appeal of devcontainers is the ability of working inside of a Docker container and thus not needing to setup all the development dependencies. The whole environment is created automatically, including all dependencies, vscode extensions and the required vscode settings.  
+Devcontainers are made for development using VSCode.
+The appeal of devcontainers is the ability of working inside of a Docker container and thus not needing to setup all the development dependencies. The whole environment is created automatically, including all dependencies, vscode extensions and the required vscode settings.
 If there are some new requirements for the environment (e.g. build tools for the Raspberry Pi), they can simply be added to the Dockerfile and everyone working on this repo will also automatically have it.
 
 ### Without devcontainers

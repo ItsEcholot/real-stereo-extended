@@ -10,9 +10,9 @@ numpy = "^1.20.1"
 opencv-python-headless = "4.5.1.48"
 python-socketio = "^5.0.4"
 aiohttp = "^3.7.4"
-janus = "^0.6.1"
 protobuf = "^3.15.6"
 soco = "^0.21.2"
+asyncio-dgram = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.7.2"

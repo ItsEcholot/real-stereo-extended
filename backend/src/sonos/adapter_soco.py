@@ -16,15 +16,17 @@ class SonosSocoAdapter(SonosAdapter):
         """
         speakers = set()
         speaker: soco.SoCo
-        for speaker in soco.discover(include_invisible=True):
-            name = speaker.player_name
-            speaker_instance = Speaker(speaker_id=speaker.uid,
-                                       name=name, ip_address=speaker.ip_address)
-            if not speaker.is_visible and len({x for x in speaker.group if x.is_visible and x.player_name == name}) == 1:
-                speaker_instance.name = name + ' (R)'
-            elif len(self.get_stereo_pair_slaves(speaker)) == 1:
-                speaker_instance.name = name + ' (L)'
-            speakers.add(speaker_instance)
+        discovery = soco.discover(include_invisible=True)
+        if discovery is not None:
+            for speaker in discovery:
+                name = speaker.player_name
+                speaker_instance = Speaker(speaker_id=speaker.uid,
+                                           name=name, ip_address=speaker.ip_address)
+                if not speaker.is_visible and len({x for x in speaker.group if x.is_visible and x.player_name == name}) == 1:
+                    speaker_instance.name = name + ' (R)'
+                elif len(self.get_stereo_pair_slaves(speaker)) == 1:
+                    speaker_instance.name = name + ' (L)'
+                speakers.add(speaker_instance)
         return speakers
 
     def set_volume(self, speaker: Speaker, volume: int):

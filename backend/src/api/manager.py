@@ -1,11 +1,9 @@
 """Handles the web server and incoming requests."""
 
 from pathlib import Path
-from threading import Thread
 from typing import List
 import asyncio
 import socketio
-from janus import Queue
 from aiohttp import web, MultipartWriter
 from numpy import ndarray
 from config import Config, NodeType
@@ -30,8 +28,7 @@ class ApiManager:
     def __init__(self, config: Config, tracking_manager: TrackingManager):
         self.config: Config = config
         self.tracking_manager: TrackingManager = tracking_manager
-        self.thread: Thread = None
-        self.stream_queues: List[Queue] = []
+        self.stream_queues: List[asyncio.Queue] = []
         self.app: web.Application = web.Application()
 
         # register routes for both masters and slaves
@@ -85,41 +82,34 @@ class ApiManager:
             print('starting camera stream')
             self.tracking_manager.set_frame_callback(self.on_frame)
 
-        queue = Queue()
+        queue = asyncio.Queue()
         self.stream_queues.append(queue)
 
         while True:
             try:
                 # write each frame (from the queue)
-                frame = await queue.async_q.get()
+                frame = await queue.get()
                 with MultipartWriter('image/jpeg', boundary='jpgboundary') as mpwriter:
                     mpwriter.append(frame, {
                         'Content-Type': 'image/jpeg'
                     })
                     await mpwriter.write(response, close_boundary=False)
-                queue.async_q.task_done()
+                queue.task_done()
             except:  # pylint: disable=bare-except
                 break
 
         # when the client has closed the connection, remove the queue
         if queue in self.stream_queues:
-            queue.close()
             # if no other stream request is active, stop catching the camera frames
             if len(self.stream_queues) == 1:
                 self.tracking_manager.set_frame_callback(None)
                 print('camera stream stopped')
             self.stream_queues.remove(queue)
 
-    def start_api(self) -> None:
-        """Start the API server in a separate thread."""
-        self.thread = Thread(target=self.listen)
-        self.thread.start()
-
-    def listen(self) -> None:
-        """Start listening on 0.0.0.0:8080."""
-        asyncio.set_event_loop(asyncio.new_event_loop())
+    async def start(self) -> None:
+        """Start the API server."""
         print('[Web API] Listening on http://localhost:8080')
-        web.run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None)
+        await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None)  # pylint: disable=protected-access
 
     def on_frame(self, frame: ndarray) -> None:
         """`on_frame` callback of a `Camera` instance. Will send the frame to all connected clients
@@ -129,4 +119,4 @@ class ApiManager:
         """
         # put the frame into all stream request queues so they can be sent in the get_stream method
         for queue in self.stream_queues:
-            queue.sync_q.put(frame.tostring())
+            queue.put_nowait(frame.tostring())

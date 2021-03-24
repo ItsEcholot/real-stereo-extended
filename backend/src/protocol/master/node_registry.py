@@ -1,6 +1,5 @@
 """Holds information about all available nodes and their state."""
-from threading import Thread
-from time import time, sleep
+from time import time
 from socket import gethostname, gethostbyname
 import asyncio
 from config import Config
@@ -21,14 +20,7 @@ class NodeRegistry:
         self.config = config
         self.master = master
         self.last_pings = {}
-        self.check_thread = Thread(target=self.check_availability)
-        self.check_thread.start()
-        self.ping_thread = Thread(target=self.ping_slaves)
-        self.ping_thread.start()
         self.master_ip = ''
-
-        # add the master as a node since it also runs a camera node instance
-        self.add_self()
 
         # add node repository change listener
         config.node_repository.register_listener(self.update_acquisition_status)
@@ -36,8 +28,6 @@ class NodeRegistry:
     def stop(self) -> None:
         """Stops the node registry."""
         self.running = False
-        self.check_thread.join()
-        self.ping_thread.join()
 
     def log(self, node: Node, message: str) -> None:  # pylint: disable=no-self-use
         """Prints a log message to the console.
@@ -47,7 +37,7 @@ class NodeRegistry:
         """
         print('[Node Registry] ' + node.hostname + ' (' + node.ip_address + ') ' + message)
 
-    def update_acquisition_status(self) -> None:
+    async def update_acquisition_status(self) -> None:
         """Checks if the acquisition state for all nodes is correct
         or acquire/release them if necessary.
         """
@@ -68,9 +58,8 @@ class NodeRegistry:
                 node.acquired = False
                 self.log(node, 'released')
 
-    def check_availability(self) -> None:
+    async def check_availability(self) -> None:
         """Checks if all nodes are still available or marks them offline if not."""
-        asyncio.set_event_loop(asyncio.new_event_loop())
 
         while self.running:
             for node in self.config.nodes:
@@ -81,27 +70,27 @@ class NodeRegistry:
                          NODE_AVAILABILITY_CHECK_INTERVAL < time()):
                     node.online = False
                     node.acquired = False
-                    self.config.node_repository.call_listeners()
-                    self.config.room_repository.call_listeners()
+                    await self.config.node_repository.call_listeners()
+                    await self.config.room_repository.call_listeners()
                     self.log(node, 'is offline')
 
                     # if the node is not assigned to a room, remove it from the list
                     if node.room is None:
-                        self.config.node_repository.remove_node(node.node_id)
+                        await self.config.node_repository.remove_node(node.node_id)
                         self.log(node, 'removed from registry')
 
-            sleep(NODE_AVAILABILITY_CHECK_INTERVAL / 2)
+            await asyncio.sleep(NODE_AVAILABILITY_CHECK_INTERVAL / 2)
 
-    def ping_slaves(self) -> None:
+    async def ping_slaves(self) -> None:
         """Send a ping message to all slaves."""
         while self.running:
             for node in self.config.nodes:
                 if node.online and node.ip_address != self.master_ip and node.acquired:
                     self.master.send_ping(node.ip_address)
 
-            sleep(MASTER_PING_INTERVAL)
+            await asyncio.sleep(MASTER_PING_INTERVAL)
 
-    def add_self(self) -> None:
+    async def add_self(self) -> None:
         """Adds the master as a node since it also runs a camera node instance."""
         hostname = gethostname()
 
@@ -110,9 +99,9 @@ class NodeRegistry:
         except:  # pylint: disable=bare-except
             self.master_ip = '127.0.0.1'
 
-        self.update_node(hostname, self.master_ip)
+        await self.update_node(hostname, self.master_ip)
 
-    def on_service_announcement(self, message: Wrapper, address: str) -> None:
+    async def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """When a service announcment is received, create or update the node in the registry.
 
         :param protocol.cluster_pb2.Wrapper message: Received message
@@ -121,10 +110,10 @@ class NodeRegistry:
         hostname = message.serviceAnnouncement.hostname
 
         # update node
-        self.update_node(hostname, address)
+        await self.update_node(hostname, address)
         self.last_pings[address] = time()
 
-    def update_node(self, hostname: str, ip_address: str) -> None:
+    async def update_node(self, hostname: str, ip_address: str) -> None:
         """Updates the given node or creates a new one if it does not yet exist.
 
         :param str hostname: Hostname of the node
@@ -136,19 +125,19 @@ class NodeRegistry:
         # create or update the node
         if node is None:
             node = Node(name=hostname, online=True, ip_address=ip_address, hostname=hostname)
-            self.config.node_repository.add_node(node)
+            await self.config.node_repository.add_node(node)
             self.log(node, 'added to registry')
         elif node.ip_address != ip_address:
             node.ip_address = ip_address
-            self.config.node_repository.call_listeners()
+            await self.config.node_repository.call_listeners()
             self.log(node, 'ip address has changed')
 
         # update node state
         if node.online is False:
             node.online = True
             self.log(node, 'is online')
-            self.config.node_repository.call_listeners()
-            self.config.room_repository.call_listeners()
+            await self.config.node_repository.call_listeners()
+            await self.config.room_repository.call_listeners()
 
         # acquire node if necessary
         if node.room is not None and node.acquired is False:

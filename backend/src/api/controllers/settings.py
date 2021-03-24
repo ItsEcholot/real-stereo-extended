@@ -1,6 +1,5 @@
 """Controller for the /settings namespace."""
 
-import asyncio
 from socketio import AsyncNamespace
 from config import Config, NodeType
 from models.acknowledgment import Acknowledgment
@@ -28,17 +27,13 @@ class SettingsController(AsyncNamespace):
             'balance': self.config.balance,
         }
 
-    def send_settings(self, sid: str = None) -> None:
+    async def send_settings(self, sid: str = None) -> None:
         """Sends the current settings to all clients or only a specific one.
 
         :param str sid: If specified, settings will only be sent to this session id. Otherwise, all
                         clients will receive the settings.
         """
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(self.emit('get', self.build_settings(), room=sid))
-
-        if loop.is_running() is False:
-            loop.run_until_complete(task)
+        await self.emit('get', self.build_settings(), room=sid)
 
     def validate(self, data: dict) -> Acknowledgment:  # pylint: disable=no-self-use
         """Validates the input data.
@@ -75,6 +70,6 @@ class SettingsController(AsyncNamespace):
         # update the settings
         if ack.successful:
             self.config.balance = data['balance']
-            self.config.setting_repository.call_listeners()
+            await self.config.setting_repository.call_listeners()
 
         return ack.to_json()

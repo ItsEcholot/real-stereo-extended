@@ -38,7 +38,7 @@ class RoomRepository(Repository):
         """
         return next(filter(lambda r: r.name == name, self.config.rooms), None)
 
-    def add_room(self, room: Room) -> None:
+    async def add_room(self, room: Room) -> None:
         """Adds a new room and stores the config file.
 
         :param models.room.Room room: Room instance
@@ -50,9 +50,9 @@ class RoomRepository(Repository):
                 rooms_sorted) == 0 else rooms_sorted[0].room_id + 1
 
         self.config.rooms.append(room)
-        self.call_listeners()
+        await self.call_listeners()
 
-    def remove_room(self, room_id: int) -> bool:
+    async def remove_room(self, room_id: int) -> bool:
         """Removes a room and stores the config file.
 
         :param int room_id: Room id
@@ -73,7 +73,7 @@ class RoomRepository(Repository):
                 self.config.nodes.remove(node)
 
             if len(nodes_to_remove) > 0:
-                self.config.node_repository.call_listeners()
+                await self.config.node_repository.call_listeners()
 
             # remove speakers with this room
             speakers_to_remove = list(filter(lambda s: s.room.room_id ==
@@ -82,9 +82,9 @@ class RoomRepository(Repository):
                 self.config.speakers.remove(speaker)
 
             if len(speakers_to_remove) > 0:
-                self.config.speaker_repository.call_listeners()
+                await self.config.speaker_repository.call_listeners()
 
-            self.call_listeners()
+            await self.call_listeners()
 
             return True
 

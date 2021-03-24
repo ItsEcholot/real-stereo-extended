@@ -46,7 +46,6 @@ class Config:
         # otherwise, create the file from a default configuration
         else:
             print('Config ' + str(path) + ' does not exist, creating default configuration')
-            self.store()
 
     def load(self) -> None:
         """Loads the configuration file and parses it into class attributes."""
@@ -64,7 +63,7 @@ class Config:
         for speaker_data in self.data.get('speakers'):
             self.speakers.append(Speaker.from_json(speaker_data, self))
 
-    def store(self) -> None:
+    async def store(self) -> None:
         """Stores the current configuration values back in the config file."""
         data = {
             'type': str(self.type).lower().split('.')[1],

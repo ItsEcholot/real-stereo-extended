@@ -1,7 +1,6 @@
 """Controller for the /nodes namespace."""
 
 from typing import List
-import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.node import Node
@@ -19,17 +18,13 @@ class NodesController(AsyncNamespace):
         # add node repository change listener
         config.node_repository.register_listener(self.send_nodes)
 
-    def send_nodes(self, sid: str = None) -> None:
+    async def send_nodes(self, sid: str = None) -> None:
         """Sends the current nodes to all clients or only a specific one.
 
         :param str sid: If specified, nodes will only be sent to this session id. Otherwise, all
                         clients will receive the nodes.
         """
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(self.emit('get', self.config.node_repository.to_json(), room=sid))
-
-        if loop.is_running() is False:
-            loop.run_until_complete(task)
+        await self.emit('get', self.config.node_repository.to_json(), room=sid)
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -97,8 +92,8 @@ class NodesController(AsyncNamespace):
                 node.room.nodes.append(node)
 
             # store the update and send the new state to all clients
-            self.config.node_repository.call_listeners()
-            self.config.room_repository.call_listeners()
+            await self.config.node_repository.call_listeners()
+            await self.config.room_repository.call_listeners()
 
         return ack.to_json()
 
@@ -119,7 +114,7 @@ class NodesController(AsyncNamespace):
             node.room = None
 
             # store the update and send the new state to all clients
-            self.config.node_repository.call_listeners()
-            self.config.room_repository.call_listeners()
+            await self.config.node_repository.call_listeners()
+            await self.config.room_repository.call_listeners()
 
         return ack.to_json()

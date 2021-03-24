@@ -14,7 +14,7 @@ class Repository:
         """
         self.listeners.append(listener)
 
-    def call_listeners(self) -> None:
+    async def call_listeners(self) -> None:
         """Calls all registered listeners."""
         for listener in self.listeners:
-            listener()
+            await listener()

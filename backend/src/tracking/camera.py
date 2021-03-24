@@ -1,5 +1,6 @@
 """Camera module implements the camera connection and person detection."""
 
+import asyncio
 import cv2
 from numpy import ndarray
 from .people_detector import PeopleDetector
@@ -27,7 +28,7 @@ class Camera:
         """Stops reading from the camera after the current frame has been processed."""
         self.exiting = True
 
-    def process(self) -> None:
+    async def process(self) -> None:
         """Processes the camera frames until `stop()` has been called
         or the camera is no longer available."""
         try:
@@ -38,6 +39,8 @@ class Camera:
 
                 if self.on_frame is not None:
                     self.send_frame(resized_frame)
+
+                await asyncio.sleep(0.1)
         finally:
             self.capture.release()
 

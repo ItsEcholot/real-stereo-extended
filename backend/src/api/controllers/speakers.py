@@ -1,7 +1,6 @@
 """Controller for the /speakers namespace."""
 
 from typing import List
-import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.speaker import Speaker
@@ -19,18 +18,13 @@ class SpeakersController(AsyncNamespace):
         # add speaker repository change listener
         config.speaker_repository.register_listener(self.send_speakers)
 
-    def send_speakers(self, sid: str = None) -> None:
+    async def send_speakers(self, sid: str = None) -> None:
         """Sends the current speakers to all clients or only a specific one.
 
         :param str sid: If specified, speakers will only be sent to this session id. Otherwise, all
                         clients will receive the speakers.
         """
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(
-            self.emit('get', self.config.speaker_repository.to_json(), room=sid))
-
-        if loop.is_running() is False:
-            loop.run_until_complete(task)
+        await self.emit('get', self.config.speaker_repository.to_json(), room=sid)
 
     def validate(self, data: dict, create: bool) -> Acknowledgment:
         """Validates the input data.
@@ -95,7 +89,7 @@ class SpeakersController(AsyncNamespace):
                 speaker.room = room
 
             # store the update and send the new state to all clients
-            self.config.speaker_repository.call_listeners()
+            await self.config.speaker_repository.call_listeners()
 
         return ack.to_json()
 
@@ -107,7 +101,7 @@ class SpeakersController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
-        if self.config.speaker_repository.remove_speaker(speaker_id) is False:
+        if await self.config.speaker_repository.remove_speaker(speaker_id) is False:
             ack.add_error('A speaker with this id does not exist')
 
         return ack.to_json()
