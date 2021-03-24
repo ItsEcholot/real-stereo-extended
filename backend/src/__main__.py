@@ -11,7 +11,7 @@ from protocol.slave import ClusterSlave
 
 
 async def main():
-    """Starts all part of the application."""
+    """Starts all parts of the application."""
     config = Config()
 
     print('Starting as ' + str(config.type))
