@@ -26,8 +26,8 @@ async def main():
         await asyncio.gather(
             cluster_master.start(),
             # tracking.start(),
-            balancing.start_discovery(),
             api.start(),
+            balancing.start_discovery(),
         )
     else:
         cluster_slave = ClusterSlave()

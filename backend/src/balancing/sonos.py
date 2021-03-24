@@ -19,23 +19,24 @@ class Sonos:
 
         while not self.discover_loop_exiting:
             players: set[soco.SoCo] = soco.discover()
-            for player in players:
-                existing_speaker = self.config.speaker_repository.get_speaker(player.uid)
-                if existing_speaker is not None and existing_speaker.name == player.player_name:
-                    continue
-                elif existing_speaker is not None:
-                    existing_speaker.name = player.player_name
-                    await self.config.speaker_repository.call_listeners()
-                    continue
-                print('[Balancing] Discovered new Sonos player {} with uid {} at {}, Coordinator: {}'
-                      .format(
-                          player.player_name,
-                          player.uid,
-                          player.ip_address,
-                          player.is_coordinator
-                      ))
-                speaker = Speaker(speaker_id=player.uid, name=player.player_name)
-                await self.config.speaker_repository.add_speaker(speaker)
+            if players is not None:
+                for player in players:
+                    existing_speaker = self.config.speaker_repository.get_speaker(player.uid)
+                    if existing_speaker is not None and existing_speaker.name == player.player_name:
+                        continue
+                    elif existing_speaker is not None:
+                        existing_speaker.name = player.player_name
+                        await self.config.speaker_repository.call_listeners()
+                        continue
+                    print('[Balancing] Discovered new Sonos player {} with uid {} at {}, Coordinator: {}'
+                          .format(
+                              player.player_name,
+                              player.uid,
+                              player.ip_address,
+                              player.is_coordinator
+                          ))
+                    speaker = Speaker(speaker_id=player.uid, name=player.player_name)
+                    await self.config.speaker_repository.add_speaker(speaker)
             await asyncio.sleep(15)
 
     def stop_discover_loop(self):
