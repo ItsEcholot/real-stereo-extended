@@ -17,6 +17,7 @@ if config.type == NodeType.MASTER or '--master' in argv:
     cluster_master = ClusterMaster(config)
     cluster_master.start()
     balancing.start_discovery()
+    balancing.start_control()
 else:
     cluster_slave = ClusterSlave()
     cluster_slave.start()

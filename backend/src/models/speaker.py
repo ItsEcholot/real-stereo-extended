@@ -1,5 +1,4 @@
 """Implements the state of a single speaker."""
-
 import models.room
 
 
@@ -11,14 +10,17 @@ class Speaker:
     :param models.room.Room room: Room to which the speaker belongs to
     """
 
-    def __init__(self, speaker_id: str, name: str = '', room=None):
+    def __init__(self, speaker_id: str, name: str = '', ip_address: str = '', room=None):
         if len(speaker_id) == 0:
             raise ValueError('Speaker id cannot be empty')
         if len(name) == 0:
             raise ValueError('Speaker name cannot be empty')
+        if len(ip_address) == 0:
+            raise ValueError('Speaker ip_address cannot be empty')
 
         self.speaker_id: str = speaker_id
         self.name: str = name
+        self.ip_address: str = ip_address
         self.room: models.room.Room = room
 
     @staticmethod
@@ -33,7 +35,7 @@ class Speaker:
         # find room in which the speaker is located
         room = config.room_repository.get_room(data.get('room_id'), fail=True)
 
-        return Speaker(speaker_id=data.get('id'), name=data.get('name'), room=room)
+        return Speaker(speaker_id=data.get('id'), name=data.get('name'), ip_address=data.get('ip_address'), room=room)
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.
@@ -46,6 +48,7 @@ class Speaker:
         json = {
             'id': self.speaker_id,
             'name': self.name,
+            'ip_address': self.ip_address,
         }
 
         if self.room is not None:
