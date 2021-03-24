@@ -12,6 +12,7 @@ python-socketio = "^5.0.4"
 aiohttp = "^3.7.4"
 protobuf = "^3.15.6"
 soco = "^0.21.2"
+asyncio-dgram = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.7.2"

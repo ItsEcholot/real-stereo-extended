@@ -1,7 +1,8 @@
 """Master for the cluster protocol."""
 
-from socket import socket, gethostname, AF_INET, SOCK_DGRAM, SOCK_STREAM, MSG_DONTWAIT, MSG_PEEK
+from socket import socket, gethostname, AF_INET, SOCK_STREAM, MSG_DONTWAIT, MSG_PEEK
 import asyncio
+import asyncio_dgram
 from config import Config
 from ..socket import ClusterSocket
 from ..constants import PORT
@@ -20,22 +21,25 @@ class ClusterMaster(ClusterSocket):
         self.hostname = gethostname()
         self.slave_sockets = {}
 
-    def init(self) -> None:
+    async def init(self) -> None:
         """Initializes the master socket and starts listening."""
         self.running = True
-        self.receive_socket = socket(family=AF_INET, type=SOCK_DGRAM)
-        self.receive_socket.bind(('0.0.0.0', PORT))
+        self.receive_socket = await asyncio_dgram.bind(('0.0.0.0', PORT))
 
         print('[Cluster Master] Listening on port ' + str(PORT))
 
-        self.run()
+        await asyncio.gather(
+            self.run(),
+            self.node_registry.add_self(),
+            self.node_registry.check_availability(),
+            self.node_registry.ping_slaves(),
+        )
 
-    def run(self) -> None:
+    async def run(self) -> None:
         """Run logic of the master socket."""
-        asyncio.set_event_loop(asyncio.new_event_loop())
-
         while self.running:
-            self.receive_message(self.receive_socket)
+            data, address = await self.receive_socket.recv()
+            await self.receive_message(data, address=address[0])
 
     def get_slave_socket(self, address: str) -> None:
         """Returns a TCP socket for the given slave.
@@ -81,8 +85,7 @@ class ClusterMaster(ClusterSocket):
         message = self.build_message()
         message.serviceAcquisition.detect = self.config.balance
         message.serviceAcquisition.hostname = self.hostname
-
-        self.get_slave_socket(address).sendall(message.SerializeToString())
+        self.get_slave_socket(address).sendall(message.SerializeToString() + '\0'.encode())
 
     def send_release(self, address: str) -> None:
         """Sends a service release message to a node.
@@ -92,7 +95,7 @@ class ClusterMaster(ClusterSocket):
         message = self.build_message()
         message.serviceRelease.hostname = self.hostname
 
-        self.get_slave_socket(address).sendall(message.SerializeToString())
+        self.get_slave_socket(address).sendall(message.SerializeToString() + '\0'.encode())
 
     def send_ping(self, address: str) -> None:
         """Sends a ping message to a node.
@@ -102,17 +105,17 @@ class ClusterMaster(ClusterSocket):
         message = self.build_message()
         message.ping.hostname = self.hostname
 
-        self.get_slave_socket(address).sendall(message.SerializeToString())
+        self.get_slave_socket(address).sendall(message.SerializeToString() + '\0'.encode())
 
-    def on_service_announcement(self, message: Wrapper, address: str) -> None:
+    async def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """On service announcement received.
 
         :param protocol.cluster_pb2.Wrapper message: Message
         :param str address: Sender IP
         """
-        self.node_registry.on_service_announcement(message, address)
+        await self.node_registry.on_service_announcement(message, address)
 
-    def on_position_update(self, _: Wrapper, address: str) -> None:
+    async def on_position_update(self, _: Wrapper, address: str) -> None:
         """Handle position updates. Also, record a received ping.
 
         :param protocol.cluster_pb2.Wrapper message: Message

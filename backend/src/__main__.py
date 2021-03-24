@@ -24,7 +24,7 @@ async def main():
         balancing = BalancingManager(config)
 
         await asyncio.gather(
-            # cluster_master.start()
+            cluster_master.start(),
             # tracking.start(),
             balancing.start_discovery(),
             api.start(),
@@ -33,7 +33,7 @@ async def main():
         cluster_slave = ClusterSlave()
 
         await asyncio.gather(
-            # cluster_slave.start(),
+            cluster_slave.start(),
             # tracking.start(),
             api.start(),
         )
