@@ -29,7 +29,7 @@ class TrackingManager:
 
         if self.camera is None:
             self.camera = Camera()
-            self.camera.on_frame = self.on_frame
+            self.camera.set_frame_callback(self.on_frame)
 
         await self.camera.process()
 
@@ -40,7 +40,6 @@ class TrackingManager:
         if self.camera is not None:
             print('[Tracking] Stopping camera')
             self.camera.stop()
-            self.camera.on_frame = None
             self.camera = None
 
     def is_active(self) -> bool:

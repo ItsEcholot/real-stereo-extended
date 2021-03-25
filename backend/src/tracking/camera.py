@@ -53,7 +53,8 @@ class Camera:
             self.camera.close()
 
         if self.on_frame is not None:
-            self.send_frame([])
+            self.on_frame(None)
+            self.on_frame = None
 
     def send_frame(self, frame: ndarray) -> None:
         """If an `on_frame` callback has been registered, it sends the current frame to it.
