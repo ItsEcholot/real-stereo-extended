@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 
 const targetFrequency = 1000;
-const fftWindowSize = 4096;
+const fftWindowSize = 512;
+const lowerFrequencyBoundary = 300;
+const higherFrequencyBoundary = 10000;
 
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
@@ -35,9 +37,14 @@ const closeAudioContext = async () => {
 }
 
 // eslint-disable-next-line
-const getTotalVolume = (fftData: Uint8Array): number => {
-  const sum = fftData.reduce((a, b) => a + b);
-  const avg = (sum / fftData.length);
+const getTotalVolume = (fftData: Uint8Array, frequencyPerArrayItem: number): number => {
+  let sum = 0;
+  const startIndex = Math.round(lowerFrequencyBoundary / frequencyPerArrayItem);
+  const endIndex = Math.round(higherFrequencyBoundary / frequencyPerArrayItem);
+  for (let i = startIndex; i < endIndex; i++) {
+    sum += fftData[i];
+  }
+  const avg = (sum / (endIndex - startIndex));
   return 100 * avg / 255;
 }
 
@@ -46,7 +53,18 @@ const getFrequencyVolume = (fftData: Uint8Array, lowerFrequencyIndex: number, hi
   return 100 * avg / 255;
 }
 
-export const useAudioMeter = (enabled: boolean) => {
+const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8Array, frequencyPerArrayItem: number) => {
+  context.beginPath();
+  fftData.forEach((value, index) => {
+    context.lineTo(index * 2, value);
+    if (index % 25 === 0) {
+      context.fillText(`${Math.round(frequencyPerArrayItem * index)}`, index * 2, 250)
+    }
+  });
+  context.stroke();
+}
+
+export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const [audioMeterErrors, setAudioMeterErrors] = useState<String[]>([]);
   const [volume, setVolume] = useState(0);
 
@@ -68,13 +86,25 @@ export const useAudioMeter = (enabled: boolean) => {
         const bufferData = new Uint8Array(analyserNode.frequencyBinCount);
         if (!audioContext) throw new Error(`Can't get frequency volume: Missing AudioContext`);
         const frequencyPerArrayItem = (audioContext.sampleRate / 2) / analyserNode.frequencyBinCount;
-        const lowerFrequencyIndex = Math.floor(targetFrequency / frequencyPerArrayItem)
-        const higherFrequencyIndex = lowerFrequencyIndex + 1;
+        /*const lowerFrequencyIndex = Math.floor(targetFrequency / frequencyPerArrayItem)
+        const higherFrequencyIndex = lowerFrequencyIndex + 1;*/
+
+        const spectrumAnalyzerCanvasContext = spectrumAnalyzerCanvasRef?.current?.getContext('2d');
+        if (spectrumAnalyzerCanvasContext) {
+          spectrumAnalyzerCanvasContext.lineWidth = 1;
+          spectrumAnalyzerCanvasContext.strokeStyle = '#ff0000';
+        }
 
         analyseInterval = setInterval(() => {
           analyserNode.getByteFrequencyData(bufferData);
-          //const volume = getTotalVolume(bufferData);
-          const volume = getFrequencyVolume(bufferData, lowerFrequencyIndex, higherFrequencyIndex);
+
+          if (spectrumAnalyzerCanvasContext) {
+            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
+            drawSpectrumAnalyzer(spectrumAnalyzerCanvasContext, bufferData, frequencyPerArrayItem);
+          }
+
+          const volume = getTotalVolume(bufferData, frequencyPerArrayItem);
+          //const volume = getFrequencyVolume(bufferData, lowerFrequencyIndex, higherFrequencyIndex);
           setVolume(volume);
         }, 50);
       } catch (err) {
@@ -87,7 +117,7 @@ export const useAudioMeter = (enabled: boolean) => {
       if (microphoneStream) stopStream(microphoneStream);
       closeAudioContext();
     }
-  }, [enabled]);
+  }, [enabled, spectrumAnalyzerCanvasRef]);
 
   return { volume, audioMeterErrors };
 };
