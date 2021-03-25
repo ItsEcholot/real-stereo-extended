@@ -66,7 +66,7 @@ class ClusterSlave(ClusterSocket):
         """Receive logic of the slave socket."""
         while self.running and not reader.at_eof():
             try:
-                data = await reader.readuntil('\0'.encode())
+                data = await reader.readuntil('\n'.encode())
                 address = writer.get_extra_info('peername')
 
                 # remove message delimiter
@@ -75,8 +75,8 @@ class ClusterSlave(ClusterSocket):
                 await self.receive_message(data, address=address[0])
             except asyncio.IncompleteReadError:
                 break
-            except:  # pylint: disable=bare-except
-                continue
+            except RuntimeError as error:
+                print(error)
 
     async def on_service_acquisition(self, message: Wrapper, address: str) -> None:
         """Handle service acquisition message.

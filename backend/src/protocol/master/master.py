@@ -84,7 +84,7 @@ class ClusterMaster(ClusterSocket):
         :param protocol.cluster_pb2.Wrapper message: Message
         """
         try:
-            self.get_slave_socket(address).sendall(message.SerializeToString() + '\0'.encode())
+            self.get_slave_socket(address).sendall(message.SerializeToString() + '\n'.encode())
         except ConnectionRefusedError:
             print('[Cluster Master] Unable to send message, connection refused')
 
