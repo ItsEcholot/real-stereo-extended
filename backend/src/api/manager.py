@@ -79,7 +79,7 @@ class ApiManager:
 
         # if no other stream request is open, start catching the camera frames
         if len(self.stream_queues) == 0:
-            print('starting camera stream')
+            print('[Web API] Starting camera stream')
             self.tracking_manager.set_frame_callback(self.on_frame)
 
         queue = asyncio.Queue()
@@ -103,7 +103,7 @@ class ApiManager:
             # if no other stream request is active, stop catching the camera frames
             if len(self.stream_queues) == 1:
                 self.tracking_manager.set_frame_callback(None)
-                print('camera stream stopped')
+                print('[Web API] Camera stream stopped')
             self.stream_queues.remove(queue)
 
     async def start(self) -> None:

@@ -20,7 +20,7 @@ message ServiceAnnouncement {
 }
 
 message ServiceAcquisition {
-  bool detect = 1;
+  bool track = 1;
   string hostname = 2;
 }
 
@@ -33,7 +33,7 @@ message PositionUpdate {
 }
 
 message ServiceUpdate {
-  bool detect = 1;
+  bool track = 1;
 }
 
 message Ping {

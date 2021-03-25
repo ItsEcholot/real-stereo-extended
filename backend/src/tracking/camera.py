@@ -34,22 +34,26 @@ class Camera:
         or the camera is no longer available."""
         try:
             raw_capture = PiRGBArray(self.camera, size=(self.FRAME_WIDTH, self.FRAME_HEIGHT))
+            for frame in self.camera.capture_continuous(raw_capture, format='bgr',
+                                                        use_video_port=True):
+                frame_data = frame.array
+                # self.detector.detect(resized_frame)
 
-            while self.exiting is False:
-                for frame in self.camera.capture_continuous(raw_capture, format='bgr',
-                                                            use_video_port=True):
-                    frame_data = frame.array
-                    # self.detector.detect(resized_frame)
+                if self.on_frame is not None:
+                    self.send_frame(frame_data)
 
-                    if self.on_frame is not None:
-                        self.send_frame(frame_data)
+                # clear stream for next frame
+                raw_capture.truncate(0)
 
-                    # clear stream for next frame
-                    raw_capture.truncate(0)
+                if self.exiting:
+                    break
 
-                    await asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)
         finally:
             self.camera.close()
+
+        if self.on_frame is not None:
+            self.send_frame([])
 
     def send_frame(self, frame: ndarray) -> None:
         """If an `on_frame` callback has been registered, it sends the current frame to it.
