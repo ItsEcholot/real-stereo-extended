@@ -111,6 +111,10 @@ class ClusterSlave(ClusterSocket):
             self.master_ip = None
             self.log('Released by ' + address)
 
+            if self.config.balance:
+                self.config.balance = False
+                await self.config.setting_repository.call_listeners()
+
     async def on_ping(self, _: Wrapper, address: str) -> None:
         """Handle ping message.
 
