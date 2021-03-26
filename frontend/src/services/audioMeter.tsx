@@ -52,7 +52,6 @@ const getTotalVolume = (fftData: Uint8Array, frequencyPerArrayItem: number): num
   const startIndex = Math.round(lowerFrequencyBoundary / frequencyPerArrayItem);
   const endIndex = Math.round(higherFrequencyBoundary / frequencyPerArrayItem);
   for (let i = startIndex; i < endIndex; i++) {
-    if (fftData[i] == -Infinity) console.log('-Infinite sample');
     sum += fftData[i];
   }
   const avg = (sum / (endIndex - startIndex));
@@ -68,7 +67,7 @@ const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8A
   context.beginPath();
   fftData.forEach((value, index) => {
     context.lineTo(index * 2, value);
-    if (index % 25 === 0) {
+    if ((frequencyPerArrayItem * index) % 1000 === 0) {
       context.fillText(`${Math.round(frequencyPerArrayItem * index)}`, index * 2, 250)
     }
   });
