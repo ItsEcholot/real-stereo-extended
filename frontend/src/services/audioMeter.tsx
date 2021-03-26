@@ -2,8 +2,8 @@ import { RefObject, useEffect, useState } from 'react';
 
 const targetFrequency = 1000;
 const fftWindowSize = 512;
-const lowerFrequencyBoundary = 300;
-const higherFrequencyBoundary = 10000;
+const lowerFrequencyBoundary = 500;
+const higherFrequencyBoundary = 9000;
 
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
@@ -11,7 +11,17 @@ let audioContext: AudioContext | undefined;
 
 const getMicrophoneStream = async (): Promise<MediaStream> => {
   if (!navigator.mediaDevices) throw new Error(`The browser doesn't support the media devices API, or the context is insecure (is HTTPS being used?)`);
-  return await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  return await navigator.mediaDevices.getUserMedia({ audio: {
+    autoGainControl: false,
+    echoCancellation: false,
+    noiseSuppression: false,
+    mandatory: {
+      googEchoCancellation: false,
+      googAutoGainControl: false,
+      googNoiseSuppression: false,
+      googHighpassFilter: false,
+    },
+  } as any, video: false });
 }
 
 const stopStream = (stream: MediaStream) => {
@@ -42,6 +52,7 @@ const getTotalVolume = (fftData: Uint8Array, frequencyPerArrayItem: number): num
   const startIndex = Math.round(lowerFrequencyBoundary / frequencyPerArrayItem);
   const endIndex = Math.round(higherFrequencyBoundary / frequencyPerArrayItem);
   for (let i = startIndex; i < endIndex; i++) {
+    if (fftData[i] == -Infinity) console.log('-Infinite sample');
     sum += fftData[i];
   }
   const avg = (sum / (endIndex - startIndex));

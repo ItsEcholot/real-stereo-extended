@@ -14,7 +14,7 @@ const TestModePage: FunctionComponent = () => {
       {audioMeterErrors.map((error, index) => (
         <Alert key={index} message={error} type="error" showIcon />
       ))}
-      {settings ? <Row>
+      {true ? <Row>
         <Col flex="auto">Enable test mode</Col>
         <Col>
           <Switch onChange={setTestModeEnabled} />
