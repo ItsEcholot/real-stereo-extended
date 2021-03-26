@@ -11,8 +11,9 @@ from ..cluster_pb2 import Wrapper
 class ClusterSlave(ClusterSocket):
     """Slave for the cluster protocol."""
 
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
+        self.config = config
         self.receive_socket = None
         self.send_socket = None
         self.master_ip = None
@@ -65,17 +66,19 @@ class ClusterSlave(ClusterSocket):
         """Receive logic of the slave socket."""
         while self.running and not reader.at_eof():
             try:
-                data = await reader.readuntil('\0'.encode())
+                data = await reader.readuntil('\n'.encode())
                 address = writer.get_extra_info('peername')
 
                 # remove message delimiter
                 data = data[:-1]
 
                 await self.receive_message(data, address=address[0])
-            except asyncio.exceptions.IncompleteReadError:
+            except asyncio.IncompleteReadError:
                 break
+            except RuntimeError as error:
+                print(error)
 
-    async def on_service_acquisition(self, _: Wrapper, address: str) -> None:
+    async def on_service_acquisition(self, message: Wrapper, address: str) -> None:
         """Handle service acquisition message.
 
         :param protocol.cluster_pb2.Wrapper message: Received message
@@ -84,6 +87,19 @@ class ClusterSlave(ClusterSocket):
         self.last_ping = time()
         self.master_ip = address
         self.log('Acquired by ' + address)
+
+        self.config.balance = message.serviceAcquisition.track
+        await self.config.setting_repository.call_listeners()
+
+    async def on_service_update(self, message: Wrapper, address: str) -> None:
+        """Handle service update message.
+
+        :param protocol.cluster_pb2.Wrapper message: Received message
+        :param str address: IP Address of the master
+        """
+        if address == self.master_ip:
+            self.config.balance = message.serviceUpdate.track
+            await self.config.setting_repository.call_listeners()
 
     async def on_service_release(self, _: Wrapper, address: str) -> None:
         """Handle service release message.
@@ -94,6 +110,10 @@ class ClusterSlave(ClusterSocket):
         if address == self.master_ip:
             self.master_ip = None
             self.log('Released by ' + address)
+
+            if self.config.balance:
+                self.config.balance = False
+                await self.config.setting_repository.call_listeners()
 
     async def on_ping(self, _: Wrapper, address: str) -> None:
         """Handle ping message.

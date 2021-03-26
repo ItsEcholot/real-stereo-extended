@@ -77,15 +77,26 @@ class ClusterMaster(ClusterSocket):
             return False
         return False
 
+    def send_message(self, address: str, message: Wrapper) -> None:
+        """Sends a message to the specified address.
+
+        :param str address: IP Address of the received
+        :param protocol.cluster_pb2.Wrapper message: Message
+        """
+        try:
+            self.get_slave_socket(address).sendall(message.SerializeToString() + '\n'.encode())
+        except ConnectionRefusedError:
+            print('[Cluster Master] Unable to send message, connection refused')
+
     def send_acquisition(self, address: str) -> None:
         """Sends a service acquisition message to a node.
 
         :param str address: IP Address of the node to acquire
         """
         message = self.build_message()
-        message.serviceAcquisition.detect = self.config.balance
+        message.serviceAcquisition.track = self.config.balance
         message.serviceAcquisition.hostname = self.hostname
-        self.get_slave_socket(address).sendall(message.SerializeToString() + '\0'.encode())
+        self.send_message(address, message)
 
     def send_release(self, address: str) -> None:
         """Sends a service release message to a node.
@@ -94,8 +105,7 @@ class ClusterMaster(ClusterSocket):
         """
         message = self.build_message()
         message.serviceRelease.hostname = self.hostname
-
-        self.get_slave_socket(address).sendall(message.SerializeToString() + '\0'.encode())
+        self.send_message(address, message)
 
     def send_ping(self, address: str) -> None:
         """Sends a ping message to a node.
@@ -104,8 +114,16 @@ class ClusterMaster(ClusterSocket):
         """
         message = self.build_message()
         message.ping.hostname = self.hostname
+        self.send_message(address, message)
 
-        self.get_slave_socket(address).sendall(message.SerializeToString() + '\0'.encode())
+    def send_service_update(self, address: str) -> None:
+        """Sends a service update message to a node.
+
+        :param str address: IP Address of the node
+        """
+        message = self.build_message()
+        message.serviceUpdate.track = self.config.balance
+        self.send_message(address, message)
 
     async def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """On service announcement received.

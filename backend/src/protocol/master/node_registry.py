@@ -22,8 +22,9 @@ class NodeRegistry:
         self.last_pings = {}
         self.master_ip = ''
 
-        # add node repository change listener
+        # add repository change listeners
         config.node_repository.register_listener(self.update_acquisition_status)
+        config.setting_repository.register_listener(self.update_service_status)
 
     def stop(self) -> None:
         """Stops the node registry."""
@@ -57,6 +58,12 @@ class NodeRegistry:
 
                 node.acquired = False
                 self.log(node, 'released')
+
+    async def update_service_status(self) -> None:
+        """Updates the service status of all slaves."""
+        for node in self.config.nodes:
+            if node.acquired and node.online and node.ip_address != self.master_ip:
+                self.master.send_service_update(node.ip_address)
 
     async def check_availability(self) -> None:
         """Checks if all nodes are still available or marks them offline if not."""

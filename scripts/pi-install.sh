@@ -72,6 +72,13 @@ if [[ ! $(sudo cat /etc/wpa_supplicant/wpa_supplicant.conf | grep 'country') ]];
   sudo ifconfig wlan0 up
 fi
 
+# set up the camera module
+if [[ ! $(grep camera /boot/config.txt) ]]; then
+  echo -e "disable_camera_led=1\n$(cat /boot/config.txt)" | sudo dd of=/boot/config.txt
+  echo -e "gpu_mem=128\n$(cat /boot/config.txt)" | sudo dd of=/boot/config.txt
+  echo -e "start_x=1\n$(cat /boot/config.txt)" | sudo dd of=/boot/config.txt
+fi
+
 # set up ssh
 if [[ ! -d "$HOME/.ssh" ]]; then
   sudo systemctl enable ssh

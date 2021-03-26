@@ -63,15 +63,15 @@ The IP address of the master can be extracted from the TCP packet header.
 
 ```
 message ServiceAcquisition {
-  bool detect = 1;
+  bool track = 1;
 }
 ```
 
-`detect` indicates the current desired service status. If true, the slave will immediately start detecting people in its camera. If false, the slave will wait for a [service status update](#service-status-update) message until he starts the detection.
+`track` indicates the current desired service status. If true, the slave will immediately start tracking people in its camera. If false, the slave will wait for a [service status update](#service-status-update) message until he starts the tracking.
 
 ### Service release
 
-When a master no longer requires the service of a slave, he can release it. The slave will then stop detection and go back into the [auto service discovery](#auto-service-discovery) mode.
+When a master no longer requires the service of a slave, he can release it. The slave will then stop tracking and go back into the [auto service discovery](#auto-service-discovery) mode.
 
 ```
 message ServiceRelease {}
@@ -93,7 +93,7 @@ Balancing can be started and stopped. In this case, the master will send a statu
 
 ```
 message ServiceUpdate {
-  bool detect = 1;
+  bool track = 1;
 }
 ```
 

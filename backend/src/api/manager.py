@@ -14,8 +14,9 @@ from .controllers.speakers import SpeakersController
 from .controllers.settings import SettingsController
 
 # define path of the static frontend files
-frontendPath: Path = (Path(__file__).resolve().parent /
-                      '..' / '..' / '..' / 'frontend' / 'build').resolve()
+frontend_path: Path = (Path(__file__).resolve().parent /
+                       '..' / '..' / '..' / 'frontend' / 'build').resolve()
+assets_path: Path = (Path(__file__).resolve().parent / '..' / '..' / 'assets').resolve()
 
 
 class ApiManager:
@@ -36,10 +37,10 @@ class ApiManager:
 
         # register master routes
         if self.config.type == NodeType.MASTER or self.config.type == NodeType.UNCONFIGURED:
-            if frontendPath.exists() and (frontendPath / 'static').exists():
+            if frontend_path.exists() and (frontend_path / 'static').exists():
                 self.app.add_routes([
                     web.get('/{tail:(?!static|socket).*}', self.get_index),
-                    web.static('/static', str(frontendPath / 'static')),
+                    web.static('/static', str(frontend_path / 'static')),
                 ])
 
             # attach the socket.io server to the same web server
@@ -59,7 +60,7 @@ class ApiManager:
         :returns: Response
         :rtype: aiohttp.web.Response
         """
-        return web.FileResponse(str(frontendPath / 'index.html'))
+        return web.FileResponse(str(frontend_path / 'index.html'))
 
     async def get_stream(self, request: web.Request) -> web.Response:
         """Starts a new multipart mjpeg stream response of the video camera.
@@ -79,8 +80,11 @@ class ApiManager:
 
         # if no other stream request is open, start catching the camera frames
         if len(self.stream_queues) == 0:
-            print('starting camera stream')
+            print('[Web API] Starting camera stream')
             self.tracking_manager.set_frame_callback(self.on_frame)
+
+        if self.tracking_manager.running is False:
+            await self.write_camera_inactive_frame(response)
 
         queue = asyncio.Queue()
         self.stream_queues.append(queue)
@@ -89,11 +93,12 @@ class ApiManager:
             try:
                 # write each frame (from the queue)
                 frame = await queue.get()
-                with MultipartWriter('image/jpeg', boundary='jpgboundary') as mpwriter:
-                    mpwriter.append(frame, {
-                        'Content-Type': 'image/jpeg'
-                    })
-                    await mpwriter.write(response, close_boundary=False)
+
+                if frame is None:
+                    await self.write_camera_inactive_frame(response)
+                else:
+                    await self.write_stream_frame(response, frame)
+
                 queue.task_done()
             except:  # pylint: disable=bare-except
                 break
@@ -103,8 +108,31 @@ class ApiManager:
             # if no other stream request is active, stop catching the camera frames
             if len(self.stream_queues) == 1:
                 self.tracking_manager.set_frame_callback(None)
-                print('camera stream stopped')
+                print('[Web API] Camera stream stopped')
             self.stream_queues.remove(queue)
+
+    async def write_stream_frame(self, response, frame) -> None:
+        """Writes a frame to the camera stream.
+
+        :param response: Response
+        :param frame: Frame
+        """
+        with MultipartWriter('image/jpeg', boundary='jpgboundary') as mpwriter:
+            mpwriter.append(frame, {
+                'Content-Type': 'image/jpeg'
+            })
+            await mpwriter.write(response, close_boundary=False)
+        await response.drain()
+
+    async def write_camera_inactive_frame(self, response) -> None:
+        """Writes the camera inactive frame to the stream.
+
+        :param response: Response
+        """
+        file = open(assets_path / 'camera-inactive.jpg', 'rb')
+        image = file.read()
+        await self.write_stream_frame(response, image)
+        await self.write_stream_frame(response, image)  # send a second time to flush previous
 
     async def start(self) -> None:
         """Start the API server."""
@@ -119,4 +147,4 @@ class ApiManager:
         """
         # put the frame into all stream request queues so they can be sent in the get_stream method
         for queue in self.stream_queues:
-            queue.put_nowait(frame.tostring())
+            queue.put_nowait(None if frame is None else frame.tostring())
