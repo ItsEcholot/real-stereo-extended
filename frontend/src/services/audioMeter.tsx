@@ -22,17 +22,13 @@ let audioContext: AudioContext | undefined;
 
 const getMicrophoneStream = async (): Promise<MediaStream> => {
   if (!navigator.mediaDevices) throw new Error(`The browser doesn't support the media devices API, or the context is insecure (is HTTPS being used?)`);
-  return await navigator.mediaDevices.getUserMedia({ audio: {
-    autoGainControl: false,
-    echoCancellation: false,
-    noiseSuppression: false,
-    mandatory: {
-      googEchoCancellation: false,
-      googAutoGainControl: false,
-      googNoiseSuppression: false,
-      googHighpassFilter: false,
-    },
-  } as any, video: false });
+  return await navigator.mediaDevices.getUserMedia({
+    audio: {
+      autoGainControl: false,
+      echoCancellation: false,
+      noiseSuppression: false,
+    }
+  });
 }
 
 const stopStream = (stream: MediaStream) => {
@@ -60,29 +56,29 @@ const closeAudioContext = async () => {
 
 // sums up energy in bins per octave
 const sumEnergy = (fftData: Uint8Array): Uint32Array => {
-    // skip the first bin
-    let binSize = 1;
-    let bin = 0;
-    const energies = new Uint32Array(aWeighting.length);
-    for (let octave = 0; octave < aWeighting.length; octave++) {
-        let sum = 0.0;
-        for (let i = 0; i < binSize; i++) {
-            sum += fftData[bin++];
-        }
-        energies[octave] = sum;
-        binSize *= 2;
+  // skip the first bin
+  let binSize = 1;
+  let bin = 0;
+  const energies = new Uint32Array(aWeighting.length);
+  for (let octave = 0; octave < aWeighting.length; octave++) {
+    let sum = 0.0;
+    for (let i = 0; i < binSize; i++) {
+      sum += fftData[bin++];
     }
+    energies[octave] = sum;
+    binSize *= 2;
+  }
 
-    return energies;
+  return energies;
 }
 
 const calculateLoudness = (energies: Uint32Array): number => {
-    let sum = 0.0;
-    for (let i = 0; i < aWeighting.length; i++) {
-        sum += energies[i] * Math.pow(10, aWeighting[i] / 10.0);
-        energies[i] = energies[i] * Math.pow(10, aWeighting[i] / 10.0);
-    }
-    return sum / 255;
+  let sum = 0.0;
+  for (let i = 0; i < aWeighting.length; i++) {
+    sum += energies[i] * Math.pow(10, aWeighting[i] / 10.0);
+    energies[i] = energies[i] * Math.pow(10, aWeighting[i] / 10.0);
+  }
+  return sum / 255;
 }
 
 const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8Array, frequencyPerArrayItem: number) => {
@@ -96,7 +92,7 @@ const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8A
   context.stroke();
 }
 
-export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
+export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const [audioMeterErrors, setAudioMeterErrors] = useState<String[]>([]);
   const [volume, setVolume] = useState(0);
 
@@ -133,7 +129,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
           setVolume(calculateLoudness(energies));
 
           if (spectrumAnalyzerCanvasContext) {
-            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
+            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
             drawSpectrumAnalyzer(spectrumAnalyzerCanvasContext, bufferData, frequencyPerArrayItem);
           }
         }, 50);
