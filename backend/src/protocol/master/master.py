@@ -132,6 +132,25 @@ class ClusterMaster(ClusterSocket):
         message.serviceUpdate.track = self.config.balance
         self.send_message(address, message)
 
+    def send_camera_calibration_request(self, address: str, start: bool, finish: bool,
+                                        repeat: bool) -> None:
+        """Sends a camera calibration request to a node.
+
+        :param str address: IP Address of the node
+        :param bool start: If calibration process starts
+        :param bool finish: If calibration process finishes
+        :param bool repeat: If last step in calibration process is repeated
+        """
+        message = self.build_message()
+        if start is not None:
+            message.cameraCalibrationRequest.start = start
+        if finish is not None:
+            message.cameraCalibrationRequest.finish = finish
+        if repeat is not None:
+            message.cameraCalibrationRequest.repeat = repeat
+
+        self.send_message(address, message)
+
     async def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """On service announcement received.
 

@@ -8,10 +8,12 @@ from aiohttp import web, MultipartWriter
 from numpy import ndarray
 from config import Config, NodeType
 from tracking.manager import TrackingManager
+from protocol.master import ClusterMaster
 from .controllers.rooms import RoomsController
 from .controllers.nodes import NodesController
 from .controllers.speakers import SpeakersController
 from .controllers.settings import SettingsController
+from .controllers.camera_calibration import CameraCalibrationController
 
 # define path of the static frontend files
 frontend_path: Path = (Path(__file__).resolve().parent /
@@ -24,9 +26,11 @@ class ApiManager:
 
     :param Config config: The application config object.
     :param TrackingManager tracking_manager: The instance of an active tracking manager.
+    :param ClusterMaster cluster_master: The cluster master instance if the current node is a master
     """
 
-    def __init__(self, config: Config, tracking_manager: TrackingManager):
+    def __init__(self, config: Config, tracking_manager: TrackingManager,
+                 cluster_master: ClusterMaster = None):
         self.config: Config = config
         self.tracking_manager: TrackingManager = tracking_manager
         self.stream_queues: List[asyncio.Queue] = []
@@ -55,6 +59,8 @@ class ApiManager:
             self.server.register_namespace(NodesController(config=self.config))
             self.server.register_namespace(SpeakersController(config=self.config))
             self.server.register_namespace(SettingsController(config=self.config))
+            self.server.register_namespace(CameraCalibrationController(config=self.config,
+                                                                       cluster_master=cluster_master))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.

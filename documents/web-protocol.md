@@ -130,6 +130,27 @@ type Acknowledgment = {
 }
 ```
 
+#### `CameraCalibration`
+
+```typescript
+type CameraCalibrationRequest = {
+  node: {
+    id: number;
+  };
+  start?: boolean;
+  finish?: boolean;
+  repeat?: boolean;
+}
+
+type CameraCalibrationResponse = {
+  node: {
+    id: number;
+  };
+  count: number;
+  image: string;
+}
+```
+
 ### Namespaces
 
 #### `/rooms`
@@ -174,3 +195,11 @@ Shows and updates settings.
 Available events:
 - `get: () => Settings`
 - `update: (data: Settings) => Acknowledgment`
+
+#### `/camera-calibration`
+
+Updates the camera calibration process.
+
+Available events:
+- `get: () => CameraCalibrationResponse`
+- `update: (data: CameraCalibrationRequest) => Acknowledgment`
