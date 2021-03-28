@@ -12,14 +12,22 @@ class TrackingManager:
         self.camera = None
         self.running = False
         self.on_frame = None
+        self.on_start = None
         self.config.setting_repository.register_listener(self.on_settings_changed)
 
     async def on_settings_changed(self) -> None:
         """Update the tracking status when the settings have changed."""
-        if self.config.balance and self.running is False:
-            asyncio.create_task(self.start())
+        if self.config.balance:
+            self.ensure_started()
         elif self.config.balance is False and self.running:
             self.stop()
+
+    def ensure_started(self) -> None:
+        """Ensures the tracking is running."""
+        if self.running is False:
+            asyncio.create_task(self.start())
+        elif self.on_start is not None:
+            self.on_start()  # pylint: disable=not-callable
 
     async def start(self) -> None:
         """Start the camera tracking."""
@@ -30,6 +38,9 @@ class TrackingManager:
         if self.camera is None:
             self.camera = Camera()
             self.camera.set_frame_callback(self.on_frame)
+
+        if self.on_start is not None:
+            self.on_start()  # pylint: disable=not-callable
 
         await self.camera.process()
 

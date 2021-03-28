@@ -11,9 +11,10 @@ from ..cluster_pb2 import Wrapper
 class ClusterSlave(ClusterSocket):
     """Slave for the cluster protocol."""
 
-    def __init__(self, config):
+    def __init__(self, config, tracking):
         super().__init__()
         self.config = config
+        self.tracking = tracking
         self.receive_socket = None
         self.send_socket = None
         self.direct_master = None
@@ -138,3 +139,24 @@ class ClusterSlave(ClusterSocket):
         """
         if address == self.master_ip:
             self.last_ping = time()
+
+    async def on_camera_calibration_request(self, message: Wrapper, address: str) -> None:
+        """Handle camera calibration request message.
+
+        :param protocol.cluster_pb2.Wrapper message: Received message
+        :param str address: IP Address of the master that pinged this service
+        """
+        if address == self.master_ip:
+            start = message.cameraCalibrationRequest.start or False
+            finish = message.cameraCalibrationRequest.finish or False
+            repeat = message.cameraCalibrationRequest.repeat or False
+
+            def on_tracking_started():
+                self.tracking.on_start = None
+                self.tracking.camera.calibration.handle_request(start=start, finish=finish,
+                                                                repeat=repeat)
+                if finish:
+                    self.tracking.stop()
+
+            self.tracking.on_start = on_tracking_started
+            self.tracking.ensure_started()

@@ -19,7 +19,7 @@ async def main():
     tracking = TrackingManager(config)
 
     if config.type == NodeType.MASTER or '--master' in argv:
-        cluster_slave = ClusterSlave(config)
+        cluster_slave = ClusterSlave(config, tracking)
         cluster_master = ClusterMaster(config, cluster_slave)
         balancing = BalancingManager(config)
         api = ApiManager(config, tracking, cluster_master)
@@ -31,7 +31,7 @@ async def main():
             balancing.start_control(),
         )
     else:
-        cluster_slave = ClusterSlave(config)
+        cluster_slave = ClusterSlave(config, tracking)
         api = ApiManager(config, tracking)
 
         await asyncio.gather(

@@ -6,6 +6,7 @@ from picamera import PiCamera  # pylint: disable=import-error
 import cv2
 from numpy import ndarray
 from .people_detector import PeopleDetector
+from .calibration import Calibration
 
 
 class Camera:
@@ -22,6 +23,7 @@ class Camera:
         self.detector = PeopleDetector()
         self.on_frame = None
         self.camera = PiCamera()
+        self.calibration = Calibration()
         self.camera.resolution = (self.FRAME_WIDTH, self.FRAME_HEIGHT)
         self.camera.framerate = self.FRAMERATE
 
@@ -37,6 +39,11 @@ class Camera:
             for frame in self.camera.capture_continuous(raw_capture, format='bgr',
                                                         use_video_port=True):
                 frame_data = frame.array
+
+                if self.calibration.calibrating:
+                    self.calibration.handle_frame(frame_data)
+                    cv2.putText(frame_data, 'Calibrating Camera', (10, self.FRAME_HEIGHT - 20),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 # self.detector.detect(resized_frame)
 
                 if self.on_frame is not None:

@@ -4,12 +4,14 @@ import { RadarChartOutlined, CheckOutlined, DeleteOutlined } from '@ant-design/i
 import { useSettings } from '../../services/settings';
 import { useNodes } from '../../services/nodes';
 import { useCameraCalibration } from '../../services/cameraCalibration';
+import { useHistory } from 'react-router';
 
 type CalibrateCameraPageProps = {
   nodeId: number;
 }
 
 const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ nodeId }) => {
+  const history = useHistory();
   const { settings } = useSettings();
   const { nodes } = useNodes();
   const currentNode = nodes?.find(node => node.id === nodeId);
@@ -27,6 +29,24 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
     }
   }, [updateCameraCalibration]);
 
+  const finishCalibration = useCallback(async () => {
+    try {
+      await updateCameraCalibration({ finish: true });
+      history.push(`/nodes/${nodeId}`)
+    } catch (ack) {
+      setErrors(ack.errors);
+    }
+  }, [updateCameraCalibration, history, nodeId]);
+
+  const cancelCalibration = useCallback(async () => {
+    try {
+      await updateCameraCalibration({ finish: true, repeat: true });
+      history.push(`/nodes/${nodeId}`);
+    } catch (ack) {
+      setErrors(ack.errors);
+    }
+  }, [updateCameraCalibration, history, nodeId]);
+
   if (currentNode && started) {
     return (
       <>
@@ -34,17 +54,16 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
           <Alert key={index} message={error} type="error" showIcon />
         ))}
         <Row gutter={[0, 16]}>
-          <Col>{count} images used</Col>
-          <Col>
+          <Col span={24}>{count} images used</Col>
+          <Col span={24}>
             <img
               width="100%"
               alt="Camera Preview"
               src={`http://${currentNode.ip}:8080/stream.mjpeg`} />
           </Col>
-          <Col>
+          <Col span={24}>
             <Space>
-              <Button type="primary" disabled={count < 1} icon={<CheckOutlined />}>Finish</Button>
-              <Button danger icon={<DeleteOutlined />}>Cancel</Button>
+              <Button danger icon={<DeleteOutlined />} onClick={cancelCalibration}>Cancel</Button>
             </Space>
           </Col>
         </Row>
