@@ -94,6 +94,17 @@ class ClusterSlave(ClusterSocket):
             except RuntimeError as error:
                 print(error)
 
+    def send_camera_calibration_response(self, count: int, image: str) -> None:
+        """Sends a camera calibration response to the master.
+
+        :param int count: Count param
+        :param str image: Image param
+        """
+        message = self.build_message()
+        message.cameraCalibrationResponse.count = count
+        message.cameraCalibrationResponse.image = image
+        self.send_message(message, self.master_ip)
+
     async def on_service_acquisition(self, message: Wrapper, address: str) -> None:
         """Handle service acquisition message.
 
@@ -153,6 +164,7 @@ class ClusterSlave(ClusterSocket):
 
             def on_tracking_started():
                 self.tracking.on_start = None
+                self.tracking.camera.calibration.cluster_slave = self
                 self.tracking.camera.calibration.handle_request(start=start, finish=finish,
                                                                 repeat=repeat)
                 if finish:

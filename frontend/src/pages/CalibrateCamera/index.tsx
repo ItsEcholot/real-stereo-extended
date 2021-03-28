@@ -86,10 +86,10 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
         <p>
           After clicking on "Start calibration", hold the chessboard in front of the camera.
           Make sure the paper is flat during this process.
-          It may help to clip the paper to a clipboard or another hard surface.
+          It may help to clamp the paper to a clipboard or another hard surface.
         </p>
         <p>
-          You have 2 seconds of time before a chessboard will be searched in the camera stream.
+          You have 3 seconds of time before a chessboard will be searched in the camera stream.
           And when the chessboard has been detected, you can review it.
         </p>
         <Divider />

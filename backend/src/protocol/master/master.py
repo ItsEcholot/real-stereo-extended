@@ -21,6 +21,7 @@ class ClusterMaster(ClusterSocket):
         self.node_registry = NodeRegistry(config, self)
         self.hostname = gethostname()
         self.slave_sockets = {}
+        self.camera_calibration_response_listener = None
 
         if self.direct_slave is not None:
             self.direct_slave.direct_master = self
@@ -166,3 +167,17 @@ class ClusterMaster(ClusterSocket):
         :param str address: Sender IP
         """
         self.node_registry.on_ping(address)
+
+    async def on_camera_calibration_response(self, message: Wrapper, address: str) -> None:
+        """Handle camera calibration response.
+
+        :param protocol.cluster_pb2.Wrapper message: Message
+        :param str address: Sender IP
+        """
+        node = self.config.node_repository.get_node_by_ip(address)
+        count = message.cameraCalibrationResponse.count
+        image = message.cameraCalibrationResponse.image
+
+        if self.camera_calibration_response_listener is not None:
+            await self.camera_calibration_response_listener(  # pylint: disable=not-callable
+                node, count, image)

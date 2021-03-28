@@ -42,6 +42,21 @@ class CameraCalibrationController(AsyncNamespace):
 
         return ack
 
+    async def send_response(self, node, count, image) -> None:
+        """Sends the camera calibration response to all clients.
+
+        :param models.node.Node node: Node
+        :param int count: Count param
+        :param str image: Image param
+        """
+        await self.emit('get', {
+            node: {
+                id: node.id,
+            },
+            count: count,
+            image: image,
+        })
+
     async def on_update(self, _: str, data: dict) -> None:
         """Updates the camera calibration process.
 
@@ -57,6 +72,7 @@ class CameraCalibrationController(AsyncNamespace):
             start = data.get('start')
             finish = data.get('finish')
             repeat = data.get('repeat')
+            self.cluster_master.camera_calibration_response_listener = self.send_response
             self.cluster_master.send_camera_calibration_request(node.ip_address, start=start,
                                                                 finish=finish, repeat=repeat)
 
