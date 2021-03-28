@@ -106,6 +106,9 @@ class NodeRegistry:
         except:  # pylint: disable=bare-except
             self.master_ip = '127.0.0.1'
 
+        if self.master.direct_slave is not None:
+            self.master.direct_slave.master_ip = self.master_ip
+
         await self.update_node(hostname, self.master_ip)
 
     async def on_service_announcement(self, message: Wrapper, address: str) -> None:

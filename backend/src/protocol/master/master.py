@@ -13,13 +13,17 @@ from .node_registry import NodeRegistry
 class ClusterMaster(ClusterSocket):
     """Master for the cluster protocol."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, direct_slave=None):
         super().__init__()
         self.receive_socket = None
         self.config = config
+        self.direct_slave = direct_slave
         self.node_registry = NodeRegistry(config, self)
         self.hostname = gethostname()
         self.slave_sockets = {}
+
+        if self.direct_slave is not None:
+            self.direct_slave.direct_master = self
 
     async def init(self) -> None:
         """Initializes the master socket and starts listening."""
@@ -80,11 +84,14 @@ class ClusterMaster(ClusterSocket):
     def send_message(self, address: str, message: Wrapper) -> None:
         """Sends a message to the specified address.
 
-        :param str address: IP Address of the received
+        :param str address: IP Address of the receiver
         :param protocol.cluster_pb2.Wrapper message: Message
         """
         try:
-            self.get_slave_socket(address).sendall(message.SerializeToString() + '\n'.encode())
+            if self.direct_slave is not None and address == self.node_registry.master_ip:
+                asyncio.create_task(self.direct_slave.call_events(message, address))
+            else:
+                self.get_slave_socket(address).sendall(message.SerializeToString() + '\n'.encode())
         except ConnectionRefusedError:
             print('[Cluster Master] Unable to send message, connection refused')
 

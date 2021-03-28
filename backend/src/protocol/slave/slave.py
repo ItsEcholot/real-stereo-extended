@@ -16,6 +16,7 @@ class ClusterSlave(ClusterSocket):
         self.config = config
         self.receive_socket = None
         self.send_socket = None
+        self.direct_master = None
         self.master_ip = None
         self.last_ping = None
 
@@ -44,6 +45,7 @@ class ClusterSlave(ClusterSocket):
         while self.running:
             # send service announcement if not yet acquired
             if self.master_ip is None:
+                self.send_message(message.SerializeToString(), address='<broadcast>')
                 self.send_socket.sendto(message.SerializeToString(), ('<broadcast>', PORT))
 
             else:
@@ -56,6 +58,19 @@ class ClusterSlave(ClusterSocket):
                 # else:
 
             await asyncio.sleep(SLAVE_PING_INTERVAL)
+
+    def send_message(self, message: Wrapper, address: str = '') -> None:
+        """Sends a message to the master or specified address.
+
+        :param protocol.cluster_pb2.Wrapper message: Message
+        :param str address: IP Address of the receiver. If unspecified, master_ip will be used.
+        """
+        receiver_address = address if len(address) > 0 else self.master_ip
+
+        if self.direct_master is not None:
+            asyncio.create_task(self.direct_master.call_events(message, receiver_address))
+        else:
+            self.send_socket.sendto(message.SerializeToString(), (receiver_address, PORT))
 
     async def receive(self) -> None:
         """Starts the receiving socket server."""
