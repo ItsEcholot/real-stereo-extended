@@ -1,7 +1,20 @@
-import { useEffect, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 
-const targetFrequency = 1000;
-const fftWindowSize = 4096;
+const fftWindowSize = 512;
+const aWeighting = [
+  -85.4,
+  -63.6,
+  -44.8,
+  -30.3,
+  -19.1,
+  -10.8,
+  -4.8,
+  0.6,
+  1.3,
+  0.6,
+  -2.5,
+  -9.3,
+]; // From https://acousticalengineer.com/a-weighting-table/
 
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
@@ -9,7 +22,13 @@ let audioContext: AudioContext | undefined;
 
 const getMicrophoneStream = async (): Promise<MediaStream> => {
   if (!navigator.mediaDevices) throw new Error(`The browser doesn't support the media devices API, or the context is insecure (is HTTPS being used?)`);
-  return await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  return await navigator.mediaDevices.getUserMedia({
+    audio: {
+      autoGainControl: false,
+      echoCancellation: false,
+      noiseSuppression: false,
+    }
+  });
 }
 
 const stopStream = (stream: MediaStream) => {
@@ -34,19 +53,46 @@ const closeAudioContext = async () => {
   audioContext = undefined;
 }
 
-// eslint-disable-next-line
-const getTotalVolume = (fftData: Uint8Array): number => {
-  const sum = fftData.reduce((a, b) => a + b);
-  const avg = (sum / fftData.length);
-  return 100 * avg / 255;
+
+// sums up energy in bins per octave
+const sumEnergy = (fftData: Uint8Array): Uint32Array => {
+  // skip the first bin
+  let binSize = 1;
+  let bin = 0;
+  const energies = new Uint32Array(aWeighting.length);
+  for (let octave = 0; octave < aWeighting.length; octave++) {
+    let sum = 0.0;
+    for (let i = 0; i < binSize; i++) {
+      sum += fftData[bin++];
+    }
+    energies[octave] = sum;
+    binSize *= 2;
+  }
+
+  return energies;
 }
 
-const getFrequencyVolume = (fftData: Uint8Array, lowerFrequencyIndex: number, higherFrequencyIndex: number): number => {
-  const avg = (fftData[lowerFrequencyIndex] + fftData[higherFrequencyIndex]) / 2;
-  return 100 * avg / 255;
+const calculateLoudness = (energies: Uint32Array): number => {
+  let sum = 0.0;
+  for (let i = 0; i < aWeighting.length; i++) {
+    sum += energies[i] * Math.pow(10, aWeighting[i] / 10.0);
+    energies[i] = energies[i] * Math.pow(10, aWeighting[i] / 10.0);
+  }
+  return sum / 255;
 }
 
-export const useAudioMeter = (enabled: boolean) => {
+const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8Array, frequencyPerArrayItem: number) => {
+  context.beginPath();
+  fftData.forEach((value, index) => {
+    context.lineTo(index * 2, value);
+    if ((frequencyPerArrayItem * index) % 1000 === 0) {
+      context.fillText(`${Math.round(frequencyPerArrayItem * index)}`, index * 2, 250)
+    }
+  });
+  context.stroke();
+}
+
+export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const [audioMeterErrors, setAudioMeterErrors] = useState<String[]>([]);
   const [volume, setVolume] = useState(0);
 
@@ -68,14 +114,24 @@ export const useAudioMeter = (enabled: boolean) => {
         const bufferData = new Uint8Array(analyserNode.frequencyBinCount);
         if (!audioContext) throw new Error(`Can't get frequency volume: Missing AudioContext`);
         const frequencyPerArrayItem = (audioContext.sampleRate / 2) / analyserNode.frequencyBinCount;
-        const lowerFrequencyIndex = Math.floor(targetFrequency / frequencyPerArrayItem)
-        const higherFrequencyIndex = lowerFrequencyIndex + 1;
+        /*const lowerFrequencyIndex = Math.floor(targetFrequency / frequencyPerArrayItem)
+        const higherFrequencyIndex = lowerFrequencyIndex + 1;*/
+
+        const spectrumAnalyzerCanvasContext = spectrumAnalyzerCanvasRef?.current?.getContext('2d');
+        if (spectrumAnalyzerCanvasContext) {
+          spectrumAnalyzerCanvasContext.lineWidth = 1;
+          spectrumAnalyzerCanvasContext.strokeStyle = '#ff0000';
+        }
 
         analyseInterval = setInterval(() => {
           analyserNode.getByteFrequencyData(bufferData);
-          //const volume = getTotalVolume(bufferData);
-          const volume = getFrequencyVolume(bufferData, lowerFrequencyIndex, higherFrequencyIndex);
-          setVolume(volume);
+          const energies = sumEnergy(bufferData);
+          setVolume(calculateLoudness(energies));
+
+          if (spectrumAnalyzerCanvasContext) {
+            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
+            drawSpectrumAnalyzer(spectrumAnalyzerCanvasContext, bufferData, frequencyPerArrayItem);
+          }
         }, 50);
       } catch (err) {
         setAudioMeterErrors(a => [...a, err.toString()]);
@@ -87,7 +143,7 @@ export const useAudioMeter = (enabled: boolean) => {
       if (microphoneStream) stopStream(microphoneStream);
       closeAudioContext();
     }
-  }, [enabled]);
+  }, [enabled, spectrumAnalyzerCanvasRef]);
 
   return { volume, audioMeterErrors };
 };

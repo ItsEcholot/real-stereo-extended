@@ -1,14 +1,13 @@
 import { Row, Col, Switch, Divider, Spin, Progress, Space, Alert } from 'antd';
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useRef, useState } from 'react';
 import { useAudioMeter } from '../../services/audioMeter';
 import { useSettings } from '../../services/settings';
 
 const TestModePage: FunctionComponent = () => {
-  const { settings, updateSettings } = useSettings();
-
-  const [previousSettingsBalancing, setPreviousSettingsBalancing] = useState<boolean>();
+  const { settings } = useSettings();
   const [testModeEnabled, setTestModeEnabled] = useState(false);
-  const { volume, audioMeterErrors } = useAudioMeter(testModeEnabled);
+  const spectrumAnalyzerCanvasRef = useRef<HTMLCanvasElement>(null);
+  const { volume, audioMeterErrors } = useAudioMeter(testModeEnabled, spectrumAnalyzerCanvasRef);
 
   return (
     <>
@@ -27,6 +26,14 @@ const TestModePage: FunctionComponent = () => {
           <Col span={12}>Current volume</Col>
           <Col flex="auto">
             <Progress trailColor="white" percent={Math.round(volume * 100) / 100} />
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24}>Spectrum Analyzer</Col>
+        </Row>
+        <Row>
+          <Col span={24}>
+            <canvas width="500" height="255" ref={spectrumAnalyzerCanvasRef} />
           </Col>
         </Row>
         <img
