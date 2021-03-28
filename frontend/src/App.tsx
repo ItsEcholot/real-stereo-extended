@@ -9,6 +9,7 @@ import AddCameraNodesPages from './pages/AddCameraNodes';
 import EditNodePage from './pages/EditNode';
 import './App.css';
 import TestModePage from './pages/TestMode';
+import CalibrateCameraPage from './pages/CalibrateCamera';
 
 const App: FunctionComponent<{}> = () => {
   return (
@@ -24,6 +25,9 @@ const App: FunctionComponent<{}> = () => {
             </Route>
             <Route exact path="/nodes/:nodeId" render={props => (
               <EditNodePage nodeId={parseInt(props.match.params.nodeId, 10)} />
+            )} />
+            <Route exact path="/nodes/:nodeId/calibrate-camera" render={props => (
+              <CalibrateCameraPage nodeId={parseInt(props.match.params.nodeId, 10)} />
             )} />
             <Route exact path="/rooms/edit">
               <EditRoomsPage />

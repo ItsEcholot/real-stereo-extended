@@ -33,7 +33,10 @@ class ApiManager:
         self.app: web.Application = web.Application()
 
         # register routes for both masters and slaves
-        self.app.add_routes([web.get('/stream.mjpeg', self.get_stream)])
+        self.app.add_routes([
+            web.get('/stream.mjpeg', self.get_stream),
+            web.static('/backend-assets', str(assets_path)),
+        ])
 
         # register master routes
         if self.config.type == NodeType.MASTER or self.config.type == NodeType.UNCONFIGURED:

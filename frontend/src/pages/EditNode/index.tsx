@@ -1,4 +1,4 @@
-import { Row, Col, Divider, Form, Input, Spin, Space, Select, Button, Alert } from 'antd';
+import { Row, Col, Divider, Form, Input, Spin, Space, Select, Button, Alert, Badge, Dropdown, Menu } from 'antd';
 import { FunctionComponent, useState } from 'react';
 import {
   CheckOutlined,
@@ -7,6 +7,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { useNodes } from '../../services/nodes';
 import { useRooms } from '../../services/rooms';
+import styles from './styles.module.css';
 
 const { Option } = Select;
 
@@ -53,10 +54,21 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
   return (
     <>
       {currentNode?.ip && (
-        <img
-          width="100%"
-          alt="Camera Preview"
-          src={`http://${currentNode?.ip}:8080/stream.mjpeg`} />
+        <Row>
+          <Col>
+            <img
+              width="100%"
+              alt="Camera Preview"
+              src={`http://${currentNode?.ip}:8080/stream.mjpeg`} />
+            <Dropdown.Button overlay={(
+              <Menu>
+                <Menu.Item onClick={() => history.push(`/nodes/${currentNode.id}/calibrate-camera`)}>
+                  Calibrate Camera
+                </Menu.Item>
+              </Menu>
+            )} className={styles.CameraOptionsDropdown} />
+          </Col>
+        </Row>
       )}
       <Row>
         <Col flex="auto">IP Address</Col>
@@ -68,7 +80,11 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
       </Row>
       <Row>
         <Col flex="auto">Status</Col>
-        <Col>{currentNode?.online ? 'Online' : 'Offline'}</Col>
+        <Col>
+          {currentNode?.online
+            ? <Badge status="success" text="Online" />
+            : <Badge status="error" text="Offline" />
+          }</Col>
       </Row>
       <Divider />
       {saveErrors?.map((error, index) => (
