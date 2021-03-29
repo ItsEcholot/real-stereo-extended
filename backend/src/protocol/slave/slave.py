@@ -46,8 +46,7 @@ class ClusterSlave(ClusterSocket):
         while self.running:
             # send service announcement if not yet acquired
             if self.master_ip is None:
-                self.send_message(message.SerializeToString(), address='<broadcast>')
-                self.send_socket.sendto(message.SerializeToString(), ('<broadcast>', PORT))
+                self.send_message(message, address='<broadcast>')
 
             else:
                 # check if the master didn't send a ping recently and so is assumed to be offline
