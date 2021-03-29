@@ -2,12 +2,13 @@
 from time import time
 from pathlib import Path
 from math import ceil
+import pickle
 import shutil
 import cv2
 import numpy as np
 
 CHESSBOARD_SIZE = (7, 7)  #  inner size
-PREPARATION_TIME = 3
+PREPARATION_TIME = 5
 CORNER_WINDOW_SIZE = (11, 11)
 CORNER_ZERO_ZONE = (-1, -1)
 CORNER_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -21,11 +22,12 @@ class Calibration:
     def __init__(self, frame_size):
         self.frame_size = frame_size
         self.calibrating = False
-        self.calibration = []
+        self.calibration = None
         self.next_chessboard_at = None
         self.object_points = []
         self.image_points = []
         self.cluster_slave = None
+        self.load_calibration()
 
     def handle_request(self, start: bool = False, finish: bool = False, repeat: bool = False) \
             -> None:
@@ -50,6 +52,10 @@ class Calibration:
         if finish:
             print('[Camera Calibration] Finishing calibration')
             self.calibrating = False
+
+            if not repeat:
+                self.store_calibration()
+                self.load_calibration()
 
             # cleanup files
             shutil.rmtree(IMAGE_PATH)
@@ -79,7 +85,7 @@ class Calibration:
 
         # process if chessboard was found
         if ret is True:
-            print('[Camera Calibration] Chessboard found')
+            print('[Camera Calibration] Chessboard found ({})'.format(len(self.object_points) + 1))
             self.next_chessboard_at = None
 
             # improve corner detection
@@ -124,3 +130,54 @@ class Calibration:
         cv2.imwrite(str(IMAGE_PATH / file_name), chessboard_image)
 
         return file_name
+
+    def load_calibration(self) -> None:
+        """Loads the current calibration from a file."""
+        custom_file = ASSETS_PATH / 'custom_calibration.pkl'
+        default_file = ASSETS_PATH / 'default_calibration.pkl'
+
+        if not custom_file.exists() and not default_file.exists():
+            print('[Camera Calibration] No calibration file found')
+            return
+
+        file_name = custom_file if custom_file.exists() else default_file
+
+        with open(file_name, 'rb') as input_data:
+            self.calibration = pickle.load(input_data)
+
+        print('[Camera Calibration] ' + ('Custom' if custom_file.exists() else 'Default') +
+              ' configuration loaded')
+
+    def store_calibration(self) -> None:
+        """Stores the current calibration into a file."""
+        _, mtx, dist, _, _ = cv2.calibrateCamera(self.object_points, self.image_points,
+                                                 self.frame_size, None, None)
+        width = self.frame_size[0]
+        height = self.frame_size[1]
+        camera_matrix, _ = cv2.getOptimalNewCameraMatrix(mtx, dist, (width, height), 0,
+                                                         (width, height))
+
+        data = {
+            'camera_matrix': camera_matrix,
+            'mtx': mtx,
+            'dist': dist,
+        }
+
+        file_name = ASSETS_PATH / 'custom_calibration.pkl'
+
+        if file_name.exists():
+            file_name.unlink()
+
+        with open(file_name, 'wb') as output:
+            pickle.dump(data, output, pickle.HIGHEST_PROTOCOL)
+
+    def correct_frame(self, frame):
+        """Corrects a input frame using the loaded calibration data.
+
+        :param array frame: Camera frame
+        """
+        if self.calibration is None:
+            return frame
+
+        return cv2.undistort(frame, self.calibration['mtx'], self.calibration['dist'], None,
+                             self.calibration['camera_matrix'])

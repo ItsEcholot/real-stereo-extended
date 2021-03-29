@@ -120,13 +120,16 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
           It may help to clamp the paper to a clipboard or another hard surface.
         </p>
         <p>
-          You have 3 seconds of time before a chessboard will be searched in the camera stream.
+          You have 5 seconds of time before a chessboard will be searched in the camera stream.
           And when the chessboard has been detected, you can review it.
+          During review, make sure that the detected corners of the chessboard are in the correct place.
+          If not, repeat the current image.
         </p>
         <Divider />
         <p>
           Repeat the process a few times and always hold the chessboard in different angles and rotations.
           An example can be seen <a href="https://upload.wikimedia.org/wikipedia/commons/0/05/Multiple_chessboard_views.png" target="_blank" rel="noreferrer">here</a>.
+          Holding the chessboard closer to the camera ends in a better result since the corners can be detected more easily.
         </p>
         <p>
           More images improve the calibration.

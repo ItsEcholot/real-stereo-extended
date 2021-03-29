@@ -44,7 +44,9 @@ class Camera:
                     self.calibration.handle_frame(frame_data)
                     cv2.putText(frame_data, 'Calibrating Camera', (10, self.FRAME_HEIGHT - 20),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                # self.detector.detect(resized_frame)
+                else:
+                    frame_data = self.calibration.correct_frame(frame_data)
+                    # self.detector.detect(frame_data)
 
                 if self.on_frame is not None:
                     self.send_frame(frame_data)
