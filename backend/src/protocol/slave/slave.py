@@ -55,7 +55,8 @@ class ClusterSlave(ClusterSocket):
                     await self.on_service_release(None, self.master_ip)
 
                 # send last position update as a ping message if older than 15s
-                # else:
+                else:
+                    self.send_position_update(0)
 
             await asyncio.sleep(SLAVE_PING_INTERVAL)
 
@@ -81,17 +82,26 @@ class ClusterSlave(ClusterSocket):
         """Receive logic of the slave socket."""
         while self.running and not reader.at_eof():
             try:
-                data = await reader.readuntil('\n'.encode())
+                data = await reader.readuntil('\r\n'.encode())
                 address = writer.get_extra_info('peername')
 
                 # remove message delimiter
-                data = data[:-1]
+                data = data[:-2]
 
                 await self.receive_message(data, address=address[0])
             except asyncio.IncompleteReadError:
                 break
             except RuntimeError as error:
                 print(error)
+
+    def send_position_update(self, coordinate: int) -> None:
+        """Sends a position update to the master.
+
+        :param int coordinate: Coordinate
+        """
+        message = self.build_message()
+        message.positionUpdate.coordinate = coordinate
+        self.send_message(message, self.master_ip)
 
     def send_camera_calibration_response(self, count: int, image: str) -> None:
         """Sends a camera calibration response to the master.

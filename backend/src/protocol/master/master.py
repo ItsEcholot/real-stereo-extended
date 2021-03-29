@@ -92,7 +92,8 @@ class ClusterMaster(ClusterSocket):
             if self.direct_slave is not None and address == self.node_registry.master_ip:
                 asyncio.create_task(self.direct_slave.call_events(message, address))
             else:
-                self.get_slave_socket(address).sendall(message.SerializeToString() + '\n'.encode())
+                self.get_slave_socket(address).sendall(
+                    message.SerializeToString() + '\r\n'.encode())
         except ConnectionRefusedError:
             print('[Cluster Master] Unable to send message, connection refused')
 
