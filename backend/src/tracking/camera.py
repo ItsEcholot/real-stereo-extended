@@ -23,7 +23,7 @@ class Camera:
         self.detector = PeopleDetector()
         self.on_frame = None
         self.camera = PiCamera()
-        self.calibration = Calibration()
+        self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT))
         self.camera.resolution = (self.FRAME_WIDTH, self.FRAME_HEIGHT)
         self.camera.framerate = self.FRAMERATE
 

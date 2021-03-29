@@ -38,19 +38,25 @@ export const useCameraCalibration = (nodeId?: number) => {
     };
   }, [getSocket, returnSocket, setCameraCalibrationForNode]);
 
-  const updateCameraCalibration = useCallback((cameraCalibration: Partial<CameraCalibrationRequest>): Promise<Acknowledgment> => {
+  const updateCameraCalibration = useCallback((cameraCalibrationRequest: Partial<CameraCalibrationRequest>): Promise<Acknowledgment> => {
     const calibrationSocket = getSocket('camera-calibration');
     return new Promise((resolve, reject) => {
       calibrationSocket.emit('update', {
         node: { id: nodeId },
-        ...cameraCalibration,
+        ...cameraCalibrationRequest,
       }, (ack: Acknowledgment) => {
+        if (cameraCalibration && cameraCalibrationRequest.repeat) {
+          setCameraCalibration({
+            ...cameraCalibration,
+            count: cameraCalibrationRequest.finish ? 0 : cameraCalibration.count - 1,
+          });
+        }
         if (ack.successful) resolve(ack);
         else reject(ack);
         returnSocket('camera-calibration');
       })
     });
-  }, [getSocket, returnSocket, nodeId]);
+  }, [getSocket, returnSocket, nodeId, cameraCalibration]);
 
   return { cameraCalibration, updateCameraCalibration };
 };

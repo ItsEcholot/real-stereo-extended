@@ -1,6 +1,6 @@
-import { Alert, Button, Col, Divider, Row, Space } from 'antd';
+import { Alert, Button, Col, Divider, Modal, Row, Space } from 'antd';
 import { FunctionComponent, useCallback, useState } from 'react';
-import { RadarChartOutlined, CheckOutlined, DeleteOutlined } from '@ant-design/icons';
+import { RadarChartOutlined, CheckOutlined, DeleteOutlined, ArrowRightOutlined, UndoOutlined } from '@ant-design/icons';
 import { useSettings } from '../../services/settings';
 import { useNodes } from '../../services/nodes';
 import { useCameraCalibration } from '../../services/cameraCalibration';
@@ -18,7 +18,9 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
   const { cameraCalibration, updateCameraCalibration } = useCameraCalibration(currentNode?.id)
   const [started, setStarted] = useState<boolean>(false);
   const [errors, setErrors] = useState<string[]>();
+  const [prevCount, setPrevCount] = useState<number>(0);
   const count = cameraCalibration ? cameraCalibration.count : 0;
+  const confirm = count !== prevCount && cameraCalibration && cameraCalibration.image;
 
   const startCalibration = useCallback(async () => {
     setStarted(true);
@@ -47,12 +49,41 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
     }
   }, [updateCameraCalibration, history, nodeId]);
 
+  const repeatImage = useCallback(async () => {
+    try {
+      await updateCameraCalibration({ repeat: true });
+    } catch (ack) {
+      setErrors(ack.errors);
+    }
+  }, [updateCameraCalibration]);
+
+  const nextImage = useCallback(async () => {
+    try {
+      await updateCameraCalibration({ repeat: false });
+      setPrevCount(count);
+    } catch (ack) {
+      setErrors(ack.errors);
+    }
+  }, [updateCameraCalibration, count]);
+
   if (currentNode && started) {
     return (
       <>
         {errors?.map((error, index) => (
           <Alert key={index} message={error} type="error" showIcon />
         ))}
+        {confirm && (
+          <Modal title="Use this image for calibration?" visible footer={[
+            <Button danger key="back" onClick={repeatImage} icon={<UndoOutlined />}>Repeat</Button>,
+            <Button onClick={finishCalibration} icon={<CheckOutlined />}>Finish</Button>,
+            <Button type="primary" key="submit" onClick={nextImage} icon={<ArrowRightOutlined />}>Next image</Button>,
+          ]}>
+            <img
+              width="100%"
+              alt="Calibration Preview"
+              src={`http://${currentNode.ip}:8080/backend-assets/calibration/${cameraCalibration?.image}`} />
+          </Modal>
+        )}
         <Row gutter={[0, 16]}>
           <Col span={24}>{count} images used</Col>
           <Col span={24}>

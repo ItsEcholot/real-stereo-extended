@@ -50,11 +50,11 @@ class CameraCalibrationController(AsyncNamespace):
         :param str image: Image param
         """
         await self.emit('get', {
-            node: {
-                id: node.id,
+            'node': {
+                'id': node.node_id,
             },
-            count: count,
-            image: image,
+            'count': count,
+            'image': image,
         })
 
     async def on_update(self, _: str, data: dict) -> None:

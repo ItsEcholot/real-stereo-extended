@@ -1,6 +1,7 @@
 """Implements camera calibration."""
 from time import time
 from pathlib import Path
+from math import ceil
 import shutil
 import cv2
 import numpy as np
@@ -10,14 +11,15 @@ PREPARATION_TIME = 3
 CORNER_WINDOW_SIZE = (11, 11)
 CORNER_ZERO_ZONE = (-1, -1)
 CORNER_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-IMAGE_PATH: Path = (Path(__file__).resolve().parent / '..' / '..' / 'assets' / 'calibration') \
-    .resolve()
+ASSETS_PATH: Path = (Path(__file__).resolve().parent / '..' / '..' / 'assets').resolve()
+IMAGE_PATH: Path = ASSETS_PATH / 'calibration'
 
 
 class Calibration:
     """Implements camera calibration."""
 
-    def __init__(self):
+    def __init__(self, frame_size):
+        self.frame_size = frame_size
         self.calibrating = False
         self.calibration = []
         self.next_chessboard_at = None
@@ -63,7 +65,12 @@ class Calibration:
         :param array frame: Camera frame
         """
         if self.next_chessboard_at is None or self.next_chessboard_at > time():
-            return True
+            if self.next_chessboard_at is not None:
+                time_left = ceil(self.next_chessboard_at - time())
+                cv2.putText(frame, str(time_left), (int(self.frame_size[0] / 2) - 10,
+                                                    int(self.frame_size[1] / 2) - 0),
+                            cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 3)
+            return
 
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -114,8 +121,6 @@ class Calibration:
         # save file
         file_name = str(int(time())) + '.jpg'
         IMAGE_PATH.mkdir(exist_ok=True)
-        print(str(IMAGE_PATH))
-        print(str(IMAGE_PATH / file_name))
         cv2.imwrite(str(IMAGE_PATH / file_name), chessboard_image)
 
         return file_name
