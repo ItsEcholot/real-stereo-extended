@@ -74,7 +74,7 @@ class Calibration:
             if self.next_chessboard_at is not None:
                 time_left = ceil(self.next_chessboard_at - time())
                 cv2.putText(frame, str(time_left), (int(self.frame_size[0] / 2) - 10,
-                                                    int(self.frame_size[1] / 2) - 0),
+                                                    int(self.frame_size[1] / 2) - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 3)
             return
 
