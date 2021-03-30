@@ -5,6 +5,7 @@ import {
   DeleteOutlined
 } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
+import inactiveImage from '../../assets/camera-inactive.jpg';
 import { useNodes } from '../../services/nodes';
 import { useRooms } from '../../services/rooms';
 import styles from './styles.module.css';
@@ -59,7 +60,7 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
             <img
               width="100%"
               alt="Camera Preview"
-              src={`http://${currentNode?.ip}:8080/stream.mjpeg`} />
+              src={currentNode?.online ? `http://${currentNode?.ip}:8080/stream.mjpeg` : inactiveImage} />
             <Dropdown.Button overlay={(
               <Menu>
                 <Menu.Item onClick={() => history.push(`/nodes/${currentNode.id}/calibrate-camera`)}>

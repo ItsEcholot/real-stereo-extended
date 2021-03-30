@@ -95,6 +95,8 @@ class ApiManager:
         if self.tracking_manager.running is False:
             await self.write_camera_inactive_frame(response)
 
+        self.tracking_manager.acquire_camera()
+
         queue = asyncio.Queue()
         self.stream_queues.append(queue)
 
@@ -111,6 +113,8 @@ class ApiManager:
                 queue.task_done()
             except:  # pylint: disable=bare-except
                 break
+
+        self.tracking_manager.release_camera()
 
         # when the client has closed the connection, remove the queue
         if queue in self.stream_queues:
@@ -138,7 +142,7 @@ class ApiManager:
 
         :param response: Response
         """
-        file = open(assets_path / 'camera-inactive.jpg', 'rb')
+        file = open(frontend_path / '..' / 'src' / 'assets' / 'camera-inactive.jpg', 'rb')
         image = file.read()
         await self.write_stream_frame(response, image)
         await self.write_stream_frame(response, image)  # send a second time to flush previous

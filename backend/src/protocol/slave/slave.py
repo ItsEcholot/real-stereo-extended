@@ -176,8 +176,10 @@ class ClusterSlave(ClusterSocket):
                 self.tracking.camera.calibration.cluster_slave = self
                 self.tracking.camera.calibration.handle_request(start=start, finish=finish,
                                                                 repeat=repeat)
-                if finish:
-                    self.tracking.stop()
 
             self.tracking.on_start = on_tracking_started
-            self.tracking.ensure_started()
+
+            if start:
+                self.tracking.acquire_camera()
+            elif finish:
+                self.tracking.release_camera()
