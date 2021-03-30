@@ -1,5 +1,5 @@
 import { FunctionComponent } from 'react';
-import { Menu } from 'antd';
+import { Badge, Menu } from 'antd';
 import {
   HomeOutlined,
   SettingOutlined,
@@ -35,7 +35,10 @@ const MainMenu: FunctionComponent<MainMenuProps> = ({
         <SubMenu key={`submenu${room.name}`} title={room.name}>
           {room.nodes.map(node => (
             <Menu.Item key={`/nodes/${node.id}`}>
-              <Link to={`/nodes/${node.id}`}>{node.name}</Link>
+              <Link to={`/nodes/${node.id}`}>
+                <Badge status={node.online ? 'success' : 'error'} />
+                {node.name}
+              </Link>
             </Menu.Item>
           ))}
         </SubMenu>

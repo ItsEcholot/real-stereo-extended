@@ -13,13 +13,18 @@ from .node_registry import NodeRegistry
 class ClusterMaster(ClusterSocket):
     """Master for the cluster protocol."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, direct_slave=None):
         super().__init__()
         self.receive_socket = None
         self.config = config
+        self.direct_slave = direct_slave
         self.node_registry = NodeRegistry(config, self)
         self.hostname = gethostname()
         self.slave_sockets = {}
+        self.camera_calibration_response_listener = None
+
+        if self.direct_slave is not None:
+            self.direct_slave.direct_master = self
 
     async def init(self) -> None:
         """Initializes the master socket and starts listening."""
@@ -80,11 +85,15 @@ class ClusterMaster(ClusterSocket):
     def send_message(self, address: str, message: Wrapper) -> None:
         """Sends a message to the specified address.
 
-        :param str address: IP Address of the received
+        :param str address: IP Address of the receiver
         :param protocol.cluster_pb2.Wrapper message: Message
         """
         try:
-            self.get_slave_socket(address).sendall(message.SerializeToString() + '\n'.encode())
+            if self.direct_slave is not None and address == self.node_registry.master_ip:
+                asyncio.create_task(self.direct_slave.call_events(message, address))
+            else:
+                self.get_slave_socket(address).sendall(
+                    message.SerializeToString() + '\r\n'.encode())
         except ConnectionRefusedError:
             print('[Cluster Master] Unable to send message, connection refused')
 
@@ -125,6 +134,25 @@ class ClusterMaster(ClusterSocket):
         message.serviceUpdate.track = self.config.balance
         self.send_message(address, message)
 
+    def send_camera_calibration_request(self, address: str, start: bool, finish: bool,
+                                        repeat: bool) -> None:
+        """Sends a camera calibration request to a node.
+
+        :param str address: IP Address of the node
+        :param bool start: If calibration process starts
+        :param bool finish: If calibration process finishes
+        :param bool repeat: If last step in calibration process is repeated
+        """
+        message = self.build_message()
+        if start is not None:
+            message.cameraCalibrationRequest.start = start
+        if finish is not None:
+            message.cameraCalibrationRequest.finish = finish
+        if repeat is not None:
+            message.cameraCalibrationRequest.repeat = repeat
+
+        self.send_message(address, message)
+
     async def on_service_announcement(self, message: Wrapper, address: str) -> None:
         """On service announcement received.
 
@@ -140,3 +168,17 @@ class ClusterMaster(ClusterSocket):
         :param str address: Sender IP
         """
         self.node_registry.on_ping(address)
+
+    async def on_camera_calibration_response(self, message: Wrapper, address: str) -> None:
+        """Handle camera calibration response.
+
+        :param protocol.cluster_pb2.Wrapper message: Message
+        :param str address: Sender IP
+        """
+        node = self.config.node_repository.get_node_by_ip(address)
+        count = message.cameraCalibrationResponse.count
+        image = message.cameraCalibrationResponse.image
+
+        if self.camera_calibration_response_listener is not None:
+            await self.camera_calibration_response_listener(  # pylint: disable=not-callable
+                node, count, image)

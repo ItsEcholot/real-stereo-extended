@@ -12,13 +12,36 @@ class TrackingManager:
         self.camera = None
         self.running = False
         self.on_frame = None
+        self.on_start = None
         self.config.setting_repository.register_listener(self.on_settings_changed)
+        self.previous_config_value = self.config.balance
+        self.camera_listeners = 0
 
     async def on_settings_changed(self) -> None:
         """Update the tracking status when the settings have changed."""
-        if self.config.balance and self.running is False:
+        if self.config.balance and self.config.balance != self.previous_config_value:
+            self.acquire_camera()
+        elif self.config.balance is False and self.config.balance != self.previous_config_value:
+            self.release_camera()
+
+        self.previous_config_value = self.config.balance
+
+    def acquire_camera(self) -> None:
+        """Ensures the tracking is running."""
+        if self.running is False:
             asyncio.create_task(self.start())
-        elif self.config.balance is False and self.running:
+        elif self.on_start is not None:
+            self.on_start()  # pylint: disable=not-callable
+
+        self.camera_listeners += 1
+        print('[Tracking] Camera acquired ({})'.format(self.camera_listeners))
+
+    def release_camera(self) -> None:
+        """Releases the camera and stops it if no other listeners are connected."""
+        self.camera_listeners -= 1
+        print('[Tracking] Camera released ({})'.format(self.camera_listeners))
+
+        if self.camera_listeners == 0:
             self.stop()
 
     async def start(self) -> None:
@@ -30,6 +53,9 @@ class TrackingManager:
         if self.camera is None:
             self.camera = Camera()
             self.camera.set_frame_callback(self.on_frame)
+
+        if self.on_start is not None:
+            self.on_start()  # pylint: disable=not-callable
 
         await self.camera.process()
 

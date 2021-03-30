@@ -11,11 +11,13 @@ from ..cluster_pb2 import Wrapper
 class ClusterSlave(ClusterSocket):
     """Slave for the cluster protocol."""
 
-    def __init__(self, config):
+    def __init__(self, config, tracking):
         super().__init__()
         self.config = config
+        self.tracking = tracking
         self.receive_socket = None
         self.send_socket = None
+        self.direct_master = None
         self.master_ip = None
         self.last_ping = None
 
@@ -44,7 +46,7 @@ class ClusterSlave(ClusterSocket):
         while self.running:
             # send service announcement if not yet acquired
             if self.master_ip is None:
-                self.send_socket.sendto(message.SerializeToString(), ('<broadcast>', PORT))
+                self.send_message(message, address='<broadcast>')
 
             else:
                 # check if the master didn't send a ping recently and so is assumed to be offline
@@ -53,9 +55,23 @@ class ClusterSlave(ClusterSocket):
                     await self.on_service_release(None, self.master_ip)
 
                 # send last position update as a ping message if older than 15s
-                # else:
+                else:
+                    self.send_position_update(0)
 
             await asyncio.sleep(SLAVE_PING_INTERVAL)
+
+    def send_message(self, message: Wrapper, address: str = '') -> None:
+        """Sends a message to the master or specified address.
+
+        :param protocol.cluster_pb2.Wrapper message: Message
+        :param str address: IP Address of the receiver. If unspecified, master_ip will be used.
+        """
+        receiver_address = address if len(address) > 0 else self.master_ip
+
+        if self.direct_master is not None:
+            asyncio.create_task(self.direct_master.call_events(message, receiver_address))
+        else:
+            self.send_socket.sendto(message.SerializeToString(), (receiver_address, PORT))
 
     async def receive(self) -> None:
         """Starts the receiving socket server."""
@@ -66,17 +82,37 @@ class ClusterSlave(ClusterSocket):
         """Receive logic of the slave socket."""
         while self.running and not reader.at_eof():
             try:
-                data = await reader.readuntil('\n'.encode())
+                data = await reader.readuntil('\r\n'.encode())
                 address = writer.get_extra_info('peername')
 
                 # remove message delimiter
-                data = data[:-1]
+                data = data[:-2]
 
                 await self.receive_message(data, address=address[0])
             except asyncio.IncompleteReadError:
                 break
             except RuntimeError as error:
                 print(error)
+
+    def send_position_update(self, coordinate: int) -> None:
+        """Sends a position update to the master.
+
+        :param int coordinate: Coordinate
+        """
+        message = self.build_message()
+        message.positionUpdate.coordinate = coordinate
+        self.send_message(message, self.master_ip)
+
+    def send_camera_calibration_response(self, count: int, image: str) -> None:
+        """Sends a camera calibration response to the master.
+
+        :param int count: Count param
+        :param str image: Image param
+        """
+        message = self.build_message()
+        message.cameraCalibrationResponse.count = count
+        message.cameraCalibrationResponse.image = image
+        self.send_message(message, self.master_ip)
 
     async def on_service_acquisition(self, message: Wrapper, address: str) -> None:
         """Handle service acquisition message.
@@ -123,3 +159,27 @@ class ClusterSlave(ClusterSocket):
         """
         if address == self.master_ip:
             self.last_ping = time()
+
+    async def on_camera_calibration_request(self, message: Wrapper, address: str) -> None:
+        """Handle camera calibration request message.
+
+        :param protocol.cluster_pb2.Wrapper message: Received message
+        :param str address: IP Address of the master that pinged this service
+        """
+        if address == self.master_ip:
+            start = message.cameraCalibrationRequest.start or False
+            finish = message.cameraCalibrationRequest.finish or False
+            repeat = message.cameraCalibrationRequest.repeat or False
+
+            def on_tracking_started():
+                self.tracking.on_start = None
+                self.tracking.camera.calibration.cluster_slave = self
+                self.tracking.camera.calibration.handle_request(start=start, finish=finish,
+                                                                repeat=repeat)
+
+            self.tracking.on_start = on_tracking_started
+
+            if start:
+                self.tracking.acquire_camera()
+            elif finish:
+                self.tracking.release_camera()

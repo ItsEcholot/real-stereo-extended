@@ -1,0 +1,9 @@
+.CameraOptionsDropdown {
+  position: absolute !important;
+  top: 12px;
+  right: 12px;
+}
+
+.CameraOptionsDropdown > button {
+  border-radius: 2px !important;
+}

@@ -12,6 +12,8 @@ message Wrapper {
     PositionUpdate positionUpdate = 6;
     ServiceUpdate serviceUpdate = 7;
     Ping ping = 8;
+    CameraCalibrationRequest cameraCalibrationRequest = 9;
+    CameraCalibrationResponse cameraCalibrationResponse = 10;
   }
 }
 
@@ -38,4 +40,15 @@ message ServiceUpdate {
 
 message Ping {
   string hostname = 1;
+}
+
+message CameraCalibrationRequest {
+  bool start = 1;
+  bool finish = 2;
+  bool repeat = 3;
+}
+
+message CameraCalibrationResponse {
+  uint32 count = 1;
+  string image = 2;
 }

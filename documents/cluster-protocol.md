@@ -27,6 +27,8 @@ message Wrapper {
     PositionUpdate positionUpdate = 6;
     ServiceUpdate serviceUpdate = 7;
     Ping ping = 8;
+    CameraCalibrationRequest cameraCalibrationRequest = 9;
+    CameraCalibrationResponse cameraCalibrationResponse = 10;
   }
 }
 ```
@@ -107,4 +109,34 @@ In the other direction (master to slaves), a dedicated ping message is sent once
 
 ```
 message Ping {}
+```
+
+### Camera Calibration Request
+
+A master can request a new camera calibration.
+`start` indicates that a new calibration will start and once finished, the old one will be overwritten.
+`finish` indicates that calibration is finished and no more request will follow.
+If `repeat` is true, the current image will overwrite the previous one. If false, it will be stored as a new one.
+If `info` is true, the response will only contain the current calibration information, but no new image will be taken.
+
+```
+message CameraCalibrationRequest {
+  bool start = 1;
+  bool finish = 2;
+  bool repeat = 3;
+}
+```
+
+### Camera Calibration Response
+
+Is the response to a `CameraCalibrationRequest` message.
+`custom` indicates if a custom calibration was performed before or if the default one is used.
+`count` holds the amount of images used for the current calibration.
+`image` contains the image name of the last image used for calibration.
+
+```
+message CameraCalibrationResponse {
+  uint32 count = 1;
+  string image = 2;
+}
 ```
