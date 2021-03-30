@@ -132,6 +132,10 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
           Holding the chessboard closer to the camera ends in a better result since the corners can be detected more easily.
         </p>
         <p>
+          Also, make sure to have images where the chessboard is held at the edges and corners of the camera.
+          Otherwise, the cropping may not be perfect and a smaller field of view is recorded.
+        </p>
+        <p>
           More images improve the calibration.
           For a reliable configuration, at least <b>10 images</b> should be used.
         </p>
