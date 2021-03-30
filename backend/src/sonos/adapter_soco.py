@@ -55,6 +55,23 @@ class SonosSocoAdapter(SonosAdapter):
         for index, slave in enumerate(soco_slaves):
             slave.volume = soco_slaves_volumes[index]
 
+    def play_calibration_sound(self, speaker: Speaker):
+        """Plays the calibration sound on all speakers which are part
+        of the passed speakers group.
+
+        :param models.speaker.Speaker speaker: Speaker
+        """
+        soco_instance = soco.SoCo(speaker.ip_address)
+        soco_group = soco_instance.group
+        if soco_group is None:
+            soco_instance.play_uri(uri=CALIBRATION_SOUND_PATH, title='RS Calibration Sound')
+            return
+        soco_group_coordinator = soco_group.coordinator
+        if soco_group_coordinator is not None:
+            soco_group_coordinator.play_uri(uri=CALIBRATION_SOUND_PATH, title='RS Calibration Sound')
+            return
+
+
     def get_stereo_pair_slaves(self, speaker: Speaker) -> Set[soco.SoCo]:
         """Checks if the passed speaker is a stereo pair coordinator and
            returns the all speakers which could be a pair slave.

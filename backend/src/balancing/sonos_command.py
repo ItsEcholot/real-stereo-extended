@@ -40,3 +40,18 @@ class SonosVolumeCommand(SonosCommand):
                 sonos_adapter.set_volume(speaker=speaker, volume=self.volumes[index])
             else:
                 sonos_adapter.ramp_to_volume(speaker=speaker, volume=self.volumes[index])
+
+class SonosPlayCalibrationSoundCommand(SonosCommand):
+    """Contains information of the play calibration sound command to
+    be sent to a Sonos speaker
+
+    :param list[Speaker] speakers: Speakers where the command should be sent to
+    """
+
+    def __init__(self, speakers: List[Speaker]):
+        super().__init__(speakers)
+
+    def run(self, sonos_adapter: SonosAdapter):
+        """Executes the command"""
+        for speaker in self.speakers:
+            sonos_adapter.play_calibration_sound(speaker)
