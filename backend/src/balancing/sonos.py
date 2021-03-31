@@ -4,7 +4,7 @@ from config import Config
 from models.speaker import Speaker
 from sonos.adapter import SonosAdapter
 from sonos.adapter_soco import SonosSocoAdapter
-from .sonos_command import SonosCommand, SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand
+from .sonos_command import SonosCommand
 
 
 class Sonos:
