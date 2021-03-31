@@ -1,32 +1,26 @@
-"""Detects people in a given camera frame."""
-import cv2
+"""Defines methods for the people detection."""
+from abc import ABC, abstractmethod
 from numpy import ndarray
+from config import Config
 
 
-class PeopleDetector:
-    """Detects people in a given camera frame."""
+class PeopleDetector(ABC):
+    """Defines methods for the people detection."""
 
-    def __init__(self):
-        self.hog = cv2.HOGDescriptor()
-        self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+    def __init__(self, config: Config):
+        self.config = config
 
-    def detect(self, frame: ndarray) -> None:
+    @abstractmethod
+    async def detect(self, frame: ndarray) -> None:
         """Detects people in a given camera frame.
 
         :param numpy.ndarray frame: Camera frame
         """
-        # detect people
-        (rects, _) = self.hog.detectMultiScale(frame, winStride=(2, 2), padding=(8, 8), scale=1.05)
+        raise NotImplementedError()
 
-        # draw the bounding boxes
-        self.draw_rects(frame, rects)
+    async def report_coordinate(self, coordinate: int) -> None:
+        """Reports the detected coordinate to the master.
 
-    @staticmethod
-    def draw_rects(frame: ndarray, rects: list) -> None:
-        """Draws the given rects ontop of the frame.
-
-        :param numpy.ndarray frame: Frame to draw on
-        :param list rects: A list of rects in the form (x, y, width, height)
+        :param int coordinate: Coordinate
         """
-        for (pos_x, pos_y, width, height) in rects:
-            cv2.rectangle(frame, (pos_x, pos_y), (pos_x + width, pos_y + height), (0, 255, 0), 2)
+        await self.config.tracking_repository.update_coordinate(coordinate)

@@ -5,7 +5,8 @@ from picamera.array import PiRGBArray  # pylint: disable=import-error
 from picamera import PiCamera  # pylint: disable=import-error
 import cv2
 from numpy import ndarray
-from .people_detector import PeopleDetector
+from config import Config
+from .hog_people_detector import HogPeopleDetector
 from .calibration import Calibration
 
 
@@ -18,9 +19,10 @@ class Camera:
     FRAME_HEIGHT: int = 480
     FRAMERATE: int = 5
 
-    def __init__(self):
+    def __init__(self, config: Config):
+        self.config = config
         self.exiting = False
-        self.detector = PeopleDetector()
+        self.detector = HogPeopleDetector(config)
         self.on_frame = None
         self.camera = PiCamera()
         self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT))
@@ -46,7 +48,9 @@ class Camera:
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 else:
                     frame_data = self.calibration.correct_frame(frame_data)
-                    # self.detector.detect(frame_data)
+
+                    if self.config.balance:
+                        await self.detector.detect(frame_data)
 
                 if self.on_frame is not None:
                     self.send_frame(frame_data)
