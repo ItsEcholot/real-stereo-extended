@@ -2,6 +2,7 @@
 from typing import Set
 from models.speaker import Speaker
 import soco
+from soco.snapshot import Snapshot
 from .adapter import SonosAdapter
 
 
@@ -56,21 +57,47 @@ class SonosSocoAdapter(SonosAdapter):
             slave.volume = soco_slaves_volumes[index]
 
     def play_calibration_sound(self, speaker: Speaker):
-        """Plays the calibration sound on all speakers which are part
+        """Plays the calibration sound on repeat on all speakers which are part
         of the passed speakers group.
 
-        :param models.speaker.Speaker speaker: Speaker
+        :param models.speaker.Speaker speaker: Speaker on which calibration sound should be played on
+        """
+        soco_instance = self.get_coordinator_instance(speaker)
+        soco_instance.play_mode = 'REPEAT_ONE'
+        soco_instance.play_uri(uri=self.calibration_sound_uri, title='RS Calibration Sound')
+
+    def save_snapshot(self, speaker: Speaker):
+        """Saves the current playback state of the passed speaker
+
+        :param models.speaker.Speaker speaker: Speaker which playback state should be saved
+        """
+        soco_instance = self.get_coordinator_instance(speaker)
+        soco_instance.snapshot = Snapshot(soco_instance)
+        soco_instance.snapshot.snapshot()
+
+    def restore_snapshot(self, speaker: Speaker):
+        """Restores the last saved snapshot of the passed speaker
+
+        :param models.speaker.Speaker speaker: Speaker whos last snapshot should be restored
+        """
+        soco_instance = self.get_coordinator_instance(speaker)
+        if soco_instance.snapshot is None:
+            raise ValueError(
+                'Instance doesn\'t contain a snapshot... Did you call save_snapshot before restoring?')
+        soco_instance.snapshot.restore()
+
+    def get_coordinator_instance(self, speaker: Speaker) -> soco.SoCo:
+        """Get the SoCo instance of the passed speaker or, if the passed speaker is in a
+        group, get the groups coordinators SoCo instance.
+
+        :param models.speaker.Speaker speaker: Speaker whos instance / coordinators instance should be returned
+        :returns: SoCo instance or coordinators SoCo instance
+        :rtype: soco.Soco
         """
         soco_instance = soco.SoCo(speaker.ip_address)
-        soco_group = soco_instance.group
-        if soco_group is None:
-            soco_instance.play_uri(uri=self.calibration_sound_uri, title='RS Calibration Sound')
-            return
-        soco_group_coordinator = soco_group.coordinator
-        if soco_group_coordinator is not None:
-            soco_group_coordinator.play_uri(
-                uri=self.calibration_sound_uri, title='RS Calibration Sound')
-            return
+        if soco_instance.group is not None and soco_instance.group.coordinator is not None:
+            soco_instance = soco_instance.group.coordinator
+        return soco_instance
 
     def get_stereo_pair_slaves(self, speaker: Speaker) -> Set[soco.SoCo]:
         """Checks if the passed speaker is a stereo pair coordinator and

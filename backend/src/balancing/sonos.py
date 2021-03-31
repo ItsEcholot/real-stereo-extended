@@ -4,7 +4,7 @@ from config import Config
 from models.speaker import Speaker
 from sonos.adapter import SonosAdapter
 from sonos.adapter_soco import SonosSocoAdapter
-from .sonos_command import SonosCommand, SonosPlayCalibrationSoundCommand
+from .sonos_command import SonosCommand, SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand
 
 
 class Sonos:
@@ -26,11 +26,6 @@ class Sonos:
             speaker: Speaker
             if speakers is not None:
                 for speaker in speakers:
-                    await asyncio.sleep(5)
-                    self.send_command(SonosPlayCalibrationSoundCommand([speaker]))
-                    self.discover_loop_exiting = True
-                    break
-
                     existing_speaker = self.config.speaker_repository.get_speaker(
                         speaker.speaker_id)
                     if existing_speaker is not None and \

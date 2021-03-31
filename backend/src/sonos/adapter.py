@@ -42,9 +42,25 @@ class SonosAdapter(ABC):
 
     @abstractmethod
     def play_calibration_sound(self, speaker: Speaker):
-        """Plays the calibration sound on all speakers which are part
+        """Plays the calibration sound on repeat on all speakers which are part
         of the passed speakers group.
 
-        :param models.speaker.Speaker speaker: Speaker
+        :param models.speaker.Speaker speaker: Speaker on which calibration sound should be played on
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def save_snapshot(self, speaker: Speaker):
+        """Saves the current playback state of the passed speaker
+
+        :param models.speaker.Speaker speaker: Speaker which playback state should be saved
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def restore_snapshot(self, speaker: Speaker):
+        """Restores the last saved snapshot of the passed speaker
+
+        :param models.speaker.Speaker speaker: Speaker whos last snapshot should be restored
         """
         raise NotImplementedError()
