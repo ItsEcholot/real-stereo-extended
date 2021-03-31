@@ -40,3 +40,30 @@ class SonosVolumeCommand(SonosCommand):
                 sonos_adapter.set_volume(speaker=speaker, volume=self.volumes[index])
             else:
                 sonos_adapter.ramp_to_volume(speaker=speaker, volume=self.volumes[index])
+
+
+class SonosPlayCalibrationSoundCommand(SonosCommand):
+    """Contains information of the play calibration sound command to
+    be sent to a Sonos speaker
+
+    :param list[Speaker] speakers: Speakers where the command should be sent to
+    """
+
+    def run(self, sonos_adapter: SonosAdapter):
+        """Executes the command"""
+        for speaker in self.speakers:
+            sonos_adapter.save_snapshot(speaker)
+            sonos_adapter.play_calibration_sound(speaker)
+
+
+class SonosStopCalibrationSoundCommand(SonosCommand):
+    """Contains information of the stop calibration sound command to
+    be sent to a Sonos speaker
+
+    :param list[Speaker] speakers: Speakers where the command should be sent to
+    """
+
+    def run(self, sonos_adapter: SonosAdapter):
+        """Executes the command"""
+        for speaker in self.speakers:
+            sonos_adapter.restore_snapshot(speaker)
