@@ -64,13 +64,13 @@ class SonosSocoAdapter(SonosAdapter):
         soco_instance = soco.SoCo(speaker.ip_address)
         soco_group = soco_instance.group
         if soco_group is None:
-            soco_instance.play_uri(uri=CALIBRATION_SOUND_PATH, title='RS Calibration Sound')
+            soco_instance.play_uri(uri=self.calibration_sound_uri, title='RS Calibration Sound')
             return
         soco_group_coordinator = soco_group.coordinator
         if soco_group_coordinator is not None:
-            soco_group_coordinator.play_uri(uri=CALIBRATION_SOUND_PATH, title='RS Calibration Sound')
+            soco_group_coordinator.play_uri(
+                uri=self.calibration_sound_uri, title='RS Calibration Sound')
             return
-
 
     def get_stereo_pair_slaves(self, speaker: Speaker) -> Set[soco.SoCo]:
         """Checks if the passed speaker is a stereo pair coordinator and

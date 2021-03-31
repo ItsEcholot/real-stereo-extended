@@ -2,16 +2,16 @@
 from abc import ABC, abstractmethod
 from typing import Set
 from pathlib import Path
+from socket import gethostname, gethostbyname
 from models.speaker import Speaker
 
-ASSETS_PATH: Path = (Path(__file__).resolve().parent / '..' / '..' / 'assets').resolve()
-CALIBRATION_SOUND_PATH: Path = ASSETS_PATH / 'white_noise.mp3'
 
 class SonosAdapter(ABC):
     """Defines methods to send commands to Sonos speakers"""
 
     def __init__(self):
-        pass
+        self.calibration_sound_uri = 'http://{}:{}/backend-assets/white_noise.mp3'.format(
+            gethostbyname(gethostname()), 8080)
 
     @abstractmethod
     def discover(self) -> Set[Speaker]:
