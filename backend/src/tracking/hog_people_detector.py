@@ -14,13 +14,16 @@ class HogPeopleDetector(PeopleDetector):
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
-    async def detect(self, frame: ndarray) -> None:
+    async def detect(self, detection_frame: ndarray, draw_frame: ndarray = None) -> None:
         """Detects people in a given camera frame.
 
-        :param numpy.ndarray frame: Camera frame
+        :param numpy.ndarray detection_frame: Camera frame which should be used for detection
+        :param numpy.ndarray draw_frame: Frame in which recognized people should be drawn.
+                                         If none, result should be drawn in detection_frame.
         """
         # detect people
-        (rects, _) = self.hog.detectMultiScale(frame, winStride=(3, 3), padding=(8, 8), scale=1.2)
+        (rects, _) = self.hog.detectMultiScale(detection_frame, winStride=(3, 3), padding=(8, 8),
+                                               scale=1.2)
 
         # reduce multiple overlapping bounding boxes to a single one
         reduced_rects = non_max_suppression(rects, probs=None, overlapThresh=0.65)
@@ -31,7 +34,7 @@ class HogPeopleDetector(PeopleDetector):
             await self.report_coordinate(coordinate)
 
         # draw the bounding boxes
-        self.draw_rects(frame, reduced_rects)
+        self.draw_rects(draw_frame if draw_frame is not None else detection_frame, reduced_rects)
 
     @staticmethod
     def draw_rects(frame: ndarray, rects: list) -> None:
