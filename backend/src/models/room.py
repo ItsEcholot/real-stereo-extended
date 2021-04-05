@@ -19,6 +19,7 @@ class Room:
         self.room_id: int = room_id
         self.name: str = name
         self.nodes: List[models.node.Node] = nodes or []
+        self.calibrating: bool = False
 
     @staticmethod
     def from_json(data: dict):

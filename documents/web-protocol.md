@@ -151,6 +151,18 @@ type CameraCalibrationResponse = {
 }
 ```
 
+### `RoomCalibration`
+```typescript
+type RoomCalibrationRequest = {
+  room: {
+    id: number;
+  };
+  start?: boolean;
+  finish?: boolean;
+  repeat?: boolean;
+}
+```
+
 ### Namespaces
 
 #### `/rooms`
