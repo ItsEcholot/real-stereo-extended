@@ -4,14 +4,16 @@ from socketio import AsyncNamespace
 from config import Config
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
+from balancing.sonos import Sonos
 
 
 class RoomCalibrationController(AsyncNamespace):
     """Controller for the /room-calibration namespace."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, sonos: Sonos):
         super().__init__(namespace='/room-calibration')
         self.config: Config = config
+        self.sonos: Sonos = sonos
 
     def validate(self, data: dict) -> Acknowledgment:
         """Validates the input data.
@@ -51,6 +53,8 @@ class RoomCalibrationController(AsyncNamespace):
         if ack.successful:
             room = self.config.room_repository.get_room(data.get('room').get('id'))
             if data.get('start'):
+                self.config.balance = False
+                await self.config.setting_repository.call_listeners()
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
             elif data.get('finish'):

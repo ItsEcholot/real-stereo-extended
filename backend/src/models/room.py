@@ -2,6 +2,7 @@
 
 from typing import List
 import models.node
+from models.room_calibration_point import RoomCalibrationPoint
 
 
 class Room:
@@ -12,7 +13,8 @@ class Room:
     :param List[model.node.Node] nodes: All nodes that are assigned to this room
     """
 
-    def __init__(self, room_id: int = None, name: str = '', nodes: List = None):
+    def __init__(self, room_id: int = None, name: str = '', nodes: List = None,
+                 calibration_points: List = None):
         if len(name) == 0:
             raise ValueError('Room name cannot be empty')
 
@@ -20,6 +22,7 @@ class Room:
         self.name: str = name
         self.nodes: List[models.node.Node] = nodes or []
         self.calibrating: bool = False
+        self.calibration_points: List[RoomCalibrationPoint] = calibration_points or []
 
     @staticmethod
     def from_json(data: dict):
@@ -29,7 +32,7 @@ class Room:
         :returns: Room
         :rtype: Room
         """
-        return Room(data.get('id'), data.get('name'))
+        return Room(data.get('id'), data.get('name'), data.get('calibration_points'))
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.
@@ -42,6 +45,7 @@ class Room:
         json = {
             'id': self.room_id,
             'name': self.name,
+            'calibration_points': self.calibration_points
         }
 
         if recursive:
