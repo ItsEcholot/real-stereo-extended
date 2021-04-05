@@ -45,7 +45,7 @@ class Room:
         json = {
             'id': self.room_id,
             'name': self.name,
-            'calibration_points': self.calibration_points
+            'calibration_points': list(map(lambda calibration_point: calibration_point.to_json(), self.calibration_points))
         }
 
         if recursive:
