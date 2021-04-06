@@ -3,6 +3,7 @@
 import multiprocessing
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+import cv2
 from .camera import Camera
 from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
 
@@ -80,8 +81,6 @@ class TrackingManager:
                 target=start_camera, args=(self.frame_queue, self.frame_result_queue,
                                            self.return_frame, self.detection_active, ))
             self.camera.start()
-            #self.camera = Camera(self.config)
-            # self.camera.set_frame_callback(self.on_frame)
 
     def start_detector(self) -> None:
         """Start the people detector."""
@@ -116,7 +115,17 @@ class TrackingManager:
         while True:
             frame = await loop.run_in_executor(executor, self.frame_result_queue.get)
             if self.on_frame is not None:
-                self.on_frame(frame)
+                # convert frame to jpeg
+                try:
+                    if frame is None:
+                        self.on_frame(None)
+                    else:
+                        _, jpeg_frame = cv2.imencode('.jpg', frame)
+                        self.on_frame(jpeg_frame)
+                except TypeError:
+                    self.on_frame = None
+                    print('Error occurred in the on_frame callback, it will automatically get '
+                          + 'unregistered')
 
     def set_frame_callback(self, on_frame: callable) -> None:
         """Sets the `on_frame` callback that will receive every processed frame.

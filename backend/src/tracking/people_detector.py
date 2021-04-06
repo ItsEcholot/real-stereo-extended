@@ -23,7 +23,6 @@ class PeopleDetector(ABC):
 
             # count fps
             self.fps.frame()
-            print('Detection FPS: {}'.format(self.fps.get()))
 
             if self.return_frame.is_set():
                 # write fps on the image
@@ -48,5 +47,4 @@ class PeopleDetector(ABC):
 
         :param int coordinate: Coordinate
         """
-        print('Detected coordinate: {}'.format(coordinate))
         # await self.config.tracking_repository.update_coordinate(coordinate)

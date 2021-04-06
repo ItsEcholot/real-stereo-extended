@@ -6,7 +6,6 @@ from queue import Empty
 from picamera.array import PiRGBArray  # pylint: disable=import-error
 from picamera import PiCamera  # pylint: disable=import-error
 import cv2
-from numpy import ndarray
 from .calibration import Calibration
 
 
@@ -59,7 +58,6 @@ class Camera:
 
                 if self.return_frame.is_set() and not self.detection_active.is_set():
                     # call frame listener
-                    print('send result back')
                     self.frame_result_queue.put_nowait(frame_data)
 
                 # clear stream for next frame
@@ -69,26 +67,5 @@ class Camera:
         finally:
             self.camera.close()
 
-        if self.on_frame is not None:
-            self.on_frame(None)
-            self.on_frame = None
-
-    def send_frame(self, frame: ndarray) -> None:
-        """If an `on_frame` callback has been registered, it sends the current frame to it.
-
-        :param numpy.ndarray frame: Current camera frame
-        """
-        _, jpeg_frame = cv2.imencode('.jpg', frame)
-        try:
-            self.on_frame(jpeg_frame)
-        except TypeError:
-            self.on_frame = None
-            print('Error occurred in the on_frame callback, it will automatically get unregistered')
-
-    def set_frame_callback(self, on_frame: callable) -> None:
-        """Sets the `on_frame` callback that will receive every processed frame.
-
-        :param callable on_frame: Callback that receives the `numpy.ndarray` frame as the first
-                                  argument
-        """
-        self.on_frame = on_frame
+        if self.return_frame.is_set():
+            self.frame_result_queue.put_nowait(None)
