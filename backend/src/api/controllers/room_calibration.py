@@ -1,12 +1,15 @@
 """Controller for the /room-calibration namespace."""
 
+import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
 from balancing.sonos import Sonos
 from models.room_calibration_point import RoomCalibrationPoint
+from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand
 
+CALIBRATION_SOUND_LENGTH = 5
 
 class RoomCalibrationController(AsyncNamespace):
     """Controller for the /room-calibration namespace."""
@@ -76,9 +79,17 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_current_speaker_index = 0
                 await self.config.room_repository.call_listeners()
             elif data.get('nextPoint'):
+                # TODO: Get position and save into room_calibration_point
                 room.calibration_current_speaker_index = 0
                 await self.config.room_repository.call_listeners()
             elif data.get('nextSpeaker'):
+                speaker = list(filter(lambda speaker: speaker.room.room_id == room.room_id, 
+                                      self.config.speakers))[room.calibration_current_speaker_index]
+                self.sonos.send_command(SonosPlayCalibrationSoundCommand([speaker]))
+                running_loop = asyncio.get_running_loop()
+                running_loop.call_later(CALIBRATION_SOUND_LENGTH,
+                                        lambda: self.sonos.send_command(SonosStopCalibrationSoundCommand([speaker])))
+
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
 
