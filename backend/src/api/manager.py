@@ -9,11 +9,13 @@ from numpy import ndarray
 from config import Config, NodeType
 from tracking.manager import TrackingManager
 from protocol.master import ClusterMaster
+from balancing.manager import BalancingManager
 from .controllers.rooms import RoomsController
 from .controllers.nodes import NodesController
 from .controllers.speakers import SpeakersController
 from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
+from .controllers.room_calibration import RoomCalibrationController
 
 # define path of the static frontend files
 frontend_path: Path = (Path(__file__).resolve().parent /
@@ -30,7 +32,8 @@ class ApiManager:
     """
 
     def __init__(self, config: Config, tracking_manager: TrackingManager,
-                 cluster_master: ClusterMaster = None):
+                 cluster_master: ClusterMaster = None,
+                 balancing_manager: BalancingManager = None):
         self.config: Config = config
         self.tracking_manager: TrackingManager = tracking_manager
         self.stream_queues: List[asyncio.Queue] = []
@@ -61,6 +64,8 @@ class ApiManager:
             self.server.register_namespace(SettingsController(config=self.config))
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
+            self.server.register_namespace(RoomCalibrationController(config=self.config,
+                                                                     sonos=balancing_manager.sonos))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.

@@ -159,7 +159,9 @@ type RoomCalibrationRequest = {
   };
   start?: boolean;
   finish?: boolean;
-  repeat?: boolean;
+  repeatPoint?: boolean;
+  nextPoint?: boolean;
+  nextSpeaker?: boolean;
 }
 ```
 

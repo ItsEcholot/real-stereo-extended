@@ -22,7 +22,7 @@ async def main():
         cluster_slave = ClusterSlave(config, tracking)
         cluster_master = ClusterMaster(config, cluster_slave)
         balancing = BalancingManager(config)
-        api = ApiManager(config, tracking, cluster_master)
+        api = ApiManager(config, tracking, cluster_master, balancing)
 
         await asyncio.gather(
             cluster_master.start(),
