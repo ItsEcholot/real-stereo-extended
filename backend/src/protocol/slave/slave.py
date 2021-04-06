@@ -21,6 +21,9 @@ class ClusterSlave(ClusterSocket):
         self.master_ip = None
         self.last_ping = None
 
+        # register listeners
+        self.config.tracking_repository.register_listener(self.on_tracking_repository_changed)
+
     async def init(self) -> None:
         """Initializes the slave socket and starts listening."""
         self.running = True
@@ -30,6 +33,10 @@ class ClusterSlave(ClusterSocket):
         self.log('Listening on port ' + str(PORT))
 
         await asyncio.gather(self.update_state(), self.receive())
+
+    async def on_tracking_repository_changed(self) -> None:
+        """Updates the coordinate when the tracking repository has been changed."""
+        self.send_position_update(self.config.tracking_repository.coordinate)
 
     def log(self, message: str) -> None:  # pylint: disable=no-self-use
         """Prints a log message to the console.
@@ -56,7 +63,7 @@ class ClusterSlave(ClusterSocket):
 
                 # send last position update as a ping message if older than 15s
                 else:
-                    self.send_position_update(0)
+                    self.send_position_update(self.config.tracking_repository.coordinate)
 
             await asyncio.sleep(SLAVE_PING_INTERVAL)
 

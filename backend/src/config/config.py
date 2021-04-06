@@ -10,6 +10,7 @@ from repositories.room import RoomRepository
 from repositories.node import NodeRepository
 from repositories.speaker import SpeakerRepository
 from repositories.settings import SettingsRepository
+from repositories.tracking import TrackingRepository
 from .node_type import NodeType
 
 
@@ -31,6 +32,7 @@ class Config:
         self.node_repository = NodeRepository(self)
         self.speaker_repository = SpeakerRepository(self)
         self.setting_repository = SettingsRepository(self)
+        self.tracking_repository = TrackingRepository(self)
 
         # register repository change listeners
         self.room_repository.register_listener(self.store)

@@ -51,7 +51,7 @@ class TrackingManager:
         print('[Tracking] Starting camera')
 
         if self.camera is None:
-            self.camera = Camera()
+            self.camera = Camera(self.config)
             self.camera.set_frame_callback(self.on_frame)
 
         if self.on_start is not None:
