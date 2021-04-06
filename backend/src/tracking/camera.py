@@ -6,7 +6,7 @@ from picamera import PiCamera  # pylint: disable=import-error
 import cv2
 from numpy import ndarray
 from config import Config
-from .hog_people_detector import HogPeopleDetector
+from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
 from .calibration import Calibration
 
 
@@ -22,7 +22,7 @@ class Camera:
     def __init__(self, config: Config):
         self.config = config
         self.exiting = False
-        self.detector = HogPeopleDetector(config)
+        self.detector = HogGrayscalePeopleDetector(config)
         self.on_frame = None
         self.camera = PiCamera()
         self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT))

@@ -11,10 +11,12 @@ class PeopleDetector(ABC):
         self.config = config
 
     @abstractmethod
-    async def detect(self, frame: ndarray) -> None:
+    async def detect(self, detection_frame: ndarray, draw_frame: ndarray = None) -> None:
         """Detects people in a given camera frame.
 
-        :param numpy.ndarray frame: Camera frame
+        :param numpy.ndarray detection_frame: Camera frame which should be used for detection
+        :param numpy.ndarray draw_frame: Frame in which recognized people should be drawn.
+                                         If none, result should be drawn in detection_frame.
         """
         raise NotImplementedError()
 
