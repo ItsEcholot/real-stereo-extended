@@ -1,20 +1,20 @@
 """Detects people in a given camera frame."""
+from multiprocessing import Queue, Event
 import cv2
 from numpy import ndarray
 from imutils.object_detection import non_max_suppression
-from config import Config
 from .people_detector import PeopleDetector
 
 
 class HogPeopleDetector(PeopleDetector):
     """Detects people in a given camera frame."""
 
-    def __init__(self, config: Config):
-        super().__init__(config)
+    def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event):
+        super().__init__(frame_queue, frame_result_queue, return_frame)
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
-    async def detect(self, detection_frame: ndarray, draw_frame: ndarray = None) -> None:
+    def detect(self, detection_frame: ndarray, draw_frame: ndarray = None) -> None:
         """Detects people in a given camera frame.
 
         :param numpy.ndarray detection_frame: Camera frame which should be used for detection
@@ -31,7 +31,7 @@ class HogPeopleDetector(PeopleDetector):
         # calculate the coordinate
         if len(reduced_rects) > 0:
             coordinate = self.calculate_coordinate(reduced_rects)
-            await self.report_coordinate(coordinate)
+            self.report_coordinate(coordinate)
 
         # draw the bounding boxes
         self.draw_rects(draw_frame if draw_frame is not None else detection_frame, reduced_rects)

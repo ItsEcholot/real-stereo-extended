@@ -1,12 +1,12 @@
 """Camera module implements the camera connection and person detection."""
 
-import asyncio
+from time import sleep
+from multiprocessing import Queue, Event
+from queue import Empty
 from picamera.array import PiRGBArray  # pylint: disable=import-error
 from picamera import PiCamera  # pylint: disable=import-error
 import cv2
 from numpy import ndarray
-from config import Config
-from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
 from .calibration import Calibration
 
 
@@ -19,21 +19,19 @@ class Camera:
     FRAME_HEIGHT: int = 480
     FRAMERATE: int = 5
 
-    def __init__(self, config: Config):
-        self.config = config
-        self.exiting = False
-        self.detector = HogGrayscalePeopleDetector(config)
+    def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
+                 detection_active: Event):
+        self.frame_queue = frame_queue
+        self.frame_result_queue = frame_result_queue
+        self.return_frame = return_frame
+        self.detection_active = detection_active
         self.on_frame = None
-        self.camera = PiCamera()
         self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT))
+        self.camera = PiCamera()
         self.camera.resolution = (self.FRAME_WIDTH, self.FRAME_HEIGHT)
         self.camera.framerate = self.FRAMERATE
 
-    def stop(self) -> None:
-        """Stops reading from the camera after the current frame has been processed."""
-        self.exiting = True
-
-    async def process(self) -> None:
+    def process(self) -> None:
         """Processes the camera frames until `stop()` has been called
         or the camera is no longer available."""
         try:
@@ -49,19 +47,25 @@ class Camera:
                 else:
                     frame_data = self.calibration.correct_frame(frame_data)
 
-                    if self.config.balance:
-                        await self.detector.detect(frame_data)
+                    # clear current frame queue
+                    while not self.frame_queue.empty():
+                        try:
+                            self.frame_queue.get_nowait()
+                        except Empty:
+                            pass
 
-                if self.on_frame is not None:
-                    self.send_frame(frame_data)
+                    # add frame to the queue
+                    self.frame_queue.put_nowait(frame_data)
+
+                if self.return_frame.is_set() and not self.detection_active.is_set():
+                    # call frame listener
+                    print('send result back')
+                    self.frame_result_queue.put_nowait(frame_data)
 
                 # clear stream for next frame
                 raw_capture.truncate(0)
 
-                if self.exiting:
-                    break
-
-                await asyncio.sleep(0.1)
+                sleep(0.1)
         finally:
             self.camera.close()
 
