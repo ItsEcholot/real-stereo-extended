@@ -43,6 +43,8 @@ async def main():
             cluster_slave.start(),
             api.start(),
             tracking.await_frames(),
+            tracking.await_coordinates(),
+            tracking.await_camera_calibration_responses(),
         )
 
 
