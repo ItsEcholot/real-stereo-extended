@@ -33,6 +33,7 @@ async def main():
             balancing.start_control(),
             tracking.await_frames(),
             tracking.await_coordinates(),
+            tracking.await_camera_calibration_responses(),
         )
     else:
         cluster_slave = ClusterSlave(config, tracking)

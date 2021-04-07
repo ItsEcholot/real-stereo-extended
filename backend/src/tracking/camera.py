@@ -19,13 +19,16 @@ class Camera:
     FRAMERATE: int = 5
 
     def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
-                 detection_active: Event):
+                 detection_active: Event, calibration_requests: Queue,
+                 calibration_responses: Queue):
         self.frame_queue = frame_queue
         self.frame_result_queue = frame_result_queue
         self.return_frame = return_frame
         self.detection_active = detection_active
+        self.calibration_requests = calibration_requests
+        self.calibration_responses = calibration_responses
         self.on_frame = None
-        self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT))
+        self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT), calibration_responses)
         self.camera = PiCamera()
         self.camera.resolution = (self.FRAME_WIDTH, self.FRAME_HEIGHT)
         self.camera.framerate = self.FRAMERATE
@@ -38,6 +41,14 @@ class Camera:
             for frame in self.camera.capture_continuous(raw_capture, format='bgr',
                                                         use_video_port=True):
                 frame_data = frame.array
+
+                # process calibration requests
+                while not self.calibration_requests.empty():
+                    try:
+                        start, finish, repeat = self.calibration_requests.get_nowait()
+                        self.calibration.handle_request(start, finish, repeat)
+                    except Empty:
+                        pass
 
                 if self.calibration.calibrating:
                     self.calibration.handle_frame(frame_data)

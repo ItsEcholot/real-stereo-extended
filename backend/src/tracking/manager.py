@@ -8,9 +8,11 @@ from .camera import Camera
 from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
 
 
-def start_camera(frame_queue, frame_result_queue, return_frame, detection_active) -> None:
+def start_camera(frame_queue, frame_result_queue, return_frame, detection_active,
+                 camera_calibration_requests, camera_calibration_responses) -> None:
     """Starts the camera in a subprocess."""
-    camera = Camera(frame_queue, frame_result_queue, return_frame, detection_active)
+    camera = Camera(frame_queue, frame_result_queue, return_frame, detection_active,
+                    camera_calibration_requests, camera_calibration_responses)
     camera.process()
 
 
@@ -32,10 +34,13 @@ class TrackingManager:
         self.config.setting_repository.register_listener(self.on_settings_changed)
         self.previous_config_value = self.config.balance
         self.camera_listeners = 0
+        self.cluster_slave = None
 
         manager = multiprocessing.Manager()
         self.frame_queue = manager.Queue()
         self.frame_result_queue = manager.Queue()
+        self.camera_calibration_requests = manager.Queue()
+        self.camera_calibration_responses = manager.Queue()
         self.coordinate_queue = manager.Queue()
         self.detection_active = manager.Event()
         self.return_frame = manager.Event()
@@ -81,7 +86,9 @@ class TrackingManager:
             print('[Tracking] Starting camera')
             self.camera = multiprocessing.Process(
                 target=start_camera, args=(self.frame_queue, self.frame_result_queue,
-                                           self.return_frame, self.detection_active, ))
+                                           self.return_frame, self.detection_active,
+                                           self.camera_calibration_requests,
+                                           self.camera_calibration_responses, ))
             self.camera.start()
 
     def start_detector(self) -> None:
@@ -138,6 +145,17 @@ class TrackingManager:
             coordinate = await loop.run_in_executor(executor, self.coordinate_queue.get)
             await self.config.tracking_repository.update_coordinate(coordinate)
 
+    async def await_camera_calibration_responses(self) -> None:
+        """Awaits camera calibration responses and passes them to the cluster slave."""
+        executor = ProcessPoolExecutor(max_workers=1)
+        loop = asyncio.get_running_loop()
+
+        while True:
+            count, image = await loop.run_in_executor(executor,
+                                                      self.camera_calibration_responses.get)
+            if self.cluster_slave is not None:
+                self.cluster_slave.send_camera_calibration_response(count, image)
+
     def set_frame_callback(self, on_frame: callable) -> None:
         """Sets the `on_frame` callback that will receive every processed frame.
         If the tracking is not started, a RuntimeError will be raised.
@@ -151,3 +169,14 @@ class TrackingManager:
             self.return_frame.set()
         else:
             self.return_frame.clear()
+
+    def send_camera_calibration_request(self, start: bool, finish: bool, repeat: bool,
+                                        cluster_slave) -> None:
+        """Sends a camera calibration request to the camera process.
+
+        :param bool start: If true, a new calibration will be started
+        :param bool finish: If true, the current calibration will be finished
+        :param bool repeat: If true, the current step will be repeated
+        """
+        self.cluster_slave = cluster_slave
+        self.camera_calibration_requests.put_nowait((start, finish, repeat))
