@@ -32,6 +32,7 @@ async def main():
             balancing.start_discovery(),
             balancing.start_control(),
             tracking.await_frames(),
+            tracking.await_coordinates(),
         )
     else:
         cluster_slave = ClusterSlave(config, tracking)

@@ -14,9 +14,10 @@ def start_camera(frame_queue, frame_result_queue, return_frame, detection_active
     camera.process()
 
 
-def start_detector(frame_queue, frame_result_queue, return_frame) -> None:
+def start_detector(frame_queue, frame_result_queue, return_frame, coordinate_queue) -> None:
     """Starts the people detector in a subprocess."""
-    detector = HogGrayscalePeopleDetector(frame_queue, frame_result_queue, return_frame)
+    detector = HogGrayscalePeopleDetector(frame_queue, frame_result_queue, return_frame,
+                                          coordinate_queue)
     detector.process()
 
 
@@ -35,6 +36,7 @@ class TrackingManager:
         manager = multiprocessing.Manager()
         self.frame_queue = manager.Queue()
         self.frame_result_queue = manager.Queue()
+        self.coordinate_queue = manager.Queue()
         self.detection_active = manager.Event()
         self.return_frame = manager.Event()
 
@@ -89,7 +91,7 @@ class TrackingManager:
             self.detection_active.set()
             self.detector = multiprocessing.Process(
                 target=start_detector, args=(self.frame_queue, self.frame_result_queue,
-                                             self.return_frame, ))
+                                             self.return_frame, self.coordinate_queue, ))
             self.detector.start()
 
     def stop_camera(self) -> None:
@@ -126,6 +128,15 @@ class TrackingManager:
                     self.on_frame = None
                     print('Error occurred in the on_frame callback, it will automatically get '
                           + 'unregistered')
+
+    async def await_coordinates(self) -> None:
+        """Awaits coordinates and passes them to the repository."""
+        executor = ProcessPoolExecutor(max_workers=1)
+        loop = asyncio.get_running_loop()
+
+        while True:
+            coordinate = await loop.run_in_executor(executor, self.coordinate_queue.get)
+            await self.config.tracking_repository.update_coordinate(coordinate)
 
     def set_frame_callback(self, on_frame: callable) -> None:
         """Sets the `on_frame` callback that will receive every processed frame.

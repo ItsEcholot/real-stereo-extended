@@ -1,6 +1,7 @@
 """Defines methods for the people detection."""
 from abc import ABC, abstractmethod
 from multiprocessing import Queue, Event
+from queue import Empty
 from numpy import ndarray
 import cv2
 from .fps_calculator import Fps
@@ -9,10 +10,12 @@ from .fps_calculator import Fps
 class PeopleDetector(ABC):
     """Defines methods for the people detection."""
 
-    def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event):
+    def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
+                 coordinate_queue: Queue):
         self.frame_queue = frame_queue
         self.frame_result_queue = frame_result_queue
         self.return_frame = return_frame
+        self.coordinate_queue = coordinate_queue
         self.fps = Fps()
 
     def process(self) -> None:
@@ -47,4 +50,12 @@ class PeopleDetector(ABC):
 
         :param int coordinate: Coordinate
         """
-        # await self.config.tracking_repository.update_coordinate(coordinate)
+        # clear current queue
+        while not self.coordinate_queue.empty():
+            try:
+                self.coordinate_queue.get_nowait()
+            except Empty:
+                pass
+
+        # add new coordinate to the queue
+        self.coordinate_queue.put_nowait(coordinate)
