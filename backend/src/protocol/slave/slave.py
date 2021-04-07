@@ -178,13 +178,7 @@ class ClusterSlave(ClusterSocket):
             finish = message.cameraCalibrationRequest.finish or False
             repeat = message.cameraCalibrationRequest.repeat or False
 
-            def on_tracking_started():
-                self.tracking.on_start = None
-                self.tracking.camera.calibration.cluster_slave = self
-                self.tracking.camera.calibration.handle_request(start=start, finish=finish,
-                                                                repeat=repeat)
-
-            self.tracking.on_start = on_tracking_started
+            self.tracking.send_camera_calibration_request(start, finish, repeat, self)
 
             if start:
                 self.tracking.acquire_camera()

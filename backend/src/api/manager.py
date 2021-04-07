@@ -92,7 +92,7 @@ class ApiManager:
             print('[Web API] Starting camera stream')
             self.tracking_manager.set_frame_callback(self.on_frame)
 
-        if self.tracking_manager.running is False:
+        if self.tracking_manager.is_camera_active() is False:
             await self.write_camera_inactive_frame(response)
 
         self.tracking_manager.acquire_camera()

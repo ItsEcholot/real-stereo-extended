@@ -1,12 +1,11 @@
 """Camera module implements the camera connection and person detection."""
 
-import asyncio
+from time import sleep
+from multiprocessing import Queue, Event
+from queue import Empty
 from picamera.array import PiRGBArray  # pylint: disable=import-error
 from picamera import PiCamera  # pylint: disable=import-error
 import cv2
-from numpy import ndarray
-from config import Config
-from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
 from .calibration import Calibration
 
 
@@ -19,21 +18,22 @@ class Camera:
     FRAME_HEIGHT: int = 480
     FRAMERATE: int = 5
 
-    def __init__(self, config: Config):
-        self.config = config
-        self.exiting = False
-        self.detector = HogGrayscalePeopleDetector(config)
+    def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
+                 detection_active: Event, calibration_requests: Queue,
+                 calibration_responses: Queue):
+        self.frame_queue = frame_queue
+        self.frame_result_queue = frame_result_queue
+        self.return_frame = return_frame
+        self.detection_active = detection_active
+        self.calibration_requests = calibration_requests
+        self.calibration_responses = calibration_responses
         self.on_frame = None
+        self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT), calibration_responses)
         self.camera = PiCamera()
-        self.calibration = Calibration((self.FRAME_WIDTH, self.FRAME_HEIGHT))
         self.camera.resolution = (self.FRAME_WIDTH, self.FRAME_HEIGHT)
         self.camera.framerate = self.FRAMERATE
 
-    def stop(self) -> None:
-        """Stops reading from the camera after the current frame has been processed."""
-        self.exiting = True
-
-    async def process(self) -> None:
+    def process(self) -> None:
         """Processes the camera frames until `stop()` has been called
         or the camera is no longer available."""
         try:
@@ -42,6 +42,14 @@ class Camera:
                                                         use_video_port=True):
                 frame_data = frame.array
 
+                # process calibration requests
+                while not self.calibration_requests.empty():
+                    try:
+                        start, finish, repeat = self.calibration_requests.get_nowait()
+                        self.calibration.handle_request(start, finish, repeat)
+                    except Empty:
+                        pass
+
                 if self.calibration.calibrating:
                     self.calibration.handle_frame(frame_data)
                     cv2.putText(frame_data, 'Calibrating Camera', (10, self.FRAME_HEIGHT - 20),
@@ -49,42 +57,26 @@ class Camera:
                 else:
                     frame_data = self.calibration.correct_frame(frame_data)
 
-                    if self.config.balance:
-                        await self.detector.detect(frame_data)
+                    # clear current frame queue
+                    while not self.frame_queue.empty():
+                        try:
+                            self.frame_queue.get_nowait()
+                        except Empty:
+                            pass
 
-                if self.on_frame is not None:
-                    self.send_frame(frame_data)
+                    # add frame to the queue
+                    self.frame_queue.put_nowait(frame_data)
+
+                if self.return_frame.is_set() and not self.detection_active.is_set():
+                    # call frame listener
+                    self.frame_result_queue.put_nowait(frame_data)
 
                 # clear stream for next frame
                 raw_capture.truncate(0)
 
-                if self.exiting:
-                    break
-
-                await asyncio.sleep(0.1)
+                sleep(0.1)
         finally:
             self.camera.close()
 
-        if self.on_frame is not None:
-            self.on_frame(None)
-            self.on_frame = None
-
-    def send_frame(self, frame: ndarray) -> None:
-        """If an `on_frame` callback has been registered, it sends the current frame to it.
-
-        :param numpy.ndarray frame: Current camera frame
-        """
-        _, jpeg_frame = cv2.imencode('.jpg', frame)
-        try:
-            self.on_frame(jpeg_frame)
-        except TypeError:
-            self.on_frame = None
-            print('Error occurred in the on_frame callback, it will automatically get unregistered')
-
-    def set_frame_callback(self, on_frame: callable) -> None:
-        """Sets the `on_frame` callback that will receive every processed frame.
-
-        :param callable on_frame: Callback that receives the `numpy.ndarray` frame as the first
-                                  argument
-        """
-        self.on_frame = on_frame
+        if self.return_frame.is_set():
+            self.frame_result_queue.put_nowait(None)
