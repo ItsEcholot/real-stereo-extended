@@ -163,6 +163,22 @@ type RoomCalibrationRequest = {
   nextPoint?: boolean;
   nextSpeaker?: boolean;
 }
+
+type RoomCalibrationResponse = {
+  room: {
+    id: number;
+  };
+  positionX: number;
+  positionY: number;
+  noiseDone?: true;
+}
+
+type RoomCalibrationResult = {
+  room: {
+    id: number;
+  };
+  volume: number;
+}
 ```
 
 ### Namespaces

@@ -25,6 +25,8 @@ class Room:
         self.calibration_points: List[RoomCalibrationPoint] = calibration_points or []
         self.calibration_points_temp: List[RoomCalibrationPoint] = []
         self.calibration_current_speaker_index = 0
+        self.calibration_point_x: int
+        self.calibration_point_y: int
 
     @staticmethod
     def from_json(data: dict):

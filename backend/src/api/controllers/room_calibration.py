@@ -69,6 +69,7 @@ class RoomCalibrationController(AsyncNamespace):
                 await self.config.setting_repository.call_listeners()
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
+                # TODO: Start tracking for room
             elif data.get('finish'):
                 room.calibrating = False
                 await self.config.room_repository.call_listeners()
