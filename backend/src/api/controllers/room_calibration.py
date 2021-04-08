@@ -4,12 +4,14 @@ import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.acknowledgment import Acknowledgment
+from models.room import Room
 from api.validate import Validate
 from balancing.sonos import Sonos
 from models.room_calibration_point import RoomCalibrationPoint
 from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand
 
 CALIBRATION_SOUND_LENGTH = 5
+
 
 class RoomCalibrationController(AsyncNamespace):
     """Controller for the /room-calibration namespace."""
@@ -54,6 +56,28 @@ class RoomCalibrationController(AsyncNamespace):
         if next_speaker is not None:
             validate.boolean(next_speaker, label='Next Speaker')
 
+        return ack
+
+    async def sendResponse(self, room: Room, position_x: int, 
+                     position_y: int, noise_done: bool = False) -> None:
+        """
+        Sends the room calibration response to all clients.
+
+        :param models.node.Room room: Room
+        :param int position_x: X Coordinate
+        :param int position_y: Y Coordinate
+        :param bool noise_done: Is the calibration noise done
+        """
+        await self.emit('get', {
+            'room': {
+                'id': room.room_id
+            },
+            'calibrating': room.calibrating,
+            'positionX': position_x,
+            'positionY': position_y,
+            'noiseDone': noise_done
+        })
+
     async def on_update(self, _: str, data: dict) -> None:
         """Starts the room calibration process.
 
@@ -63,18 +87,21 @@ class RoomCalibrationController(AsyncNamespace):
         ack = self.validate(data)
 
         if ack.successful:
-            room = self.config.room_repository.get_room(data.get('room').get('id'))
+            room = self.config.room_repository.get_room(
+                data.get('room').get('id'))
             if data.get('start'):
                 self.config.balance = False
                 await self.config.setting_repository.call_listeners()
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
                 # TODO: Start tracking for room
+                await self.sendResponse(room, position_x=0, position_y=0) # TODO: Replace with real coordinates
             elif data.get('finish'):
                 room.calibrating = False
                 await self.config.room_repository.call_listeners()
+                await self.sendResponse(room, position_x=0, position_y=0) # TODO: Replace with real coordinates
             elif data.get('repeatPoint'):
-                room_speaker_count = list(filter(lambda speaker: speaker.room.room_id == room.room_id, 
+                room_speaker_count = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                                  self.config.speakers)).count()
                 del room.calibration_points_temp[-room_speaker_count:]
                 room.calibration_current_speaker_index = 0
@@ -84,14 +111,17 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_current_speaker_index = 0
                 await self.config.room_repository.call_listeners()
             elif data.get('nextSpeaker'):
-                speaker = list(filter(lambda speaker: speaker.room.room_id == room.room_id, 
+                speaker = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                       self.config.speakers))[room.calibration_current_speaker_index]
-                self.sonos.send_command(SonosPlayCalibrationSoundCommand([speaker]))
+                self.sonos.send_command(
+                    SonosPlayCalibrationSoundCommand([speaker]))
                 running_loop = asyncio.get_running_loop()
                 running_loop.call_later(CALIBRATION_SOUND_LENGTH,
                                         lambda: self.sonos.send_command(SonosStopCalibrationSoundCommand([speaker])))
 
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
+            else:
+                await self.sendResponse(room, position_x=0, position_y=0) # TODO: Replace with real coordinates
 
         return ack.to_json()

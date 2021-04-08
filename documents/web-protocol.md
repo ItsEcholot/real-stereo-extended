@@ -168,6 +168,7 @@ type RoomCalibrationResponse = {
   room: {
     id: number;
   };
+  calibrating: boolean;
   positionX: number;
   positionY: number;
   noiseDone?: true;

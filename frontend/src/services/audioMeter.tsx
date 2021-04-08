@@ -130,7 +130,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
           const energies = sumEnergy(bufferData);
           const calcVolume = calculateLoudness(energies);
           setVolume(calcVolume);
-          setHistoricVolume([...historicVolume, calcVolume]);
+          setHistoricVolume(historicVolume => [...historicVolume, calcVolume]);
 
           if (spectrumAnalyzerCanvasContext) {
             spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
