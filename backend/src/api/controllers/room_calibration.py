@@ -10,17 +10,25 @@ from api.validate import Validate
 from balancing.sonos import Sonos
 from models.room_calibration_point import RoomCalibrationPoint
 from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand
+from tracking.manager import TrackingManager
 
 CALIBRATION_SOUND_LENGTH = 5
 CALIBRATION_SOUND_VOLUME = 25
 
 class RoomCalibrationController(AsyncNamespace):
-    """Controller for the /room-calibration namespace."""
+    """Controller for the /room-calibration namespace.
+    
+    :param Config config: The application config object.
+    :param Sonos sonos: The sonos control instance 
+    :param TrackingManager tracking_manager: The instance of an active tracking manager.
+    """
 
-    def __init__(self, config: Config, sonos: Sonos):
+    def __init__(self, config: Config, sonos: Sonos, tracking_manager: TrackingManager):
         super().__init__(namespace='/room-calibration')
         self.config: Config = config
         self.sonos: Sonos = sonos
+        self.tracking_manager = tracking_manager
+        self.config.tracking_repository.register_listener(self.position_update())
 
     def validate(self, data: dict) -> Acknowledgment:
         """Validates the input data.
@@ -59,6 +67,16 @@ class RoomCalibrationController(AsyncNamespace):
 
         return ack
 
+    async def position_update(self) -> None:
+        """Gets called when the tracking repository contains new coordinates."""
+        room: Room
+        for room in list(filter(lambda room: room.calibrating == True, self.config.rooms)):
+            if not room.calibration_point_freeze:
+                room.calibration_point_x = self.config.tracking_repository.coordinate
+                room.calibration_point_y = self.config.tracking_repository.coordinate # TODO: Get X & Y coordinates
+                await self.config.room_repository.call_listeners()
+            await self.send_response(room)
+
     async def after_calibration_noise(self, room: Room, speaker: Speaker):
         """Inform the client that the calibration noise ended
         
@@ -66,15 +84,12 @@ class RoomCalibrationController(AsyncNamespace):
         :param models.speaker.Speaker speaker: Speaker
         """
         self.sonos.send_command(SonosStopCalibrationSoundCommand([speaker]))
-        await self.send_response(room, room.calibration_point_x, room.calibration_point_y, noise_done=True)
+        await self.send_response(room, noise_done=True)
 
-    async def send_response(self, room: Room, position_x: int, 
-                     position_y: int, noise_done: bool = False) -> None:
+    async def send_response(self, room: Room, noise_done: bool = False) -> None:
         """Sends the room calibration response to all clients.
 
         :param models.room.Room room: Room
-        :param int position_x: X Coordinate
-        :param int position_y: Y Coordinate
         :param bool noise_done: Is the calibration noise done
         """
         await self.emit('get', {
@@ -82,8 +97,8 @@ class RoomCalibrationController(AsyncNamespace):
                 'id': room.room_id
             },
             'calibrating': room.calibrating,
-            'positionX': position_x,
-            'positionY': position_y,
+            'positionX': room.calibration_point_x,
+            'positionY': room.calibration_point_y,
             'noiseDone': noise_done
         })
 
@@ -96,32 +111,32 @@ class RoomCalibrationController(AsyncNamespace):
         ack = self.validate(data)
 
         if ack.successful:
-            room = self.config.room_repository.get_room(
-                data.get('room').get('id'))
+            room = self.config.room_repository.get_room(data.get('room').get('id'))
             if data.get('start'):
                 self.config.balance = False
                 await self.config.setting_repository.call_listeners()
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
-                # TODO: Start tracking for room and keep clients updated with self.send_response
-                await self.send_response(room, position_x=1, position_y=1) # TODO: Replace with real coordinates
+                self.tracking_manager.acquire_camera()
+                self.tracking_manager.start_detector()
             elif data.get('finish'):
                 room.calibrating = False
                 await self.config.room_repository.call_listeners()
-                await self.send_response(room, position_x=0, position_y=0)
+                self.tracking_manager.release_camera()
+                self.tracking_manager.stop_detector()
+                await self.send_response(room)
             elif data.get('repeatPoint'):
-                room_speaker_count = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
-                                                 self.config.speakers)).count()
-                del room.calibration_points_temp[-room_speaker_count:]
+                room.calibration_points_current_point = []
                 room.calibration_current_speaker_index = 0
                 await self.config.room_repository.call_listeners()
             elif data.get('nextPoint'):
-                room.calibration_point_x = 1 # TODO: Replace with real coordinates
-                room.calibration_point_y = 1
+                # Save last point to permanent calibration points
+                room.calibration_points.extend(room.calibration_points_current_point)
+                # Stop updating the tracking coordinates
+                room.calibration_point_freeze = True
                 room.calibration_current_speaker_index = 0
                 await self.config.room_repository.call_listeners()
-                await self.send_response(room, room.calibration_point_x, room.calibration_point_y)
-                # TODO: Stop tracking & updating clients
+                await self.send_response(room)
             elif data.get('nextSpeaker'):
                 room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                             self.config.speakers))

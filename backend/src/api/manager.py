@@ -65,7 +65,8 @@ class ApiManager:
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
             self.server.register_namespace(RoomCalibrationController(config=self.config,
-                                                                     sonos=balancing_manager.sonos))
+                                                                     sonos=balancing_manager.sonos,
+                                                                     tracking_manager=tracking_manager))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.

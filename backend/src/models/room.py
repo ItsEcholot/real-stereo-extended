@@ -23,10 +23,11 @@ class Room:
         self.nodes: List[models.node.Node] = nodes or []
         self.calibrating: bool = False
         self.calibration_points: List[RoomCalibrationPoint] = calibration_points or []
-        self.calibration_points_temp: List[RoomCalibrationPoint] = []
+        self.calibration_points_current_point: List[RoomCalibrationPoint] = []
         self.calibration_current_speaker_index = 0
-        self.calibration_point_x: int
-        self.calibration_point_y: int
+        self.calibration_point_x: int = 0
+        self.calibration_point_y: int = 0
+        self.calibration_point_freeze: bool = False
 
     @staticmethod
     def from_json(data: dict):
