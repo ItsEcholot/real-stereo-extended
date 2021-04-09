@@ -2,6 +2,7 @@
 from time import time
 from pathlib import Path
 from math import ceil
+from multiprocessing import Queue
 import pickle
 import shutil
 import cv2
@@ -19,14 +20,14 @@ IMAGE_PATH: Path = ASSETS_PATH / 'calibration'
 class Calibration:
     """Implements camera calibration."""
 
-    def __init__(self, frame_size):
+    def __init__(self, frame_size, calibration_responses: Queue):
         self.frame_size = frame_size
+        self.calibration_responses = calibration_responses
         self.calibrating = False
         self.calibration = None
         self.next_chessboard_at = None
         self.object_points = []
         self.image_points = []
-        self.cluster_slave = None
         self.load_calibration()
 
     def handle_request(self, start: bool = False, finish: bool = False, repeat: bool = False) \
@@ -58,7 +59,10 @@ class Calibration:
                 self.load_calibration()
 
             # cleanup files
-            shutil.rmtree(IMAGE_PATH)
+            try:
+                shutil.rmtree(IMAGE_PATH)
+            except FileNotFoundError:
+                pass
         elif self.calibrating is False:
             self.calibrating = True
 
@@ -95,10 +99,8 @@ class Calibration:
 
             file_name = self.save_chessboard_image(frame, improved_corners)
 
-            # call master
-            if self.cluster_slave is not None:
-                self.cluster_slave.send_camera_calibration_response(len(self.object_points),
-                                                                    file_name)
+            # send response
+            self.calibration_responses.put_nowait((len(self.object_points), file_name))
 
     def add_points(self, image_points) -> None:
         """Add the found chessboard points to the results.

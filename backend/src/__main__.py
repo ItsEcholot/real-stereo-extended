@@ -2,6 +2,8 @@
 
 from sys import argv
 import asyncio
+import multiprocessing
+import atexit
 from tracking.manager import TrackingManager
 from api.manager import ApiManager
 from config import Config, NodeType
@@ -29,6 +31,9 @@ async def main():
             api.start(),
             balancing.start_discovery(),
             balancing.start_control(),
+            tracking.await_frames(),
+            tracking.await_coordinates(),
+            tracking.await_camera_calibration_responses(),
         )
     else:
         cluster_slave = ClusterSlave(config, tracking)
@@ -37,7 +42,18 @@ async def main():
         await asyncio.gather(
             cluster_slave.start(),
             api.start(),
+            tracking.await_frames(),
+            tracking.await_coordinates(),
+            tracking.await_camera_calibration_responses(),
         )
 
 
-asyncio.run(main())
+@atexit.register
+def kill_children():
+    """Kills all subprocesses on an exit."""
+    for p in multiprocessing.active_children():
+        p.kill()
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
