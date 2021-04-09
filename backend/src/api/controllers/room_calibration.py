@@ -103,12 +103,12 @@ class RoomCalibrationController(AsyncNamespace):
                 await self.config.setting_repository.call_listeners()
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
-                # TODO: Start tracking for room and keep clients updated with self.sendResponse
-                await self.sendResponse(room, position_x=1, position_y=1) # TODO: Replace with real coordinates
+                # TODO: Start tracking for room and keep clients updated with self.send_response
+                await self.send_response(room, position_x=1, position_y=1) # TODO: Replace with real coordinates
             elif data.get('finish'):
                 room.calibrating = False
                 await self.config.room_repository.call_listeners()
-                await self.sendResponse(room, position_x=0, position_y=0)
+                await self.send_response(room, position_x=0, position_y=0)
             elif data.get('repeatPoint'):
                 room_speaker_count = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                                  self.config.speakers)).count()
@@ -120,7 +120,7 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_point_y = 1
                 room.calibration_current_speaker_index = 0
                 await self.config.room_repository.call_listeners()
-                await self.sendResponse(room, room.calibration_point_x, room.calibration_point_y)
+                await self.send_response(room, room.calibration_point_x, room.calibration_point_y)
                 # TODO: Stop tracking & updating clients
             elif data.get('nextSpeaker'):
                 room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
@@ -137,6 +137,6 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
             else:
-                await self.sendResponse(room, position_x=1, position_y=1) # TODO: Replace with real coordinates
+                await self.send_response(room, position_x=1, position_y=1) # TODO: Replace with real coordinates
 
         return ack.to_json()
