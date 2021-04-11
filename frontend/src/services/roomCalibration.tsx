@@ -31,9 +31,15 @@ export type RoomCalibrationResult = {
 }
 
 const drawCurrentPosition = (context: CanvasRenderingContext2D, x: number, y: number) => {
-  context.fillStyle = '#ff0000';
+  x = x / 10;
+  y = y / 10; // TODO: This can be removed when/if we use the same scaling as the old (100:100 coordinates)
+  const crosshairRadius = 3;
+  context.strokeStyle = '#ff0000';
   context.beginPath();
-  context.arc(x / 10, y / 10, 0.5, 0, 2 * Math.PI);
+  context.moveTo(x - crosshairRadius, y);
+  context.lineTo(x + crosshairRadius, y);
+  context.moveTo(x, y - crosshairRadius);
+  context.lineTo(x, x + crosshairRadius);
   context.stroke();
 }
 
@@ -95,7 +101,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         }
         resolve(ack);
         returnSocket(socketRoomName);
-      })
+      });
     });
   }, [getSocket, returnSocket, roomId]);
 
@@ -112,9 +118,32 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         }
         resolve(ack);
         returnSocket(socketRoomName);
-      })
+      });
     });
   }, [getSocket, returnSocket, roomId]);
 
-  return { roomCalibration, errors, startCalibration, finishCalibration };
+  const nextPosition = useCallback((): Promise<Acknowledgment> => {
+    const calibrationSocket = getSocket(socketRoomName);
+    return new Promise(resolve => {    
+      calibrationSocket.emit('update', {
+        room: {id: roomId},
+        nextPoint: true,
+      }, (ack: Acknowledgment) => {
+        if (!ack.successful && ack.errors !== undefined) {
+          const ackErrors = ack.errors;
+          setErrors(prevErrors => [...prevErrors, ...ackErrors])
+        }
+        resolve(ack);
+        returnSocket(socketRoomName);
+      });
+    });
+  }, [getSocket, returnSocket, roomId]);
+
+  return { 
+    roomCalibration,
+    errors,
+    startCalibration,
+    finishCalibration,
+    nextPosition
+  };
 };

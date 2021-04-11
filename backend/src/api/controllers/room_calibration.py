@@ -149,6 +149,8 @@ class RoomCalibrationController(AsyncNamespace):
                 # TODO: Somehow call self.after_calibration_noise with room & speaker as argument after CALIBRATION_SOUND_LENGTH seconds
                 #       But don't wait for the timeout... Call the following statements immediately
 
+                # TODO: After last speaker unfreeze room calibration point using room.calibration_point_freeze
+
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
             else:

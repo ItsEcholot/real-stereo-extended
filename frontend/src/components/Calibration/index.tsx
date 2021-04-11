@@ -18,10 +18,12 @@ const Calibration: FunctionComponent<CalibrationProps> = ({ roomId }) => {
     errors,
     startCalibration,
     finishCalibration,
+    nextPosition,
   } = useRoomCalibration(roomId, calibrationMapCanvasRef);
 
   const [calibrationStarting, setCalibrationStarting] = useState(false);
   const [calibrationFinishing, setCalibrationFinishing] = useState(false);
+  const [calibrationNextPositioning, setCalibrationNextPositioning] = useState(false);
 
   const onStartCalibration = async () => {
     setCalibrationStarting(true);
@@ -35,6 +37,12 @@ const Calibration: FunctionComponent<CalibrationProps> = ({ roomId }) => {
     setCalibrationFinishing(false);
   }
 
+  const onNextPosition = async () => {
+    setCalibrationNextPositioning(true);
+    await nextPosition();
+    setCalibrationNextPositioning(false);
+  }
+
   return (
     <>
       {errors.map((error, index) => (
@@ -43,10 +51,13 @@ const Calibration: FunctionComponent<CalibrationProps> = ({ roomId }) => {
       {!roomCalibration?.calibrating ?
         <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>
           Start calibration
-      </Button> :
+        </Button> :
         <>
           <Space direction="vertical" className={styles.space}>
-            <Button type="primary" loading={calibrationFinishing} icon={<CheckOutlined />} onClick={onFinishCalibration}>Finish calibration</Button>
+            <Space>
+              <Button type="default" loading={calibrationNextPositioning} onClick={onNextPosition}>Next Position</Button>
+              <Button type="primary" loading={calibrationFinishing} icon={<CheckOutlined />} onClick={onFinishCalibration}>Finish calibration</Button>
+            </Space>
             <div>
               <span>Current calibration map</span>
               <canvas className={styles.canvas} ref={calibrationMapCanvasRef} />
