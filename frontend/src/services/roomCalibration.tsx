@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { RefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { SocketContext } from './socketProvider';
 import { Acknowledgment } from './acknowledgment';
 
@@ -30,18 +30,31 @@ export type RoomCalibrationResult = {
   volume: number;
 }
 
-export const useRoomCalibration = () => {
+const drawCurrentPosition = (context: CanvasRenderingContext2D, x: number, y: number) => {
+  context.fillStyle = '#ff0000';
+  context.beginPath();
+  context.arc(x / 10, y / 10, 0.5, 0, 2 * Math.PI);
+  context.stroke();
+}
+
+export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const socketRoomName = 'room-calibration';
+  const canvasCordSize = 100;
   const { getSocket, returnSocket } = useContext(SocketContext);
-  const [roomId, setRoomId] = useState<number>();
   const [roomCalibration, setRoomCalibration] = useState<RoomCalibrationResponse>();
   const [errors, setErrors] = useState<string[]>([]);
 
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
       setRoomCalibration(roomCalibration);
+
+      const context = calibrationMapCanvasRef?.current?.getContext("2d");
+      if (context) {
+        context.clearRect(0, 0, canvasCordSize, canvasCordSize);
+        drawCurrentPosition(context, roomCalibration.positionX, roomCalibration.positionY);
+      }
     }
-  }, [roomId]);
+  }, [roomId, calibrationMapCanvasRef]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -50,15 +63,28 @@ export const useRoomCalibration = () => {
     calibrationSocket.emit('update', {
       room: {id: roomId}
     });
+
     return () => {
       calibrationSocket.off('get', setRoomCalibrationForRoom);
       returnSocket(socketRoomName);
     };
-  }, [getSocket, returnSocket, setRoomCalibrationForRoom, roomId]);
+  }, [getSocket, returnSocket, setRoomCalibrationForRoom, roomId, calibrationMapCanvasRef]);
+
+  useEffect(() => {
+    if (calibrationMapCanvasRef && calibrationMapCanvasRef.current) {
+      calibrationMapCanvasRef.current.width = canvasCordSize;
+      calibrationMapCanvasRef.current.height = canvasCordSize;
+      const context = calibrationMapCanvasRef.current.getContext("2d");
+      if (context) {
+        context.clearRect(0, 0, canvasCordSize, canvasCordSize);
+        context.fillStyle = '#000000';
+      }
+    }
+  }, [roomCalibration?.calibrating, calibrationMapCanvasRef])
 
   const startCalibration = useCallback((): Promise<Acknowledgment> => {
     const calibrationSocket = getSocket(socketRoomName);
-    return new Promise((resolve, reject) => {    
+    return new Promise(resolve => {    
       calibrationSocket.emit('update', {
         room: {id: roomId},
         start: true,
@@ -75,7 +101,7 @@ export const useRoomCalibration = () => {
 
   const finishCalibration = useCallback((): Promise<Acknowledgment> => {
     const calibrationSocket = getSocket(socketRoomName);
-    return new Promise((resolve, reject) => {    
+    return new Promise(resolve => {    
       calibrationSocket.emit('update', {
         room: {id: roomId},
         finish: true,
@@ -90,5 +116,5 @@ export const useRoomCalibration = () => {
     });
   }, [getSocket, returnSocket, roomId]);
 
-  return { roomCalibration, errors, setRoomId, startCalibration, finishCalibration };
+  return { roomCalibration, errors, startCalibration, finishCalibration };
 };

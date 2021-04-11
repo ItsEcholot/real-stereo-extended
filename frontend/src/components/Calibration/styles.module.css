@@ -1,0 +1,10 @@
+.space {
+    width: 100%;
+}
+
+.canvas {
+    display: block;
+    border: black 1px solid;
+    width: 100%;
+    height: auto;
+}
