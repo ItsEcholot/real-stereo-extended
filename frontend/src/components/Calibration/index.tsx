@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Button } from 'antd';
+import { Button, Alert } from 'antd';
 import {
   RadarChartOutlined,
   CheckOutlined,
@@ -14,6 +14,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({roomId}) => {
   const { 
     setRoomId,
     roomCalibration,
+    errors,
     startCalibration,
     finishCalibration,
   } = useRoomCalibration();
@@ -42,14 +43,17 @@ const Calibration: FunctionComponent<CalibrationProps> = ({roomId}) => {
 
   return (
     <>
-      {!roomCalibration?.calibrating ? 
-        <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>
-          Start calibration
-        </Button> : 
-        <>
-        <Button type="primary" loading={calibrationFinishing} icon={<CheckOutlined />} onClick={onFinishCalibration}>Finish calibration</Button>
-        </>
-      }
+    {errors.map((error, index) => (
+      <Alert key={index} message={error} type="error" showIcon />
+    ))}
+    {!roomCalibration?.calibrating ? 
+      <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>
+        Start calibration
+      </Button> : 
+      <>
+      <Button type="primary" loading={calibrationFinishing} icon={<CheckOutlined />} onClick={onFinishCalibration}>Finish calibration</Button>
+      </>
+    }
     </>
   );
 }
