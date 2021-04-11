@@ -119,12 +119,14 @@ class RoomCalibrationController(AsyncNamespace):
                 await self.config.room_repository.call_listeners()
                 self.tracking_manager.acquire_camera()
                 self.tracking_manager.start_detector()
+                print('[Room Calibration] Starting for room {}'.format(room.name))
             elif data.get('finish'):
                 room.calibrating = False
                 await self.config.room_repository.call_listeners()
                 self.tracking_manager.release_camera()
                 self.tracking_manager.stop_detector()
                 await self.send_response(room)
+                print('[Room Calibration] Finishing for room {}'.format(room.name))
             elif data.get('repeatPoint'):
                 room.calibration_points_current_point = []
                 room.calibration_current_speaker_index = 0
@@ -137,6 +139,8 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_current_speaker_index = 0
                 await self.config.room_repository.call_listeners()
                 await self.send_response(room)
+                print('[Room Calibration] Next point for room {} has been selected: x{}, y{}'
+                      .format(room.name, room.calibration_point_x, room.calibration_point_y))
             elif data.get('nextSpeaker'):
                 room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                             self.config.speakers))
@@ -153,6 +157,7 @@ class RoomCalibrationController(AsyncNamespace):
 
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
+                print('[Room Calibration] Next speaker ({}) has been selected for noise'.format(room_speakers[room.calibration_current_speaker_index].name))
             else:
                 await self.send_response(room) # TODO: Replace with real coordinates
 
