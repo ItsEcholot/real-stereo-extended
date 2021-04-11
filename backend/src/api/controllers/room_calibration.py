@@ -28,7 +28,7 @@ class RoomCalibrationController(AsyncNamespace):
         self.config: Config = config
         self.sonos: Sonos = sonos
         self.tracking_manager = tracking_manager
-        self.config.tracking_repository.register_listener(self.position_update())
+        self.config.tracking_repository.register_listener(self.position_update)
 
     def validate(self, data: dict) -> Acknowledgment:
         """Validates the input data.
@@ -152,6 +152,6 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
             else:
-                await self.send_response(room, position_x=1, position_y=1) # TODO: Replace with real coordinates
+                await self.send_response(room) # TODO: Replace with real coordinates
 
         return ack.to_json()

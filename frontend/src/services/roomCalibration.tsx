@@ -68,5 +68,19 @@ export const useRoomCalibration = () => {
     });
   }, [getSocket, returnSocket, roomId]);
 
-  return { roomCalibration, setRoomId, startCalibration };
+  const finishCalibration = useCallback((): Promise<Acknowledgment> => {
+    const calibrationSocket = getSocket('room-calibration');
+    return new Promise((resolve, reject) => {    
+      calibrationSocket.emit('update', {
+        room: {id: roomId},
+        finish: true,
+      }, (ack: Acknowledgment) => {
+        if (ack.successful) resolve(ack);
+        else reject(ack);
+        returnSocket('room-calibration');
+      })
+    });
+  }, [getSocket, returnSocket, roomId]);
+
+  return { roomCalibration, setRoomId, startCalibration, finishCalibration };
 };

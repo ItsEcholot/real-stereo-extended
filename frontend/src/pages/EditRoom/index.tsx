@@ -1,4 +1,4 @@
-import { FunctionComponent, ReactNode, useEffect, useState } from 'react';
+import { FunctionComponent, useState } from 'react';
 import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin } from 'antd';
 import {
   RadarChartOutlined,
@@ -10,7 +10,7 @@ import { useRooms } from '../../services/rooms';
 import { Acknowledgment } from '../../services/acknowledgment';
 import Text from 'antd/lib/typography/Text';
 import { useSpeakers } from '../../services/speakers';
-import { useRoomCalibration } from '../../services/roomCalibration';
+import Calibration from '../../components/Calibration';
 
 type EditRoomPageProps = {
   roomId?: number;
@@ -24,18 +24,10 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   const { speakers, updateSpeaker, deleteSpeaker } = useSpeakers();
   const currentRoom = rooms?.find(room => room.id === roomId);
   const currentRoomSpeakers = speakers?.filter(speaker => speaker.room?.id === currentRoom?.id);
-  const { startCalibration, setRoomId, roomCalibration } = useRoomCalibration();
 
   const [saving, setSaving] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
-
-  useEffect(() => {
-    setRoomId(roomId);
-    return () => {
-      setRoomId(undefined);
-    }
-  }, [roomId, setRoomId]);
 
   const save = async (values: { name: string, speakers: string[] }) => {
     setSaving(true);
@@ -79,10 +71,6 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
     setSaving(false);
     setSaveErrors(ack.errors);
   }
-
-  const showCalibratingUi = (): ReactNode => (
-    <h1>Calibrating</h1>
-  );
 
   return (
     <>
@@ -133,9 +121,9 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           When all positions are calibrated, exit the configuration by pressing the save button.
         </p>
       {roomId ? 
-        (!roomCalibration?.calibrating ? <Button type="primary" icon={<RadarChartOutlined />} onClick={startCalibration}>Start calibration</Button> :
-                                         showCalibratingUi()) :
-        <Button type="primary" disabled icon={<RadarChartOutlined />}>Room needs to be saved before calibration can be started</Button>}
+        <Calibration roomId={roomId}/> :
+        <Button type="primary" disabled icon={<RadarChartOutlined />}>Room needs to be saved before calibration can be started</Button>
+      }
     </>
   );
 }
