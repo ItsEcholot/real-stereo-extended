@@ -6,14 +6,16 @@ from config import Config
 from models.node import Node
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
+from protocol.master import ClusterMaster
 
 
 class NodesController(AsyncNamespace):
     """Controller for the /nodes namespace."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, cluster_master: ClusterMaster):
         super().__init__(namespace='/nodes')
         self.config: Config = config
+        self.cluster_master: ClusterMaster = cluster_master
 
         # add node repository change listener
         config.node_repository.register_listener(self.send_nodes)
@@ -43,7 +45,7 @@ class NodesController(AsyncNamespace):
         validate.string(name, label='Name', min_value=1, max_value=50)
 
         if detector is not None:
-            validate.string(detector, label='Detection Algorithm', min_value=3, max_value=4)
+            validate.string(detector, label='Detection Algorithm', min_value=3, max_value=8)
 
         if data.get('room') is None or isinstance(data.get('room'), dict) is False:
             ack.add_error('Room id must not be empty')
@@ -90,6 +92,8 @@ class NodesController(AsyncNamespace):
 
             if data.get('detector') is not None:
                 node.detector = data.get('detector')
+                if node.acquired and node.online:
+                    self.cluster_master.send_service_update(node.ip_address)
 
             # update room reference if necessary
             if node.room is None or node.room.room_id != room.room_id:

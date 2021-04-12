@@ -118,12 +118,13 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
           </Select>
         </Form.Item>
         <Collapse ghost className={styles.AdvancedOptions}>
-          <Collapse.Panel header="Advanced Options" key="advanced">
+          <Collapse.Panel header="Advanced options" key="advanced">
             <Form.Item
-              label="Detection Algorithm"
+              label="Detection algorithm"
               name="detector">
-              <Select defaultValue={currentNode.detector || 'yolo'}>
-                <Option value="hog">Histogram of oriented gradients</Option>
+              <Select defaultValue="yolo">
+                <Option value="hog">HoG</Option>
+                <Option value="hog_gray">HoG (Grayscale)</Option>
                 <Option value="yolo">YOLO3 Object Detector</Option>
               </Select>
             </Form.Item>
