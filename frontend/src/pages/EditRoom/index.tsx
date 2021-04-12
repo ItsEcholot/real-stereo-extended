@@ -1,7 +1,6 @@
 import { FunctionComponent, useState } from 'react';
-import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin } from 'antd';
+import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin, Typography } from 'antd';
 import {
-  RadarChartOutlined,
   CloseOutlined,
   CheckOutlined,
 } from '@ant-design/icons';
@@ -120,9 +119,9 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           <br />
           When all positions are calibrated, exit the configuration by pressing the save button.
         </p>
-      {roomId ? 
-        <Calibration roomId={roomId}/> :
-        <Button type="primary" disabled icon={<RadarChartOutlined />}>Room needs to be saved before calibration can be started</Button>
+      {roomId && currentRoomSpeakers?.length ? 
+        <Calibration roomId={roomId} roomSpeakers={currentRoomSpeakers}/> :
+        <Typography.Text type="warning">Room needs to be saved & have speakers assigned before calibration can be started</Typography.Text>
       }
     </>
   );

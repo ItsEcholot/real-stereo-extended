@@ -164,6 +164,13 @@ type RoomCalibrationRequest = {
   nextSpeaker?: boolean;
 }
 
+type RoomCalibrationPoint = {
+  coordinateX: number;
+  coordinateY: number;
+  measuredVolumeLow: number;
+  measuredVolumeHigh: number;
+}
+
 type RoomCalibrationResponse = {
   room: {
     id: number;
@@ -171,7 +178,11 @@ type RoomCalibrationResponse = {
   calibrating: boolean;
   positionX: number;
   positionY: number;
-  noiseDone?: true;
+  noiseDone: boolean;
+  positionFreeze: boolean;
+  currentSpeakerIndex: number,
+  currentPoints: RoomCalibrationPoint[],
+  previousPoints: RoomCalibrationPoint[],
 }
 
 type RoomCalibrationResult = {

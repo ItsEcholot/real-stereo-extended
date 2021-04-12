@@ -75,7 +75,7 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_point_x = self.config.tracking_repository.coordinate
                 room.calibration_point_y = self.config.tracking_repository.coordinate # TODO: Get X & Y coordinates
                 await self.config.room_repository.call_listeners()
-            await self.send_response(room)
+                await self.send_response(room)
 
     async def after_calibration_noise(self, room: Room, speaker: Speaker):
         """Inform the client that the calibration noise ended
@@ -99,7 +99,11 @@ class RoomCalibrationController(AsyncNamespace):
             'calibrating': room.calibrating,
             'positionX': room.calibration_point_x,
             'positionY': room.calibration_point_y,
-            'noiseDone': noise_done
+            'noiseDone': noise_done,
+            'positionFreeze': room.calibration_point_freeze,
+            'currentSpeakerIndex': room.calibration_current_speaker_index,
+            'currentPoints': list(map(lambda point: point.to_json(), room.calibration_points_current_point)),
+            'previousPoints': list(map(lambda point: point.to_json(), room.calibration_points)),
         })
 
     async def on_update(self, _: str, data: dict) -> None:
@@ -122,6 +126,9 @@ class RoomCalibrationController(AsyncNamespace):
                 print('[Room Calibration] Starting for room {}'.format(room.name))
             elif data.get('finish'):
                 room.calibrating = False
+                room.calibration_current_speaker_index = 0
+                room.calibration_point_freeze = False
+                room.calibration_points_current_point = []
                 await self.config.room_repository.call_listeners()
                 self.tracking_manager.release_camera()
                 self.tracking_manager.stop_detector()
@@ -144,16 +151,14 @@ class RoomCalibrationController(AsyncNamespace):
             elif data.get('nextSpeaker'):
                 room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                             self.config.speakers))
-                room_volumes = [0] * room_speakers.count
+                if room.calibration_current_speaker_index > 0:
+                    self.sonos.send_command(SonosStopCalibrationSoundCommand([room_speakers[room.calibration_current_speaker_index - 1]]))
+
+                room_volumes = [0] * len(room_speakers)
                 room_volumes[room.calibration_current_speaker_index] = CALIBRATION_SOUND_VOLUME
-                self.sonos.send_command(SonosVolumeCommand(room_speakers, room_volumes))
                 self.sonos.send_command(
                     SonosPlayCalibrationSoundCommand([room_speakers[room.calibration_current_speaker_index]]))
-
-                # TODO: Somehow call self.after_calibration_noise with room & speaker as argument after CALIBRATION_SOUND_LENGTH seconds
-                #       But don't wait for the timeout... Call the following statements immediately
-
-                # TODO: After last speaker unfreeze room calibration point using room.calibration_point_freeze
+                self.sonos.send_command(SonosVolumeCommand(room_speakers, room_volumes))
 
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()

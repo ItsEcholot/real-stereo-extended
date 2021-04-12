@@ -29,10 +29,10 @@ class RoomCalibrationPoint:
         """
 
         json = {
-            'coordinate_x': self.coordinate_x,
-            'coordinate_y': self.coordinate_y,
-            'measured_volume_low': self.measured_volume_low,
-            'measured_volume_high': self.measured_volume_high,
+            'coordinateX': self.coordinate_x,
+            'coordinateY': self.coordinate_y,
+            'measuredVolumeLow': self.measured_volume_low,
+            'measuredVolumeHigh': self.measured_volume_high,
         }
 
         if recursive:

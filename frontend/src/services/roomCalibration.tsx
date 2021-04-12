@@ -13,6 +13,13 @@ export type RoomCalibrationRequest = {
   nextSpeaker?: boolean;
 }
 
+export type RoomCalibrationPoint = {
+  coordinateX: number;
+  coordinateY: number;
+  measuredVolumeLow: number;
+  measuredVolumeHigh: number;
+}
+
 export type RoomCalibrationResponse = {
   room: {
     id: number;
@@ -20,7 +27,11 @@ export type RoomCalibrationResponse = {
   calibrating: boolean;
   positionX: number;
   positionY: number;
-  noiseDone?: true;
+  noiseDone: boolean;
+  positionFreeze: boolean;
+  currentSpeakerIndex: number,
+  currentPoints: RoomCalibrationPoint[],
+  previousPoints: RoomCalibrationPoint[],
 }
 
 export type RoomCalibrationResult = {
@@ -31,8 +42,8 @@ export type RoomCalibrationResult = {
 }
 
 const drawCurrentPosition = (context: CanvasRenderingContext2D, x: number, y: number) => {
-  x = x / 10;
-  y = y / 10; // TODO: This can be removed when/if we use the same scaling as the old (100:100 coordinates)
+  x = Math.round(x / 10);
+  y = Math.round(y / 10); // TODO: This can be removed when/if we use the same scaling as the old (100:100 coordinates)
   const crosshairRadius = 3;
   context.strokeStyle = '#ff0000';
   context.beginPath();
@@ -53,6 +64,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
       setRoomCalibration(roomCalibration);
+      console.dir(roomCalibration);
 
       const context = calibrationMapCanvasRef?.current?.getContext("2d");
       if (context) {
@@ -139,11 +151,29 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
     });
   }, [getSocket, returnSocket, roomId]);
 
+  const nextSpeaker = useCallback((): Promise<Acknowledgment> => {
+    const calibrationSocket = getSocket(socketRoomName);
+    return new Promise(resolve => {    
+      calibrationSocket.emit('update', {
+        room: {id: roomId},
+        nextSpeaker: true,
+      }, (ack: Acknowledgment) => {
+        if (!ack.successful && ack.errors !== undefined) {
+          const ackErrors = ack.errors;
+          setErrors(prevErrors => [...prevErrors, ...ackErrors])
+        }
+        resolve(ack);
+        returnSocket(socketRoomName);
+      });
+    });
+  }, [getSocket, returnSocket, roomId]);
+
   return { 
     roomCalibration,
     errors,
     startCalibration,
     finishCalibration,
-    nextPosition
+    nextPosition,
+    nextSpeaker,
   };
 };
