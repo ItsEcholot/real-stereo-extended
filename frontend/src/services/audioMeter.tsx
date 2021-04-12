@@ -53,7 +53,6 @@ const closeAudioContext = async () => {
   audioContext = undefined;
 }
 
-
 // sums up energy in bins per octave
 const sumEnergy = (fftData: Uint8Array): Uint32Array => {
   // skip the first bin

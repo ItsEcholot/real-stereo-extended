@@ -36,8 +36,10 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
     if (!roomCalibration) return;
     if (roomCalibration.positionFreeze) {
       setCalibrationStep(1 + roomCalibration.currentSpeakerIndex);
+    } else {
+      setCalibrationStep(0);
     }
-  }, [setCalibrationStep, roomCalibration?.positionFreeze, roomCalibration?.currentSpeakerIndex]);
+  }, [setCalibrationStep, roomCalibration]);
 
   const onStartCalibration = async () => {
     setCalibrationStarting(true);

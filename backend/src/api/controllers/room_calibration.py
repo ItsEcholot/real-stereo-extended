@@ -12,7 +12,6 @@ from models.room_calibration_point import RoomCalibrationPoint
 from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand
 from tracking.manager import TrackingManager
 
-CALIBRATION_SOUND_LENGTH = 5
 CALIBRATION_SOUND_VOLUME = 25
 
 class RoomCalibrationController(AsyncNamespace):
@@ -63,7 +62,7 @@ class RoomCalibrationController(AsyncNamespace):
         if next_point is not None:
             validate.boolean(next_point, label='Next Point')
         if next_speaker is not None:
-            validate.boolean(next_speaker, label='Next Speaker')
+            validate.boolean(next_speaker, label='Next Speaker')                
 
         return ack
 
@@ -154,15 +153,19 @@ class RoomCalibrationController(AsyncNamespace):
                 if room.calibration_current_speaker_index > 0:
                     self.sonos.send_command(SonosStopCalibrationSoundCommand([room_speakers[room.calibration_current_speaker_index - 1]]))
 
+                if room.calibration_current_speaker_index > (len(room_speakers) - 1):
+                    ack.add_error('No next speaker available')
+                    return ack.to_json()
+
                 room_volumes = [0] * len(room_speakers)
                 room_volumes[room.calibration_current_speaker_index] = CALIBRATION_SOUND_VOLUME
                 self.sonos.send_command(
                     SonosPlayCalibrationSoundCommand([room_speakers[room.calibration_current_speaker_index]]))
                 self.sonos.send_command(SonosVolumeCommand(room_speakers, room_volumes))
 
+                print('[Room Calibration] Next speaker ({}) has been selected for noise'.format(room_speakers[room.calibration_current_speaker_index].name))
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
-                print('[Room Calibration] Next speaker ({}) has been selected for noise'.format(room_speakers[room.calibration_current_speaker_index].name))
             else:
                 await self.send_response(room) # TODO: Replace with real coordinates
 
