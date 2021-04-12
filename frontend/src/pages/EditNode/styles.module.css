@@ -7,3 +7,7 @@
 .CameraOptionsDropdown > button {
   border-radius: 2px !important;
 }
+
+.AdvancedOptions {
+  margin: 12px -12px !important;
+}

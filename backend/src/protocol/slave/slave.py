@@ -131,6 +131,9 @@ class ClusterSlave(ClusterSocket):
         self.master_ip = address
         self.log('Acquired by ' + address)
 
+        if message.serviceAcquisition.detector is not None:
+            self.tracking.set_detector(message.serviceAcquisition.detector)
+
         self.config.balance = message.serviceAcquisition.track
         await self.config.setting_repository.call_listeners()
 
@@ -143,6 +146,9 @@ class ClusterSlave(ClusterSocket):
         if address == self.master_ip:
             self.config.balance = message.serviceUpdate.track
             await self.config.setting_repository.call_listeners()
+
+            if message.serviceUpdate.detector is not None:
+                self.tracking.set_detector(message.serviceUpdate.detector)
 
     async def on_service_release(self, _: Wrapper, address: str) -> None:
         """Handle service release message.

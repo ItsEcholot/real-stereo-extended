@@ -12,10 +12,11 @@ class Node:
     :param str ip_address: Local IP adress of the node
     :param str hostname: Hostname of the node
     :param models.room.Room room: Room to which the node belongs to
+    :param str detector: Detection algorithm
     """
 
     def __init__(self, node_id: int = None, name: str = '', online: bool = False,  # pylint: disable=too-many-arguments
-                 ip_address: str = '', hostname: str = '', room=None):
+                 ip_address: str = '', hostname: str = '', room=None, detector: str = None):
         if len(name) == 0:
             raise ValueError('Node name cannot be empty')
 
@@ -25,6 +26,7 @@ class Node:
         self.ip_address: str = ip_address
         self.hostname: str = hostname
         self.room: models.room.Room = room
+        self.detector = detector
         self.acquired: bool = False
 
     @staticmethod
@@ -40,7 +42,8 @@ class Node:
         room = config.room_repository.get_room(data.get('room_id'), fail=True)
 
         node = Node(node_id=data.get('id'), name=data.get('name'),
-                    ip_address=data.get('ip'), hostname=data.get('hostname'), room=room)
+                    ip_address=data.get('ip'), hostname=data.get('hostname'), room=room,
+                    detector=data.get('detector'))
         room.nodes.append(node)
         return node
 
@@ -65,6 +68,9 @@ class Node:
                 json['room'] = self.room.to_json()
             else:
                 json['room_id'] = self.room.room_id
+
+        if self.detector is not None and len(self.detector) > 0:
+            json['detector'] = self.detector
 
         if live:
             json['online'] = self.online

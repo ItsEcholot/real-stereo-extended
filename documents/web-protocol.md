@@ -65,6 +65,7 @@ type Node = {
   ip: string;
   hostname: string;
   room?: Omit<Room, 'nodes'>;
+  detector?: string;
 }
 
 type UpdateNode = {
@@ -75,6 +76,7 @@ type UpdateNode = {
   room: {
     id: number;
   };
+  detector?: string;
 }
 ```
 

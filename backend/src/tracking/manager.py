@@ -5,7 +5,12 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 import cv2
 from .camera import Camera
+from .yolo_people_detector import YoloPeopleDetector
+from .hog_people_detector import HogPeopleDetector
 from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
+
+
+DEFAULT_DETECTOR = 'yolo'
 
 
 def start_camera(frame_queue, frame_result_queue, return_frame, detection_active,
@@ -16,11 +21,22 @@ def start_camera(frame_queue, frame_result_queue, return_frame, detection_active
     camera.process()
 
 
-def start_detector(frame_queue, frame_result_queue, return_frame, coordinate_queue) -> None:
+def start_detector(frame_queue, frame_result_queue, return_frame, coordinate_queue,
+                   detector_algorithm) -> None:
     """Starts the people detector in a subprocess."""
-    detector = HogGrayscalePeopleDetector(frame_queue, frame_result_queue, return_frame,
-                                          coordinate_queue)
-    detector.process()
+    detector = None
+
+    if detector_algorithm is None or detector_algorithm == 'yolo':
+        detector = YoloPeopleDetector
+    elif detector_algorithm == 'hog':
+        detector = HogPeopleDetector
+    elif detector_algorithm == 'hog_gray':
+        detector = HogGrayscalePeopleDetector
+    else:
+        raise RuntimeError('Unknown detection algorithm: {}'.format(detector_algorithm))
+
+    instance = detector(frame_queue, frame_result_queue, return_frame, coordinate_queue)
+    instance.process()
 
 
 class TrackingManager:
@@ -28,8 +44,9 @@ class TrackingManager:
 
     def __init__(self, config):
         self.config = config
-        self.camera = None
-        self.detector = None
+        self.camera_process = None
+        self.detector_process = None
+        self.detector = DEFAULT_DETECTOR
         self.on_frame = None
         self.config.setting_repository.register_listener(self.on_settings_changed)
         self.previous_config_value = self.config.balance
@@ -62,11 +79,11 @@ class TrackingManager:
         :returns: True if the camera is active
         :rtype: bool
         """
-        return self.camera is not None
+        return self.camera_process is not None
 
     def acquire_camera(self) -> None:
         """Ensures the tracking is running."""
-        if self.camera is None:
+        if self.camera_process is None:
             self.start_camera()
 
         self.camera_listeners += 1
@@ -82,39 +99,40 @@ class TrackingManager:
 
     def start_camera(self) -> None:
         """Start the camera tracking."""
-        if self.camera is None:
+        if self.camera_process is None:
             print('[Tracking] Starting camera')
-            self.camera = multiprocessing.Process(
+            self.camera_process = multiprocessing.Process(
                 target=start_camera, args=(self.frame_queue, self.frame_result_queue,
                                            self.return_frame, self.detection_active,
                                            self.camera_calibration_requests,
                                            self.camera_calibration_responses, ))
-            self.camera.start()
+            self.camera_process.start()
 
     def start_detector(self) -> None:
         """Start the people detector."""
-        if self.detector is None:
-            print('[Tracking] Starting people detector')
+        if self.detector_process is None:
+            print('[Tracking] Starting people detector: {}'.format(self.detector))
             self.detection_active.set()
-            self.detector = multiprocessing.Process(
+            self.detector_process = multiprocessing.Process(
                 target=start_detector, args=(self.frame_queue, self.frame_result_queue,
-                                             self.return_frame, self.coordinate_queue, ))
-            self.detector.start()
+                                             self.return_frame, self.coordinate_queue,
+                                             self.detector, ))
+            self.detector_process.start()
 
     def stop_camera(self) -> None:
         """Stop the current camera tracking."""
-        if self.camera is not None:
+        if self.camera_process is not None:
             print('[Tracking] Stopping camera')
-            self.camera.kill()
-            self.camera = None
+            self.camera_process.kill()
+            self.camera_process = None
 
     def stop_detector(self) -> None:
         """Stop the people detector."""
-        if self.detector is not None:
+        if self.detector_process is not None:
             print('[Tracking] Stopping people detector')
             self.detection_active.clear()
-            self.detector.kill()
-            self.detector = None
+            self.detector_process.kill()
+            self.detector_process = None
 
     async def await_frames(self) -> None:
         """Awaits result frames and passes them to the listener."""
@@ -180,3 +198,15 @@ class TrackingManager:
         """
         self.cluster_slave = cluster_slave
         self.camera_calibration_requests.put_nowait((start, finish, repeat))
+
+    def set_detector(self, detector: str) -> None:
+        """Sets the detection algorithm.
+
+        :param str detector: New detection algorithm
+        """
+        if self.detector != detector:
+            self.detector = detector
+
+            if self.detector_process is not None:
+                self.stop_detector()
+                self.start_detector()
