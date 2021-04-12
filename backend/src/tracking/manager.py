@@ -5,7 +5,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 import cv2
 from .camera import Camera
-from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
+from .yolo_people_detector import YoloPeopleDetector
 
 
 def start_camera(frame_queue, frame_result_queue, return_frame, detection_active,
@@ -18,8 +18,8 @@ def start_camera(frame_queue, frame_result_queue, return_frame, detection_active
 
 def start_detector(frame_queue, frame_result_queue, return_frame, coordinate_queue) -> None:
     """Starts the people detector in a subprocess."""
-    detector = HogGrayscalePeopleDetector(frame_queue, frame_result_queue, return_frame,
-                                          coordinate_queue)
+    detector = YoloPeopleDetector(frame_queue, frame_result_queue, return_frame,
+                                  coordinate_queue)
     detector.process()
 
 

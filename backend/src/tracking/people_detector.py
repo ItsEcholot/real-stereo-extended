@@ -46,6 +46,31 @@ class PeopleDetector(ABC):
         """
         raise NotImplementedError()
 
+    @staticmethod
+    def draw_rects(frame: ndarray, rects: list) -> None:
+        """Draws the given rects ontop of the frame.
+
+        :param numpy.ndarray frame: Frame to draw on
+        :param list rects: A list of rects in the form (x, y, width, height)
+        """
+        for (pos_x, pos_y, width, height) in rects:
+            cv2.rectangle(frame, (pos_x, pos_y), (pos_x + width, pos_y + height), (0, 255, 0), 2)
+
+    def calculate_coordinate(self, rects) -> int:
+        """Calculates the coordinate of the detected person in the given rects.
+
+        :param array rects: Rects
+        """
+        if len(rects) < 1:
+            return 0
+
+        # take the average x coordinate over all rects
+        total = 0.0
+        for (x_coordinate, _, width, _) in rects:
+            total += x_coordinate + (width / 2.0)
+
+        return int(total / len(rects))
+
     def report_coordinate(self, coordinate: int) -> None:
         """Reports the detected coordinate to the master.
 
