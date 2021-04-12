@@ -1,4 +1,4 @@
-import { Row, Col, Divider, Form, Input, Spin, Space, Select, Button, Alert, Badge, Dropdown, Menu } from 'antd';
+import { Row, Col, Divider, Form, Input, Spin, Space, Select, Button, Alert, Badge, Dropdown, Menu, Collapse } from 'antd';
 import { FunctionComponent, useState } from 'react';
 import {
   CheckOutlined,
@@ -28,13 +28,14 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
   const [saveErrors, setSaveErrors] = useState<string[]>();
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
-  const save = async (values: { name: string, room: number }) => {
+  const save = async (values: { name: string, room: number, detector: string }) => {
     if (!currentNode) return;
     setSaving(true);
     try {
       await updateNode({
         ...currentNode,
         name: values.name,
+        detector: values.detector,
         room: { id: values.room },
       });
       setSaveErrors(undefined);
@@ -116,6 +117,18 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
             {rooms.map(room => <Option key={room.id} value={room.id}>{room.name}</Option>)}
           </Select>
         </Form.Item>
+        <Collapse ghost className={styles.AdvancedOptions}>
+          <Collapse.Panel header="Advanced Options" key="advanced">
+            <Form.Item
+              label="Detection Algorithm"
+              name="detector">
+              <Select defaultValue={currentNode.detector || 'yolo'}>
+                <Option value="hog">Histogram of oriented gradients</Option>
+                <Option value="yolo">YOLO3 Object Detector</Option>
+              </Select>
+            </Form.Item>
+          </Collapse.Panel>
+        </Collapse>
         <Form.Item>
           <Space>
             <Button type="primary" icon={<CheckOutlined />} htmlType="submit" loading={saving}>Save</Button>

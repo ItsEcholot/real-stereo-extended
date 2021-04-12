@@ -38,8 +38,12 @@ class NodesController(AsyncNamespace):
         validate = Validate(ack)
         node_id = data.get('id')
         name = data.get('name')
+        detector = data.get('detector')
 
         validate.string(name, label='Name', min_value=1, max_value=50)
+
+        if detector is not None:
+            validate.string(detector, label='Detection Algorithm', min_value=3, max_value=4)
 
         if data.get('room') is None or isinstance(data.get('room'), dict) is False:
             ack.add_error('Room id must not be empty')
@@ -83,6 +87,9 @@ class NodesController(AsyncNamespace):
             node = self.config.node_repository.get_node(data.get('id'))
 
             node.name = data.get('name')
+
+            if data.get('detector') is not None:
+                node.detector = data.get('detector')
 
             # update room reference if necessary
             if node.room is None or node.room.room_id != room.room_id:
