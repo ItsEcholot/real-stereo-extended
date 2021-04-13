@@ -14,15 +14,26 @@ class SSLGenerator:
     """Checks and generates a new SSL certificate if necessary"""
 
     def __init__(self):
-        print('[Web API] Checking for SSL Certificate...')
+        print('[Web API] Checking for SSL Certificate')
         self.hostname = gethostname()
         self.ip_address = gethostbyname(self.hostname)
 
         if not certificate_path.is_file() or not certificate_path_key.is_file():
             print('[Web API] No certificate found, generating one')
             self.generate_certificate()
+        else:
+            with open(certificate_path, "rb") as file:
+                cert_bytes = file.read()
+            cert = x509.load_pem_x509_certificate(cert_bytes, default_backend())
+            if not self.check_if_cert_contains_current_ip(cert):
+                print('[Web API] Certificate doesn\'t contain the current IP/hostname, recreating')
+                self.generate_certificate()
+            elif not self.check_if_cert_still_valid(cert):
+                print('[Web API] Certificate isn\'t valid anymore, recreating')
+                self.generate_certificate
 
     def generate_certificate(self):
+        """Generates a new certificate and stores it on the disk"""
         key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=2048,
@@ -50,7 +61,28 @@ class SSLGenerator:
                                             x509.SubjectAlternativeName([
                                                 x509.DNSName("localhost"),
                                                 x509.DNSName("127.0.0.1"),
+                                                x509.DNSName(self.hostname),
                                                 x509.DNSName(self.ip_address)]),
                                             critical=False).sign(key, hashes.SHA256(), default_backend())
         with open(certificate_path, "wb") as file:
             file.write(cert.public_bytes(serialization.Encoding.PEM))
+    
+    def check_if_cert_contains_current_ip(self, cert: x509.Certificate) -> bool:
+        """Checks if the passed cert contains the current ip & hostname
+
+        :param cryptography.x509.Certificate cert: The certificate
+        """
+        alternative_names = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName)
+        dns_names = alternative_names.value.get_values_for_type(x509.DNSName)
+        if not self.hostname in dns_names or not self.ip_address in dns_names:
+            return False
+        return True
+
+    def check_if_cert_still_valid(self, cert: x509.Certificate) -> bool:
+        """Checks if the passed cert is still valid
+
+        :param cryptography.x509.Certificate cert: The certificate
+        """
+        if cert.not_valid_after < datetime.datetime.utcnow():
+            return False
+        return True
