@@ -16,6 +16,7 @@ from .controllers.speakers import SpeakersController
 from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
 from .controllers.room_calibration import RoomCalibrationController
+from .ssl_generator import SSLGenerator
 
 # define path of the static frontend files
 frontend_path: Path = (Path(__file__).resolve().parent /
@@ -155,6 +156,7 @@ class ApiManager:
 
     async def start(self) -> None:
         """Start the API server."""
+        SSLGenerator()
         print('[Web API] Listening on http://localhost:8080')
         await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None)  # pylint: disable=protected-access
 
