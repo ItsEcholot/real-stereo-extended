@@ -9,7 +9,7 @@ const socketsReferences: { [key: string]: number } = {};
 const getSocket = (namespace: string) => {
   if (!sockets[namespace]) {
     sockets[namespace] = io(`${baseSocketUrl}/${namespace}`, {
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
     });
     console.debug(`Creating socket /${namespace}`);
   }

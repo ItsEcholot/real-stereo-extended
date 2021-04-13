@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List
 import asyncio
 import socketio
+import ssl
 from aiohttp import web, MultipartWriter
 from numpy import ndarray
 from config import Config, NodeType
@@ -156,9 +157,11 @@ class ApiManager:
 
     async def start(self) -> None:
         """Start the API server."""
-        SSLGenerator()
+        ssl_generator = SSLGenerator()
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context.load_cert_chain(ssl_generator.certificate_path, ssl_generator.certificate_path_key)
         print('[Web API] Listening on http://localhost:8080')
-        await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None)  # pylint: disable=protected-access
+        await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None, ssl_context=ssl_context)  # pylint: disable=protected-access
 
     def on_frame(self, frame: ndarray) -> None:
         """`on_frame` callback of a `Camera` instance. Will send the frame to all connected clients

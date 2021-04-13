@@ -7,9 +7,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-certificate_path: Path = (Path(__file__).resolve().parent / '..' / '..' / 'certificate.crt').resolve()
-certificate_path_key: Path = (Path(__file__).resolve().parent / '..' / '..' / 'certificate.key').resolve()
-
 class SSLGenerator:
     """Checks and generates a new SSL certificate if necessary"""
 
@@ -17,12 +14,14 @@ class SSLGenerator:
         print('[Web API] Checking for SSL Certificate')
         self.hostname = gethostname()
         self.ip_address = gethostbyname(self.hostname)
+        self.certificate_path: Path = (Path(__file__).resolve().parent / '..' / '..' / 'certificate.crt').resolve()
+        self.certificate_path_key: Path = (Path(__file__).resolve().parent / '..' / '..' / 'certificate.key').resolve()
 
-        if not certificate_path.is_file() or not certificate_path_key.is_file():
+        if not self.certificate_path.is_file() or not self.certificate_path_key.is_file():
             print('[Web API] No certificate found, generating one')
             self.generate_certificate()
         else:
-            with open(certificate_path, "rb") as file:
+            with open(self.certificate_path, "rb") as file:
                 cert_bytes = file.read()
             cert = x509.load_pem_x509_certificate(cert_bytes, default_backend())
             if not self.check_if_cert_contains_current_ip(cert):
@@ -38,7 +37,7 @@ class SSLGenerator:
             public_exponent=65537,
             key_size=2048,
         )
-        with open(certificate_path_key, "wb") as file:
+        with open(self.certificate_path_key, "wb") as file:
             file.write(key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
@@ -64,7 +63,7 @@ class SSLGenerator:
                                                 x509.DNSName(self.hostname),
                                                 x509.DNSName(self.ip_address)]),
                                             critical=False).sign(key, hashes.SHA256(), default_backend())
-        with open(certificate_path, "wb") as file:
+        with open(self.certificate_path, "wb") as file:
             file.write(cert.public_bytes(serialization.Encoding.PEM))
     
     def check_if_cert_contains_current_ip(self, cert: x509.Certificate) -> bool:
