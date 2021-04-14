@@ -29,7 +29,7 @@ class SSLGenerator:
                 self.generate_certificate()
             elif not self.check_if_cert_still_valid(cert):
                 print('[Web API] Certificate isn\'t valid anymore, recreating')
-                self.generate_certificate
+                self.generate_certificate()
 
     def generate_certificate(self):
         """Generates a new certificate and stores it on the disk"""
