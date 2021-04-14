@@ -8,9 +8,16 @@ from .camera import Camera
 from .yolo_people_detector import YoloPeopleDetector
 from .hog_people_detector import HogPeopleDetector
 from .hog_grayscale_people_detector import HogGrayscalePeopleDetector
+from .motion_people_detector import MotionPeopleDetector
 
 
 DEFAULT_DETECTOR = 'yolo'
+DETECTORS = {
+    'yolo': YoloPeopleDetector,
+    'hog': HogPeopleDetector,
+    'hog_gray': HogGrayscalePeopleDetector,
+    'motion': MotionPeopleDetector,
+}
 
 
 def start_camera(frame_queue, frame_result_queue, return_frame, detection_active,
@@ -26,17 +33,12 @@ def start_detector(frame_queue, frame_result_queue, return_frame, coordinate_que
     """Starts the people detector in a subprocess."""
     detector = None
 
-    if detector_algorithm is None or detector_algorithm == 'yolo':
-        detector = YoloPeopleDetector
-    elif detector_algorithm == 'hog':
-        detector = HogPeopleDetector
-    elif detector_algorithm == 'hog_gray':
-        detector = HogGrayscalePeopleDetector
-    else:
+    if detector_algorithm not in DETECTORS:
         raise RuntimeError('Unknown detection algorithm: {}'.format(detector_algorithm))
 
-    instance = detector(frame_queue, frame_result_queue, return_frame, coordinate_queue)
-    instance.process()
+    detector = DETECTORS[detector_algorithm](frame_queue, frame_result_queue, return_frame,
+                                             coordinate_queue)
+    detector.process()
 
 
 class TrackingManager:

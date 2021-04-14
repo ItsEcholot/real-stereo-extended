@@ -125,6 +125,7 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
               <Select defaultValue="yolo">
                 <Option value="hog">HoG</Option>
                 <Option value="hog_gray">HoG (Grayscale)</Option>
+                <Option value="motion">Motion</Option>
                 <Option value="yolo">YOLO3 Object Detector</Option>
               </Select>
             </Form.Item>

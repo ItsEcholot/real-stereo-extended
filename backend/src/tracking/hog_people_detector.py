@@ -6,6 +6,10 @@ from imutils.object_detection import non_max_suppression
 from .people_detector import PeopleDetector
 
 
+GROUP_THRESHOLD_WIDTH = 50
+GROUP_THRESHOLD_HEIGTH = 50
+
+
 class HogPeopleDetector(PeopleDetector):
     """Detects people in a given camera frame."""
 
@@ -16,19 +20,18 @@ class HogPeopleDetector(PeopleDetector):
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
-    def detect(self, detection_frame: ndarray, draw_frame: ndarray = None) -> None:
+    def detect(self, frame: ndarray) -> None:
         """Detects people in a given camera frame.
 
-        :param numpy.ndarray detection_frame: Camera frame which should be used for detection
-        :param numpy.ndarray draw_frame: Frame in which recognized people should be drawn.
-                                         If none, result should be drawn in detection_frame.
+        :param numpy.ndarray frame: Camera frame which should be used for detection
         """
         # detect people
-        (rects, _) = self.hog.detectMultiScale(detection_frame, winStride=(3, 3), padding=(8, 8),
-                                               scale=1.2)
+        (rects, _) = self.hog.detectMultiScale(frame, winStride=(3, 3), padding=(8, 8), scale=1.2)
 
         # reduce multiple overlapping bounding boxes to a single one
-        reduced_rects = non_max_suppression(rects, probs=None, overlapThresh=0.65)
+        reduced_rects = non_max_suppression(rects, probs=None, overlapThresh=0.1)
+        reduced_rects = self.group_nearby_rects(rects, GROUP_THRESHOLD_WIDTH,
+                                                GROUP_THRESHOLD_HEIGTH)
 
         # calculate the coordinate
         if len(reduced_rects) > 0:
@@ -36,4 +39,4 @@ class HogPeopleDetector(PeopleDetector):
             self.report_coordinate(coordinate)
 
         # draw the bounding boxes
-        self.draw_rects(draw_frame if draw_frame is not None else detection_frame, reduced_rects)
+        self.draw_rects(self.drawing_frame, reduced_rects)

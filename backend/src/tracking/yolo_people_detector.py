@@ -27,19 +27,17 @@ class YoloPeopleDetector(PeopleDetector):
 
         return cv2.dnn.readNetFromDarknet(str(config_path), str(weights_path))  # pylint: disable=no-member
 
-    def detect(self, detection_frame: ndarray, draw_frame: ndarray = None) -> None:
+    def detect(self, frame: ndarray) -> None:
         """Detects people in a given camera frame.
 
-        :param numpy.ndarray detection_frame: Camera frame which should be used for detection
-        :param numpy.ndarray draw_frame: Frame in which recognized people should be drawn.
-                                         If none, result should be drawn in detection_frame.
+        :param numpy.ndarray frame: Camera frame which should be used for detection
         """
         # get target layer names
         layers = self.net.getLayerNames()
         layers = [layers[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
 
         # convert image to a blob and pass it to the net
-        blob = cv2.dnn.blobFromImage(detection_frame, 1 / 255.0, (416, 416),  # pylint: disable=no-member
+        blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416),  # pylint: disable=no-member
                                      swapRB=True, crop=False)
         self.net.setInput(blob)
 
@@ -47,7 +45,7 @@ class YoloPeopleDetector(PeopleDetector):
         results = self.net.forward(layers)
 
         # convert results to bounding boxes
-        rects = self.convert_to_boxes(detection_frame, results)
+        rects = self.convert_to_boxes(frame, results)
 
         # calculate the coordinate
         if len(rects) > 0:
@@ -55,7 +53,7 @@ class YoloPeopleDetector(PeopleDetector):
             self.report_coordinate(coordinate)
 
         # draw the bounding boxes
-        self.draw_rects(draw_frame if draw_frame is not None else detection_frame, rects)
+        self.draw_rects(self.drawing_frame, rects)
 
     def convert_to_boxes(self, frame: ndarray, results: list) -> list:
         """Converts the net result to bounding boxes.
