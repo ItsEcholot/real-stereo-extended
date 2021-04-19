@@ -81,7 +81,7 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
             <img
               width="100%"
               alt="Calibration Preview"
-              src={`http://${currentNode.ip}:8080/backend-assets/calibration/${cameraCalibration?.image}`} />
+              src={`//${currentNode.ip}:8080/backend-assets/calibration/${cameraCalibration?.image}`} />
           </Modal>
         )}
         <Row gutter={[0, 16]}>
@@ -90,7 +90,7 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
             <img
               width="100%"
               alt="Camera Preview"
-              src={`http://${currentNode.ip}:8080/stream.mjpeg`} />
+              src={`//${currentNode.ip}:8080/stream.mjpeg?nodeId=${currentNode.id}`} />
           </Col>
           <Col span={24}>
             <Space>

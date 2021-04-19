@@ -5,7 +5,7 @@ from typing import List
 import asyncio
 import socketio
 import ssl
-from aiohttp import web, MultipartWriter
+from aiohttp import web, MultipartWriter, ClientSession
 from numpy import ndarray
 from config import Config, NodeType
 from tracking.manager import TrackingManager
@@ -95,6 +95,18 @@ class ApiManager:
         response.force_close()
         await response.prepare(request)
 
+        # proxy if query contains node id
+        if 'nodeId' in request.rel_url.query:
+            node_id = int(request.rel_url.query['nodeId'])
+            node = self.config.node_repository.get_node(node_id)             
+            async with ClientSession() as client:
+                async with client.request(method='get', url='https://{}:8080/stream.mjpeg'.format(node.ip_address), ssl=False) as res:
+                    async for data in res.content.iter_any():
+                        await response.write(data)
+                        if data:
+                            await response.drain()
+            return
+
         # if no other stream request is open, start catching the camera frames
         if len(self.stream_queues) == 0:
             print('[Web API] Starting camera stream')
@@ -160,8 +172,8 @@ class ApiManager:
         ssl_generator = SSLGenerator()
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_context.load_cert_chain(ssl_generator.certificate_path, ssl_generator.certificate_path_key)
-        print('[Web API] Listening on http://localhost:8080')
-        await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None, ssl_context=ssl_context)  # pylint: disable=protected-access
+        print('[Web API] Listening on https://localhost:8080')
+        await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None, ssl_context=ssl_context) # pylint: disable=protected-access
 
     def on_frame(self, frame: ndarray) -> None:
         """`on_frame` callback of a `Camera` instance. Will send the frame to all connected clients

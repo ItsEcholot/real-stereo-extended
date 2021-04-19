@@ -60,7 +60,7 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
             <img
               width="100%"
               alt="Camera Preview"
-              src={currentNode?.online ? `http://${currentNode?.ip}:8080/stream.mjpeg` : inactiveImage} />
+              src={currentNode?.online ? `${process.env.NODE_ENV !== 'production' && process.env.REACT_APP_BACKEND_URL ? ('//' + process.env.REACT_APP_BACKEND_URL) : ''}/stream.mjpeg?nodeId=${currentNode?.id}` : inactiveImage} />
             <Dropdown.Button overlay={(
               <Menu>
                 <Menu.Item onClick={() => history.push(`/nodes/${currentNode.id}/calibrate-camera`)}>
