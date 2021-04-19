@@ -18,6 +18,7 @@ from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
 from .controllers.room_calibration import RoomCalibrationController
 from .ssl_generator import SSLGenerator
+from balancing.sonos import Sonos
 
 # define path of the static frontend files
 frontend_path: Path = (Path(__file__).resolve().parent /
@@ -44,6 +45,7 @@ class ApiManager:
         # register routes for both masters and slaves
         self.app.add_routes([
             web.get('/stream.mjpeg', self.get_stream),
+            web.get('/backend-assets/calibration/{image}/proxy', self.get_proxy_assets),
             web.static('/backend-assets', str(assets_path)),
         ])
 
@@ -67,7 +69,7 @@ class ApiManager:
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
             self.server.register_namespace(RoomCalibrationController(config=self.config,
-                                                                     sonos=balancing_manager.sonos,
+                                                                     sonos=getattr(balancing_manager, 'sonos', None),
                                                                      tracking_manager=tracking_manager))
 
     async def get_index(self, _: web.Request) -> web.Response:
@@ -105,7 +107,7 @@ class ApiManager:
                         await response.write(data)
                         if data:
                             await response.drain()
-            return
+            return response
 
         # if no other stream request is open, start catching the camera frames
         if len(self.stream_queues) == 0:
@@ -143,6 +145,21 @@ class ApiManager:
                 self.tracking_manager.set_frame_callback(None)
                 print('[Web API] Camera stream stopped')
             self.stream_queues.remove(queue)
+
+    async def get_proxy_assets(self, request: web.Request) -> web.Response:
+        image = request.match_info['image']
+        node_id = int(request.rel_url.query['nodeId'])
+        node = self.config.node_repository.get_node(node_id)
+
+        async with ClientSession() as client:
+            async with client.request(method='get', url='https://{}:8080/backend-assets/calibration/{}'.format(node.ip_address, image), ssl=False) as res:
+                proxied_response = web.Response(headers=res.headers, status=res.status)
+                await proxied_response.prepare(request)
+                async for data in res.content.iter_any():
+                    await proxied_response.write(data)
+                    if data:
+                        await proxied_response.drain()
+        return proxied_response
 
     async def write_stream_frame(self, response, frame) -> None:
         """Writes a frame to the camera stream.

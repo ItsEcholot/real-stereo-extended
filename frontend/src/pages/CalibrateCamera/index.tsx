@@ -81,7 +81,7 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
             <img
               width="100%"
               alt="Calibration Preview"
-              src={`//${currentNode.ip}:8080/backend-assets/calibration/${cameraCalibration?.image}`} />
+              src={`${process.env.NODE_ENV !== 'production' && process.env.REACT_APP_BACKEND_URL ? ('//' + process.env.REACT_APP_BACKEND_URL) : ''}/backend-assets/calibration/${cameraCalibration?.image}/proxy?nodeId=${currentNode.id}`} />
           </Modal>
         )}
         <Row gutter={[0, 16]}>
@@ -90,7 +90,7 @@ const CalibrateCameraPage: FunctionComponent<CalibrateCameraPageProps> = ({ node
             <img
               width="100%"
               alt="Camera Preview"
-              src={`//${currentNode.ip}:8080/stream.mjpeg?nodeId=${currentNode.id}`} />
+              src={`${process.env.NODE_ENV !== 'production' && process.env.REACT_APP_BACKEND_URL ? ('//' + process.env.REACT_APP_BACKEND_URL) : ''}/stream.mjpeg?nodeId=${currentNode.id}`} />
           </Col>
           <Col span={24}>
             <Space>
