@@ -63,8 +63,8 @@ class SonosSocoAdapter(SonosAdapter):
         :param models.speaker.Speaker speaker: Speaker on which calibration sound should be played on
         """
         soco_instance = self.get_coordinator_instance(speaker)
-        soco_instance.play_mode = 'REPEAT_ONE'
         soco_instance.play_uri(uri=self.calibration_sound_uri, title='RS Calibration Sound')
+        soco_instance.play_mode = 'REPEAT_ONE'
 
     def save_snapshot(self, speaker: Speaker):
         """Saves the current playback state of the passed speaker

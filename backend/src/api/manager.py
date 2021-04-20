@@ -57,6 +57,12 @@ class ApiManager:
                     web.static('/static', str(frontend_path / 'static')),
                 ])
 
+            # add an insecure http web application used for sonos sound assets
+            self.insecure_app: web.Application = web.Application()
+            self.insecure_app.add_routes([
+                web.static('/backend-assets', str(assets_path)),
+            ])
+
             # attach the socket.io server to the same web server
             self.server = socketio.AsyncServer(cors_allowed_origins='*', async_mode='aiohttp')
             self.server.attach(self.app)
@@ -190,7 +196,12 @@ class ApiManager:
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_context.load_cert_chain(ssl_generator.certificate_path, ssl_generator.certificate_path_key)
         print('[Web API] Listening on https://localhost:8080')
-        await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None, ssl_context=ssl_context) # pylint: disable=protected-access
+        apps = [web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None, ssl_context=ssl_context)] # pylint: disable=protected-access
+        if self.config.type == NodeType.MASTER:
+            print('[Web API INSECURE] Listening on http://localhost:8079 (for Sonos media assets)')
+            apps.append(web._run_app(self.insecure_app, host='0.0.0.0', port=8079, handle_signals=False, print=None)) # pylint: disable=protected-access
+        await asyncio.gather(*apps)
+            
 
     def on_frame(self, frame: ndarray) -> None:
         """`on_frame` callback of a `Camera` instance. Will send the frame to all connected clients

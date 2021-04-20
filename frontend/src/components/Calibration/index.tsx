@@ -6,7 +6,7 @@ import {
 } from '@ant-design/icons';
 import { useRoomCalibration } from '../../services/roomCalibration';
 import styles from './styles.module.css';
-import { Speaker } from '../../services/speakers';
+import { Speaker, useSpeakers } from '../../services/speakers';
 
 type CalibrationProps = {
   roomId: number;
@@ -21,11 +21,13 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
   const {
     roomCalibration,
     errors,
+    audioMeterErrors,
     startCalibration,
     finishCalibration,
     nextPosition,
     nextSpeaker,
   } = useRoomCalibration(roomId, calibrationMapCanvasRef);
+  const { speakers } = useSpeakers();
 
   const [calibrationStarting, setCalibrationStarting] = useState(false);
   const [calibrationFinishing, setCalibrationFinishing] = useState(false);
@@ -54,16 +56,23 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
   }
 
   const onNextPosition = async () => {
+    if (!speakers) return;
     setCalibrationNextPositioning(true);
     await nextPosition();
     setCalibrationNextPositioning(false);
-    await nextSpeaker();
+    for (let _ of speakers.filter(speaker => speaker.room.id === roomId)) {
+      await nextSpeaker();
+    }
+    await nextSpeaker(false); // One more time to stop it
   }
 
   return (
     <>
       {errors.map((error, index) => (
-        <Alert key={index} message={error} type="error" showIcon />
+        <Alert key={`e${index}`} message={error} type="error" showIcon />
+      ))}
+      {audioMeterErrors.map((error, index) => (
+        <Alert key={`ame${index}`} message={error} type="error" showIcon />
       ))}
       {!roomCalibration?.calibrating ?
         <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>

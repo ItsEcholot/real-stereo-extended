@@ -15,6 +15,7 @@ const aWeighting = [
   -2.5,
   -9.3,
 ]; // From https://acousticalengineer.com/a-weighting-table/
+export let historicVolume: number[] = [];
 
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
@@ -94,13 +95,12 @@ const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8A
 export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const [audioMeterErrors, setAudioMeterErrors] = useState<String[]>([]);
   const [volume, setVolume] = useState(0);
-  const [historicVolume, setHistoricVolume] = useState<number[]>([]);
 
   useEffect(() => {
     if (!enabled) {
       setVolume(0);
       setAudioMeterErrors([]);
-      setHistoricVolume([]);
+      historicVolume = [];
       return;
     }
     let microphoneStream: MediaStream;
@@ -129,7 +129,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
           const energies = sumEnergy(bufferData);
           const calcVolume = calculateLoudness(energies);
           setVolume(calcVolume);
-          setHistoricVolume(historicVolume => [...historicVolume, calcVolume]);
+          historicVolume.push(calcVolume);
 
           if (spectrumAnalyzerCanvasContext) {
             spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
@@ -148,5 +148,5 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
     }
   }, [enabled, spectrumAnalyzerCanvasRef]);
 
-  return { volume, audioMeterErrors, historicVolume };
+  return { volume, audioMeterErrors };
 };

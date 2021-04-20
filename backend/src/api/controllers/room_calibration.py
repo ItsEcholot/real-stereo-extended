@@ -150,20 +150,20 @@ class RoomCalibrationController(AsyncNamespace):
             elif data.get('nextSpeaker'):
                 room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                             self.config.speakers))
-                if room.calibration_current_speaker_index > 0:
-                    self.sonos.send_command(SonosStopCalibrationSoundCommand([room_speakers[room.calibration_current_speaker_index - 1]]))
-
-                if room.calibration_current_speaker_index > (len(room_speakers) - 1):
-                    ack.add_error('No next speaker available')
+                room_speaker_count = len(room_speakers)
+                if room.calibration_current_speaker_index == room_speaker_count:
+                    self.sonos.send_command(SonosStopCalibrationSoundCommand([room_speakers[0]]))
+                    await self.send_response(room)
                     return ack.to_json()
 
                 room_volumes = [0] * len(room_speakers)
                 room_volumes[room.calibration_current_speaker_index] = CALIBRATION_SOUND_VOLUME
-                self.sonos.send_command(
-                    SonosPlayCalibrationSoundCommand([room_speakers[room.calibration_current_speaker_index]]))
+                if room.calibration_current_speaker_index == 0:
+                    self.sonos.send_command(SonosPlayCalibrationSoundCommand([room_speakers[0]]))
                 self.sonos.send_command(SonosVolumeCommand(room_speakers, room_volumes))
 
                 print('[Room Calibration] Next speaker ({}) has been selected for noise'.format(room_speakers[room.calibration_current_speaker_index].name))
+                await self.send_response(room)
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
             else:

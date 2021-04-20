@@ -1,7 +1,7 @@
 import { RefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { SocketContext } from './socketProvider';
 import { Acknowledgment } from './acknowledgment';
-import { useAudioMeter } from './audioMeter';
+import { useAudioMeter, historicVolume } from './audioMeter';
 import { useSpeakers } from './speakers';
 
 export type RoomCalibrationRequest = {
@@ -65,8 +65,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const [errors, setErrors] = useState<string[]>([]);
   const [measuringVolume, setMeasuringVolume] = useState(false);
 
-  const { speakers } = useSpeakers();
-  const { historicVolume, audioMeterErrors } = useAudioMeter(measuringVolume);
+  const { audioMeterErrors } = useAudioMeter(measuringVolume);
 
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
@@ -158,18 +157,8 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
     });
   }, [getSocket, returnSocket, roomId]);
 
-  const nextSpeaker = useCallback((): Promise<Acknowledgment> | undefined => {
-    if (!roomCalibration || !speakers) return;
+  const nextSpeaker = useCallback((record: boolean = true): Promise<Acknowledgment> | undefined => {
     const calibrationSocket = getSocket(socketRoomName);
-
-    const afterVolumeMeasurement = () => {
-      setMeasuringVolume(false);
-      if (historicVolume.length > 0) {
-        const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
-      }
-      // TODO: Send result to backend
-      nextSpeaker();
-    };
 
     return new Promise(resolve => {
       calibrationSocket.emit('update', {
@@ -179,21 +168,33 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         if (!ack.successful && ack.errors !== undefined) {
           const ackErrors = ack.errors;
           setErrors(prevErrors => [...prevErrors, ...ackErrors])
+          resolve(ack);
+          returnSocket(socketRoomName);
+        } else if (record) {
+          setMeasuringVolume(true);
+          setTimeout(() => {
+            if (historicVolume.length > 0) {
+              const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
+              console.log(`averageVolume ${averageVolume}`);
+            }
+            setMeasuringVolume(false);
+            // TODO: Send result to backend
+
+            resolve(ack);
+            returnSocket(socketRoomName);
+          }, 5000);
         } else {
-          if (roomCalibration.currentSpeakerIndex + 1 < speakers.filter(speaker => speaker.room.id === roomId).length - 1) {
-            setMeasuringVolume(true);
-            setTimeout(afterVolumeMeasurement, 5000);
-          }
+          resolve(ack);
+          returnSocket(socketRoomName);
         }
-        resolve(ack);
-        returnSocket(socketRoomName);
       });
     });
-  }, [getSocket, returnSocket, roomId, roomCalibration, speakers, historicVolume]);
+  }, [getSocket, returnSocket, roomId]);
 
   return { 
     roomCalibration,
     errors,
+    audioMeterErrors,
     startCalibration,
     finishCalibration,
     nextPosition,
