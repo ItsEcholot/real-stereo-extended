@@ -56,6 +56,27 @@ class Validate:
 
         return num_errors == len(self.ack.errors)
 
+    def float(self, value: float, label: str, min_value: float = None, max_value: float = None) -> bool:
+        """Validates if a value is a float and in the given boundaries.
+
+        :param float value: Input value that should be validated
+        :param str label: Label that will be shown in error messages
+        :param float min_value: Min value (optional)
+        :param float max_value: Max value (optional)
+        :returns: Whether the input validates
+        :rtype: bool
+        """
+        num_errors = len(self.ack.errors)
+
+        if isinstance(value, float) is False:
+            self.ack.add_error(label + ' must be a float')
+        elif min_value is not None and value < min_value:
+            self.ack.add_error(label + ' must be at least ' + str(min_value))
+        elif max_value is not None and value > max_value:
+            self.ack.add_error(label + ' must be at most ' + str(max_value))
+
+        return num_errors == len(self.ack.errors)
+
     def boolean(self, value: bool, label: str) -> bool:
         """Validates if a value is a boolean.
 

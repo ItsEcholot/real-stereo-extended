@@ -13,8 +13,7 @@ class Room:
     :param List[model.node.Node] nodes: All nodes that are assigned to this room
     """
 
-    def __init__(self, room_id: int = None, name: str = '', nodes: List = None,
-                 calibration_points: List = None):
+    def __init__(self, room_id: int = None, name: str = '', nodes: List = None):
         if len(name) == 0:
             raise ValueError('Room name cannot be empty')
 
@@ -22,7 +21,7 @@ class Room:
         self.name: str = name
         self.nodes: List[models.node.Node] = nodes or []
         self.calibrating: bool = False
-        self.calibration_points: List[RoomCalibrationPoint] = calibration_points or []
+        self.calibration_points: List[RoomCalibrationPoint] = []
         self.calibration_points_current_point: List[RoomCalibrationPoint] = []
         self.calibration_current_speaker_index = 0
         self.calibration_point_x: int = 0
@@ -37,7 +36,15 @@ class Room:
         :returns: Room
         :rtype: Room
         """
-        return Room(data.get('id'), data.get('name'), data.get('calibration_points'))
+        return Room(data.get('id'), data.get('name'))
+
+    def calibration_points_from_json(self, data: dict, config):
+        """Reads calibration points from a JSON object and adds it to the current room instance.
+
+        :param dict data: JSON data
+        :param config.Config config: Config instance
+        """
+        self.calibration_points = list(map(lambda calibration_point: RoomCalibrationPoint.from_json(calibration_point, config), data))
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.

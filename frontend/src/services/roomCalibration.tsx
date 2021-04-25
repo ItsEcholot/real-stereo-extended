@@ -2,7 +2,6 @@ import { RefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { SocketContext } from './socketProvider';
 import { Acknowledgment } from './acknowledgment';
 import { useAudioMeter, historicVolume } from './audioMeter';
-import { useSpeakers } from './speakers';
 
 export type RoomCalibrationRequest = {
   room: {
@@ -11,6 +10,7 @@ export type RoomCalibrationRequest = {
   start?: boolean;
   finish?: boolean;
   repeatPoint?: boolean;
+  confirmPoint?: boolean;
   nextPoint?: boolean;
   nextSpeaker?: boolean;
 }
@@ -70,6 +70,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
       setRoomCalibration(roomCalibration);
+      console.dir(roomCalibration);
 
       const context = calibrationMapCanvasRef?.current?.getContext("2d");
       if (context) {
@@ -140,7 +141,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
     });
   }, [getSocket, returnSocket, roomId]);
 
-  const nextPosition = useCallback((): Promise<Acknowledgment> => {
+  const nextPoint = useCallback((): Promise<Acknowledgment> => {
     const calibrationSocket = getSocket(socketRoomName);
     return new Promise(resolve => {    
       calibrationSocket.emit('update', {
@@ -173,20 +174,59 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         } else if (record) {
           setMeasuringVolume(true);
           setTimeout(() => {
-            if (historicVolume.length > 0) {
-              const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
-              console.log(`averageVolume ${averageVolume}`);
-            }
+            const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
+            console.debug(`Calibration measured average volume: ${averageVolume}`);
+            calibrationSocket.emit('result', {
+              room: {id: roomId},
+              volume: averageVolume
+            }, (ack: Acknowledgment) => {
+              if (!ack.successful && ack.errors !== undefined) {
+                const ackErrors = ack.errors;
+                setErrors(prevErrors => [...prevErrors, ...ackErrors])
+              }
+              resolve(ack);
+              returnSocket(socketRoomName);
+            });
             setMeasuringVolume(false);
-            // TODO: Send result to backend
-
-            resolve(ack);
-            returnSocket(socketRoomName);
           }, 5000);
         } else {
           resolve(ack);
           returnSocket(socketRoomName);
         }
+      });
+    });
+  }, [getSocket, returnSocket, roomId]);
+
+  const confirmPoint = useCallback((): Promise<Acknowledgment> => {
+    const calibrationSocket = getSocket(socketRoomName);
+    return new Promise(resolve => {    
+      calibrationSocket.emit('update', {
+        room: {id: roomId},
+        confirmPoint: true,
+      }, (ack: Acknowledgment) => {
+        if (!ack.successful && ack.errors !== undefined) {
+          const ackErrors = ack.errors;
+          setErrors(prevErrors => [...prevErrors, ...ackErrors])
+        }
+        resolve(ack);
+        returnSocket(socketRoomName);
+      });
+    });
+  }, [getSocket, returnSocket, roomId]);
+
+  const repeatPoint = useCallback((): Promise<Acknowledgment> => {
+    const calibrationSocket = getSocket(socketRoomName);
+    return new Promise(resolve => {    
+      calibrationSocket.emit('update', {
+        room: {id: roomId},
+        repeatPoint: true,
+      }, (ack: Acknowledgment) => {
+        if (!ack.successful && ack.errors !== undefined) {
+          const ackErrors = ack.errors;
+          setErrors(prevErrors => [...prevErrors, ...ackErrors])
+        }
+        resolve(ack);
+        returnSocket(socketRoomName);
       });
     });
   }, [getSocket, returnSocket, roomId]);
@@ -197,7 +237,9 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
     audioMeterErrors,
     startCalibration,
     finishCalibration,
-    nextPosition,
+    nextPoint,
     nextSpeaker,
+    confirmPoint,
+    repeatPoint,
   };
 };

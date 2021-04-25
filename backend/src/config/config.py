@@ -65,6 +65,11 @@ class Config:
         for speaker_data in self.data.get('speakers'):
             self.speakers.append(Speaker.from_json(speaker_data, self))
 
+        # load rooms calibration data after loading speakers
+        for room_data in self.data.get('rooms'):
+            room = self.room_repository.get_room(room_data.get('id'), fail=True)
+            room.calibration_points_from_json(room_data.get('calibration_points'), self)
+
     async def store(self) -> None:
         """Stores the current configuration values back in the config file."""
         data = {

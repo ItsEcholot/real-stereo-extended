@@ -14,7 +14,7 @@ type CalibrationProps = {
 }
 
 const Calibration: FunctionComponent<CalibrationProps> = ({
-  roomId, 
+  roomId,
   roomSpeakers,
 }) => {
   const calibrationMapCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,14 +24,18 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
     audioMeterErrors,
     startCalibration,
     finishCalibration,
-    nextPosition,
+    nextPoint,
     nextSpeaker,
+    confirmPoint,
+    repeatPoint,
   } = useRoomCalibration(roomId, calibrationMapCanvasRef);
   const { speakers } = useSpeakers();
 
   const [calibrationStarting, setCalibrationStarting] = useState(false);
   const [calibrationFinishing, setCalibrationFinishing] = useState(false);
-  const [calibrationNextPositioning, setCalibrationNextPositioning] = useState(false);
+  const [calibrationNextPointing, setCalibrationNextPointing] = useState(false);
+  const [calibrationConfirmingPoint, setCalibrationConfirmingPoint] = useState(false);
+  const [calibrationRepeatingPoint, setCalibrationRepeatingPoint] = useState(false);
   const [calibrationStep, setCalibrationStep] = useState(0);
 
   useEffect(() => {
@@ -55,15 +59,27 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
     setCalibrationFinishing(false);
   }
 
-  const onNextPosition = async () => {
+  const onNextPoint = async () => {
     if (!speakers) return;
-    setCalibrationNextPositioning(true);
-    await nextPosition();
-    setCalibrationNextPositioning(false);
-    for (let _ of speakers.filter(speaker => speaker.room.id === roomId)) {
+    setCalibrationNextPointing(true);
+    await nextPoint();
+    setCalibrationNextPointing(false);
+    for (const _ of roomSpeakers) {
       await nextSpeaker();
     }
     await nextSpeaker(false); // One more time to stop it
+  }
+
+  const onConfirmPosition = async () => {
+    setCalibrationConfirmingPoint(true);
+    await confirmPoint();
+    setCalibrationConfirmingPoint(false);
+  }
+
+  const onRepeatPosition = async () => {
+    setCalibrationRepeatingPoint(true);
+    await repeatPoint();
+    setCalibrationRepeatingPoint(false);
   }
 
   return (
@@ -83,7 +99,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
             <Space>
               <Button type="primary" loading={calibrationFinishing} icon={<CheckOutlined />} onClick={onFinishCalibration}>Finish calibration</Button>
             </Space>
-            <Divider/>
+            <Divider />
             <Row gutter={10}>
               <Col span="6">
                 <canvas className={styles.canvas} ref={calibrationMapCanvasRef} />
@@ -92,9 +108,15 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
                 <Steps progressDot direction="vertical" size="small" current={calibrationStep}>
                   <Steps.Step title="Position yourself" description={<>
                     <span>When you're at the desired location press</span>
-                    <Button type="default" disabled={calibrationStep !== 0} loading={calibrationNextPositioning} onClick={onNextPosition}>Next Position</Button>
+                    <Button type="default" disabled={calibrationStep !== 0} loading={calibrationNextPointing} onClick={onNextPoint}>Next Position</Button>
                   </>} />
                   {roomSpeakers.map(speaker => <Steps.Step key={speaker.id} title={`Measuring ${speaker.name}`} />)}
+                  <Steps.Step title="Confirm calibration for this position" description={<>
+                    <Space>
+                      <Button type="default" disabled={calibrationStep !== roomSpeakers.length + 1} loading={calibrationConfirmingPoint} onClick={onConfirmPosition}>Confirm</Button>
+                      <Button type="default" disabled={calibrationStep !== roomSpeakers.length + 1} loading={calibrationRepeatingPoint} onClick={onRepeatPosition}>Repeat</Button>
+                    </Space>
+                  </>} />
                 </Steps>
               </Col>
             </Row>
