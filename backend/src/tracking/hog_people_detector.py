@@ -19,6 +19,8 @@ class HogPeopleDetector(PeopleDetector):
         self.name = "HoG"
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+        self.tracker.group_threshold_width = GROUP_THRESHOLD_WIDTH
+        self.tracker.group_threshold_height = GROUP_THRESHOLD_HEIGTH
 
     def detect(self, frame: ndarray) -> list:
         """Detects people in a given camera frame.
