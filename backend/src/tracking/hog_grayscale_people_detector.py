@@ -13,10 +13,12 @@ class HogGrayscalePeopleDetector(HogPeopleDetector):
         super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue)
         self.name = "HoG G"
 
-    def detect(self, frame: ndarray) -> None:
+    def detect(self, frame: ndarray) -> list:
         """Detects people in a given camera frame.
 
         :param numpy.ndarray frame: Camera frame which should be used for detection
+        :returns: Detected people as bounding boxes
+        :rtype: list
         """
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         return super().detect(gray_frame)

@@ -22,10 +22,12 @@ class MotionPeopleDetector(PeopleDetector):
         self.name = "Motion"
         self.last_frame = None
 
-    def detect(self, frame: ndarray) -> None:
+    def detect(self, frame: ndarray) -> list:
         """Detects people in a given camera frame.
 
         :param numpy.ndarray frame: Camera frame which should be used for detection
+        :returns: Detected people as bounding boxes
+        :rtype: list
         """
         # convert to grayscale and smooth frame
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -34,7 +36,7 @@ class MotionPeopleDetector(PeopleDetector):
         # requires last frame to already exist
         if self.last_frame is None:
             self.last_frame = gray_frame
-            return
+            return []
 
         # difference to last frame
         diff = cv2.absdiff(self.last_frame, gray_frame)
@@ -60,5 +62,4 @@ class MotionPeopleDetector(PeopleDetector):
         reduced_rects = self.group_nearby_rects(reduced_rects, GROUP_THRESHOLD_WIDTH,
                                                 GROUP_THRESHOLD_HEIGTH)
 
-        # draw the bounding boxes
-        self.draw_rects(self.drawing_frame, reduced_rects)
+        return reduced_rects

@@ -20,10 +20,12 @@ class HogPeopleDetector(PeopleDetector):
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
-    def detect(self, frame: ndarray) -> None:
+    def detect(self, frame: ndarray) -> list:
         """Detects people in a given camera frame.
 
         :param numpy.ndarray frame: Camera frame which should be used for detection
+        :returns: Detected people as bounding boxes
+        :rtype: list
         """
         # detect people
         (rects, _) = self.hog.detectMultiScale(frame, winStride=(3, 3), padding=(8, 8), scale=1.2)
@@ -33,10 +35,4 @@ class HogPeopleDetector(PeopleDetector):
         reduced_rects = self.group_nearby_rects(rects, GROUP_THRESHOLD_WIDTH,
                                                 GROUP_THRESHOLD_HEIGTH)
 
-        # calculate the coordinate
-        if len(reduced_rects) > 0:
-            coordinate = self.calculate_coordinate(reduced_rects)
-            self.report_coordinate(coordinate)
-
-        # draw the bounding boxes
-        self.draw_rects(self.drawing_frame, reduced_rects)
+        return reduced_rects

@@ -34,8 +34,7 @@ class Camera:
         self.camera.framerate = self.FRAMERATE
 
     def process(self) -> None:
-        """Processes the camera frames until `stop()` has been called
-        or the camera is no longer available."""
+        """Processes the camera frames."""
         try:
             raw_capture = PiRGBArray(self.camera, size=(self.FRAME_WIDTH, self.FRAME_HEIGHT))
             for frame in self.camera.capture_continuous(raw_capture, format='bgr',
