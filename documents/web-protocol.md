@@ -49,6 +49,7 @@ type Room = {
   id: number;
   name: string;
   nodes: Omit<Node, 'room'>[];
+  people_group?: string;
 }
 
 type UpdateRoom = Omit<Room, 'nodes'>

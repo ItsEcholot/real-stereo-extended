@@ -8,7 +8,7 @@ from .people_detector import PeopleDetector
 
 GAUSSIAN_BLUR = 15
 THRESHOLD = 25
-MIN_CONTOUR_SIZE = 500
+MIN_CONTOUR_SIZE = 300
 GROUP_THRESHOLD_WIDTH = 100
 GROUP_THRESHOLD_HEIGTH = 500
 
@@ -17,15 +17,21 @@ class MotionPeopleDetector(PeopleDetector):
     """Detects people in a given camera frame."""
 
     def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
-                 coordinate_queue: Queue):
-        super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue)
+                 coordinate_queue: Queue, people_group: str):
+        super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue,
+                         people_group)
         self.name = "Motion"
         self.last_frame = None
+        self.tracker.group_threshold_width = GROUP_THRESHOLD_WIDTH
+        self.tracker.group_threshold_height = GROUP_THRESHOLD_HEIGTH
+        self.tracker.history_size = 3
 
-    def detect(self, frame: ndarray) -> None:
+    def detect(self, frame: ndarray) -> list:
         """Detects people in a given camera frame.
 
         :param numpy.ndarray frame: Camera frame which should be used for detection
+        :returns: Detected people as bounding boxes
+        :rtype: list
         """
         # convert to grayscale and smooth frame
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -34,7 +40,7 @@ class MotionPeopleDetector(PeopleDetector):
         # requires last frame to already exist
         if self.last_frame is None:
             self.last_frame = gray_frame
-            return
+            return []
 
         # difference to last frame
         diff = cv2.absdiff(self.last_frame, gray_frame)
@@ -60,5 +66,4 @@ class MotionPeopleDetector(PeopleDetector):
         reduced_rects = self.group_nearby_rects(reduced_rects, GROUP_THRESHOLD_WIDTH,
                                                 GROUP_THRESHOLD_HEIGTH)
 
-        # draw the bounding boxes
-        self.draw_rects(self.drawing_frame, reduced_rects)
+        return reduced_rects

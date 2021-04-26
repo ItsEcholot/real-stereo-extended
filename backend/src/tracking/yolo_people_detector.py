@@ -15,8 +15,9 @@ class YoloPeopleDetector(PeopleDetector):
     """Detects people in a given camera frame."""
 
     def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
-                 coordinate_queue: Queue):
-        super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue)
+                 coordinate_queue: Queue, people_group: str):
+        super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue,
+                         people_group)
         self.name = "YOLO"
         self.net = self.load_net()
 
@@ -27,10 +28,12 @@ class YoloPeopleDetector(PeopleDetector):
 
         return cv2.dnn.readNetFromDarknet(str(config_path), str(weights_path))  # pylint: disable=no-member
 
-    def detect(self, frame: ndarray) -> None:
+    def detect(self, frame: ndarray) -> list:
         """Detects people in a given camera frame.
 
         :param numpy.ndarray frame: Camera frame which should be used for detection
+        :returns: Detected people as bounding boxes
+        :rtype: list
         """
         # get target layer names
         layers = self.net.getLayerNames()
@@ -47,13 +50,7 @@ class YoloPeopleDetector(PeopleDetector):
         # convert results to bounding boxes
         rects = self.convert_to_boxes(frame, results)
 
-        # calculate the coordinate
-        if len(rects) > 0:
-            coordinate = self.calculate_coordinate(rects)
-            self.report_coordinate(coordinate)
-
-        # draw the bounding boxes
-        self.draw_rects(self.drawing_frame, rects)
+        return rects
 
     def convert_to_boxes(self, frame: ndarray, results: list) -> list:
         """Converts the net result to bounding boxes.

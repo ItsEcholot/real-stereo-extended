@@ -68,6 +68,7 @@ message ServiceAcquisition {
   bool track = 1;
   string hostname = 2;
   string detector = 3;
+  string people_group = 4;
 }
 ```
 
@@ -101,6 +102,7 @@ Balancing can be started and stopped. In this case, the master will send a statu
 message ServiceUpdate {
   bool track = 1;
   string detector = 2;
+  string people_group = 3;
 }
 ```
 
