@@ -2,6 +2,7 @@
 
 from typing import List
 import models.node
+from tracking.people_detector import DEFAULT_COORDINATE
 
 
 class Room:
@@ -22,6 +23,7 @@ class Room:
         self.name: str = name
         self.nodes: List[models.node.Node] = nodes or []
         self.people_group: str = people_group
+        self.coordinates: List[int] = [DEFAULT_COORDINATE, DEFAULT_COORDINATE]
 
     @staticmethod
     def from_json(data: dict):

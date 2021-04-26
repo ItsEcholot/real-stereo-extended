@@ -131,10 +131,12 @@ class ClusterSlave(ClusterSocket):
         self.master_ip = address
         self.log('Acquired by ' + address)
 
-        if message.serviceAcquisition.detector is not None:
+        if message.serviceAcquisition.detector is not None and \
+                len(message.serviceAcquisition.detector) > 0:
             self.tracking.set_detector(message.serviceAcquisition.detector)
 
-        if message.serviceAcquisition.people_group is not None:
+        if message.serviceAcquisition.people_group is not None and \
+                len(message.serviceAcquisition.people_group) > 0:
             self.tracking.set_people_group(message.serviceAcquisition.people_group)
 
         self.config.balance = message.serviceAcquisition.track
@@ -150,10 +152,12 @@ class ClusterSlave(ClusterSocket):
             self.config.balance = message.serviceUpdate.track
             await self.config.setting_repository.call_listeners()
 
-            if message.serviceUpdate.detector is not None:
+            if message.serviceUpdate.detector is not None and \
+                    len(message.serviceUpdate.detector) > 0:
                 self.tracking.set_detector(message.serviceUpdate.detector)
 
-            if message.serviceUpdate.people_group is not None:
+            if message.serviceUpdate.people_group is not None and \
+                    len(message.serviceUpdate.people_group) > 0:
                 self.tracking.set_people_group(message.serviceUpdate.people_group)
 
     async def on_service_release(self, _: Wrapper, address: str) -> None:
