@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useRef, useState } from 'react';
-import { Button, Alert, Space, Row, Col, Steps, Divider } from 'antd';
+import { Button, Alert, Space, Row, Col, Steps, Divider, Progress } from 'antd';
 import {
   RadarChartOutlined,
   CheckOutlined,
@@ -29,6 +29,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
     nextSpeaker,
     confirmPoint,
     repeatPoint,
+    volume
   } = useRoomCalibration(roomId, calibrationMapCanvasRef);
   const { speakers } = useSpeakers();
 
@@ -51,7 +52,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
   useEffect(() => {
     if (!roomCalibration?.calibrating) return;
     prepareCalibration();
-  }, [roomCalibration?.calibrating, prepareCalibration])
+  }, [roomCalibration?.calibrating, prepareCalibration]);
 
   const onStartCalibration = async () => {
     setCalibrationStarting(true);
@@ -85,6 +86,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
   const onRepeatPosition = async () => {
     setCalibrationRepeatingPoint(true);
     await repeatPoint();
+    onNextPoint();
     setCalibrationRepeatingPoint(false);
   }
 
@@ -116,7 +118,11 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
                     <span>When you're at the desired location press</span>
                     <Button type="default" disabled={calibrationStep !== 0} loading={calibrationNextPointing} onClick={onNextPoint}>Next Position</Button>
                   </>} />
-                  {roomSpeakers.map(speaker => <Steps.Step key={speaker.id} title={`Measuring ${speaker.name}`} />)}
+                  {roomSpeakers.map((speaker, index) => <Steps.Step key={speaker.id} title={`Measuring ${speaker.name}`} description={<>
+                    {calibrationStep === index + 1 ? 
+                      <Progress trailColor="white" percent={Math.round(volume * 100) / 100} /> :
+                      roomCalibration.currentPoints[index] ? <Progress trailColor="white" percent={Math.round(roomCalibration.currentPoints[index].measuredVolume * 100) / 100} /> : null}
+                  </>} />)}
                   <Steps.Step title="Confirm calibration for this position" description={<>
                     <Space>
                       <Button type="default" disabled={calibrationStep !== roomSpeakers.length + 1} loading={calibrationConfirmingPoint} onClick={onConfirmPosition}>Confirm</Button>

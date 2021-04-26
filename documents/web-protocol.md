@@ -168,8 +168,7 @@ type RoomCalibrationRequest = {
 type RoomCalibrationPoint = {
   coordinateX: number;
   coordinateY: number;
-  measuredVolumeLow: number;
-  measuredVolumeHigh: number;
+  measuredVolume: number;
 }
 
 type RoomCalibrationResponse = {

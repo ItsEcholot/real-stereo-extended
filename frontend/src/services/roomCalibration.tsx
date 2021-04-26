@@ -18,8 +18,7 @@ export type RoomCalibrationRequest = {
 export type RoomCalibrationPoint = {
   coordinateX: number;
   coordinateY: number;
-  measuredVolumeLow: number;
-  measuredVolumeHigh: number;
+  measuredVolume: number;
 }
 
 export type RoomCalibrationResponse = {
@@ -65,7 +64,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const [errors, setErrors] = useState<string[]>([]);
   const [measuringVolume, setMeasuringVolume] = useState(false);
 
-  const { audioMeterErrors } = useAudioMeter(measuringVolume);
+  const { audioMeterErrors, volume } = useAudioMeter(measuringVolume);
 
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
@@ -178,11 +177,15 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         } else if (record) {
           setMeasuringVolume(true);
           setTimeout(() => {
-            const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
-            console.debug(`Calibration measured average volume: ${averageVolume}`);
+            historicVolume.sort();
+            const length = historicVolume.length;
+            const mid = Math.ceil(length / 2);
+            //const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
+            const medianVolume = length % 2 === 0 ? (historicVolume[mid] + historicVolume[mid - 1]) / 2 : historicVolume[mid - 1];
+            console.debug(`Calibration measured average volume: ${medianVolume}`);
             calibrationSocket.emit('result', {
               room: {id: roomId},
-              volume: averageVolume
+              volume: medianVolume
             }, (ack: Acknowledgment) => {
               if (!ack.successful && ack.errors !== undefined) {
                 const ackErrors = ack.errors;
@@ -246,5 +249,6 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
     nextSpeaker,
     confirmPoint,
     repeatPoint,
+    volume,
   };
 };
