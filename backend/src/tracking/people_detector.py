@@ -44,8 +44,8 @@ class PeopleDetector(ABC):
                 # calculate the coordinate
                 if len(next_people) > 0:
                     self.people = next_people
-                    coordinate = self.calculate_coordinate(self.people)
-                    self.report_coordinate(coordinate)
+                    self.last_coordinate = self.calculate_coordinate(self.people)
+                    self.report_coordinate(self.last_coordinate)
 
             # count fps
             self.fps.frame()
@@ -92,14 +92,30 @@ class PeopleDetector(ABC):
         :param array rects: Rects
         """
         if len(rects) < 1:
-            return DEFAULT_COORDINATE
+            return self.last_coordinate
 
-        # take the average x coordinate over all rects
-        total = 0.0
-        for (x_coordinate, _, width, _) in rects:
-            total += x_coordinate + (width / 2.0)
+        # take the average coordinate over all rects
+        if self.people_group == 'average':
+            total = 0.0
+            for (x_coordinate, _, width, _) in rects:
+                total += x_coordinate + (width / 2.0)
 
-        return int(total / len(rects))
+            return int(total / len(rects))
+
+        # return the coordinate that is closest to the last one
+        elif self.people_group == 'track':
+            closest = -1
+
+            for (x_coordinate, _, width, _) in rects:
+                coordinate = x_coordinate + (width / 2.0)
+                if closest < 0 or abs(self.last_coordinate - coordinate) < abs(self.last_coordinate
+                                                                               - closest):
+                    closest = coordinate
+
+            return closest
+
+        else:
+            raise RuntimeError('Unknown people group algorithm: {}'.format(self.people_group))
 
     def report_coordinate(self, coordinate: int) -> None:
         """Reports the detected coordinate to the master.
