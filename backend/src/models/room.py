@@ -3,6 +3,7 @@
 from typing import List
 import models.node
 from models.room_calibration_point import RoomCalibrationPoint
+from tracking.people_detector import DEFAULT_COORDINATE
 
 
 class Room:
@@ -11,9 +12,11 @@ class Room:
     :param int room_id: Room id
     :param str name: Name of the room
     :param List[model.node.Node] nodes: All nodes that are assigned to this room
+    :param str people_group: Strategy to calculate the coordinate in case of multiple people
     """
 
-    def __init__(self, room_id: int = None, name: str = '', nodes: List = None):
+    def __init__(self, room_id: int = None, name: str = '', nodes: List = None,
+                 people_group: str = ''):
         if len(name) == 0:
             raise ValueError('Room name cannot be empty')
 
@@ -27,6 +30,8 @@ class Room:
         self.calibration_point_x: int = 0
         self.calibration_point_y: int = 0
         self.calibration_point_freeze: bool = False
+        self.people_group: str = people_group
+        self.coordinates: List[int] = [DEFAULT_COORDINATE, DEFAULT_COORDINATE]
 
     @staticmethod
     def from_json(data: dict):
@@ -36,7 +41,7 @@ class Room:
         :returns: Room
         :rtype: Room
         """
-        return Room(data.get('id'), data.get('name'))
+        return Room(data.get('id'), data.get('name'), people_group=data.get('people_group'))
 
     def calibration_points_from_json(self, data: dict, config):
         """Reads calibration points from a JSON object and adds it to the current room instance.
@@ -63,5 +68,8 @@ class Room:
 
         if recursive:
             json['nodes'] = list(map(lambda node: node.to_json(live=True), self.nodes))
+
+        if self.people_group is not None and len(self.people_group) > 0:
+            json['people_group'] = self.people_group
 
         return json

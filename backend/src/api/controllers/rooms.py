@@ -6,14 +6,16 @@ from config import Config
 from models.room import Room
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
+from protocol.master import ClusterMaster
 
 
 class RoomsController(AsyncNamespace):
     """Controller for the /rooms namespace."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, cluster_master: ClusterMaster):
         super().__init__(namespace='/rooms')
         self.config: Config = config
+        self.cluster_master: ClusterMaster = cluster_master
 
         # add room repository change listener
         config.room_repository.register_listener(self.send_rooms)
@@ -38,8 +40,12 @@ class RoomsController(AsyncNamespace):
         validate = Validate(ack)
         room_id = data.get('id')
         name = data.get('name')
+        people_group = data.get('people_group')
 
         validate.string(name, label='Name', min_value=1, max_value=50)
+
+        if people_group is not None:
+            validate.string(people_group, label='Handle multiple people', min_value=5, max_value=10)
 
         if create:
             if self.config.room_repository.get_room_by_name(name) is not None:
@@ -75,6 +81,9 @@ class RoomsController(AsyncNamespace):
         if ack.successful:
             room = Room(name=data.get('name'))
 
+            if data.get('people_group') is not None:
+                room.people_group = data.get('people_group')
+
             # add the new room and send the new state to all clients
             await self.config.room_repository.add_room(room)
             ack.created_id = room.room_id
@@ -94,6 +103,12 @@ class RoomsController(AsyncNamespace):
         if ack.successful:
             room = self.config.room_repository.get_room(data.get('id'))
             room.name = data.get('name')
+
+            if data.get('people_group') is not None:
+                room.people_group = data.get('people_group')
+                for node in room.nodes:
+                    if node.acquired and node.online:
+                        self.cluster_master.send_service_update(node.ip_address)
 
             # store the update and send the new state to all clients
             await self.config.room_repository.call_listeners()

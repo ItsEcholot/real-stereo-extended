@@ -68,8 +68,10 @@ class ApiManager:
             self.server.attach(self.app)
 
             # register socket.io namespaces
-            self.server.register_namespace(RoomsController(config=self.config))
-            self.server.register_namespace(NodesController(config=self.config))
+            self.server.register_namespace(RoomsController(config=self.config,
+                                                           cluster_master=cluster_master))
+            self.server.register_namespace(NodesController(config=self.config,
+                                                           cluster_master=cluster_master))
             self.server.register_namespace(SpeakersController(config=self.config))
             self.server.register_namespace(SettingsController(config=self.config))
             self.server.register_namespace(CameraCalibrationController(config=self.config,

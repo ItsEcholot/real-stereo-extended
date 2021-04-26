@@ -102,9 +102,18 @@ class ClusterMaster(ClusterSocket):
 
         :param str address: IP Address of the node to acquire
         """
+        node = self.config.node_repository.get_node_by_ip(address)
         message = self.build_message()
         message.serviceAcquisition.track = self.config.balance
         message.serviceAcquisition.hostname = self.hostname
+
+        if node.detector is not None and len(node.detector) > 0:
+            message.serviceAcquisition.detector = node.detector
+
+        if node.room is not None and node.room.people_group is not None and \
+                len(node.room.people_group) > 0:
+            message.serviceAcquisition.people_group = node.room.people_group
+
         self.send_message(address, message)
 
     def send_release(self, address: str) -> None:
@@ -130,8 +139,17 @@ class ClusterMaster(ClusterSocket):
 
         :param str address: IP Address of the node
         """
+        node = self.config.node_repository.get_node_by_ip(address)
         message = self.build_message()
         message.serviceUpdate.track = self.config.balance
+
+        if node.detector is not None and len(node.detector) > 0:
+            message.serviceUpdate.detector = node.detector
+
+        if node.room is not None and node.room.people_group is not None and \
+                len(node.room.people_group) > 0:
+            message.serviceUpdate.people_group = node.room.people_group
+
         self.send_message(address, message)
 
     def send_camera_calibration_request(self, address: str, start: bool, finish: bool,
@@ -161,13 +179,20 @@ class ClusterMaster(ClusterSocket):
         """
         await self.node_registry.on_service_announcement(message, address)
 
-    async def on_position_update(self, _: Wrapper, address: str) -> None:
+    async def on_position_update(self, message: Wrapper, address: str) -> None:
         """Handle position updates. Also, record a received ping.
 
         :param protocol.cluster_pb2.Wrapper message: Message
         :param str address: Sender IP
         """
         self.node_registry.on_ping(address)
+
+        node = self.config.node_repository.get_node_by_ip(address)
+        if node.room is not None:
+            coordinate_id = node.room.nodes.index(node)
+            node.room.coordinates[coordinate_id] = message.positionUpdate.coordinate
+            print('Coordinate: x={}, y={}'.format(node.room.coordinates[0],
+                                                  node.room.coordinates[1]))
 
     async def on_camera_calibration_response(self, message: Wrapper, address: str) -> None:
         """Handle camera calibration response.

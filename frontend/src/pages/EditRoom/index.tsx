@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from 'react';
-import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin, Typography } from 'antd';
+import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin, Collapse, Select, Typography } from 'antd';
 import {
   CloseOutlined,
   CheckOutlined,
@@ -10,6 +10,7 @@ import { Acknowledgment } from '../../services/acknowledgment';
 import Text from 'antd/lib/typography/Text';
 import { useSpeakers } from '../../services/speakers';
 import Calibration from '../../components/Calibration';
+import styles from './styles.module.css';
 
 type EditRoomPageProps = {
   roomId?: number;
@@ -28,14 +29,18 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
 
-  const save = async (values: { name: string, speakers: string[] }) => {
+  const save = async (values: { name: string, speakers: string[], people_group: string }) => {
     setSaving(true);
     let ack;
     try {
       if (currentRoom) {
-        ack = await updateRoom({ id: currentRoom.id, name: values.name })
+        ack = await updateRoom({
+          id: currentRoom.id,
+          name: values.name,
+          people_group: values.people_group,
+        })
       } else {
-        ack = await createRoom({ name: values.name });
+        ack = await createRoom({ name: values.name, people_group: values.people_group });
       }
       const currentRoomId = currentRoom ? currentRoom.id : ack.createdId;
 
@@ -98,6 +103,18 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           {speakers.length > 0 ? <Checkbox.Group
             options={speakers?.map(speaker => ({ label: speaker.name, value: speaker.id, disabled: speaker.room && speaker.room.id !== currentRoom?.id }))} /> : <Text disabled>No speakers</Text>}
         </Form.Item>
+        <Collapse ghost className={styles.AdvancedOptions}>
+          <Collapse.Panel header="Advanced options" key="advanced">
+            <Form.Item
+              label="Handle multiple people"
+              name="people_group">
+              <Select defaultValue="average">
+                <Select.Option value="average">Average</Select.Option>
+                <Select.Option value="track">Track</Select.Option>
+              </Select>
+            </Form.Item>
+          </Collapse.Panel>
+        </Collapse>
         <Form.Item>
           <Space>
             <Button type="default" icon={<CloseOutlined />} onClick={() => history.push('/rooms/edit')} disabled={saving}>Cancel</Button>

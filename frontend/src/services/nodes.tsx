@@ -10,6 +10,7 @@ export type Node = {
   ip: string;
   hostname: string;
   room: Omit<Room, 'nodes'>;
+  detector?: string;
 }
 
 export type UpdateNode = {
@@ -21,6 +22,7 @@ export type UpdateNode = {
   room: {
     id: number;
   };
+  detector?: string;
 }
 
 export const useNodes = () => {

@@ -7,6 +7,7 @@ export type Room = {
   id: number;
   name: string;
   nodes: Omit<Node, 'room'>[];
+  people_group?: string;
 }
 
 export type UpdateRoom = Omit<Room, 'nodes'>

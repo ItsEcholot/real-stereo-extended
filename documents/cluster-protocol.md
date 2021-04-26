@@ -66,6 +66,9 @@ The IP address of the master can be extracted from the TCP packet header.
 ```
 message ServiceAcquisition {
   bool track = 1;
+  string hostname = 2;
+  string detector = 3;
+  string people_group = 4;
 }
 ```
 
@@ -76,7 +79,9 @@ message ServiceAcquisition {
 When a master no longer requires the service of a slave, he can release it. The slave will then stop tracking and go back into the [auto service discovery](#auto-service-discovery) mode.
 
 ```
-message ServiceRelease {}
+message ServiceRelease {
+  string hostname = 1;
+}
 ```
 
 ### Position updates
@@ -96,6 +101,8 @@ Balancing can be started and stopped. In this case, the master will send a statu
 ```
 message ServiceUpdate {
   bool track = 1;
+  string detector = 2;
+  string people_group = 3;
 }
 ```
 

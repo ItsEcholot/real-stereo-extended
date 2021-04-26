@@ -24,6 +24,8 @@ message ServiceAnnouncement {
 message ServiceAcquisition {
   bool track = 1;
   string hostname = 2;
+  string detector = 3;
+  string people_group = 4;
 }
 
 message ServiceRelease {
@@ -36,6 +38,8 @@ message PositionUpdate {
 
 message ServiceUpdate {
   bool track = 1;
+  string detector = 2;
+  string people_group = 3;
 }
 
 message Ping {
