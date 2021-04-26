@@ -1,7 +1,7 @@
 import { RefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { SocketContext } from './socketProvider';
 import { Acknowledgment } from './acknowledgment';
-import { useAudioMeter, historicVolume } from './audioMeter';
+import { useAudioMeter, historicVolume, prepareAudioMeter } from './audioMeter';
 
 export type RoomCalibrationRequest = {
   room: {
@@ -70,7 +70,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
       setRoomCalibration(roomCalibration);
-      console.dir(roomCalibration);
+      //console.dir(roomCalibration);
 
       const context = calibrationMapCanvasRef?.current?.getContext("2d");
       if (context) {
@@ -105,6 +105,10 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
       }
     }
   }, [roomCalibration?.calibrating, calibrationMapCanvasRef])
+
+  const prepareCalibration = useCallback((): void => {
+    prepareAudioMeter();
+  }, []);
 
   const startCalibration = useCallback((): Promise<Acknowledgment> => {
     const calibrationSocket = getSocket(socketRoomName);
@@ -235,6 +239,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
     roomCalibration,
     errors,
     audioMeterErrors,
+    prepareCalibration,
     startCalibration,
     finishCalibration,
     nextPoint,

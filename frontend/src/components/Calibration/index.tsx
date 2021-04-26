@@ -22,6 +22,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
     roomCalibration,
     errors,
     audioMeterErrors,
+    prepareCalibration,
     startCalibration,
     finishCalibration,
     nextPoint,
@@ -46,6 +47,11 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
       setCalibrationStep(0);
     }
   }, [setCalibrationStep, roomCalibration]);
+
+  useEffect(() => {
+    if (!roomCalibration?.calibrating) return;
+    prepareCalibration();
+  }, [roomCalibration?.calibrating, prepareCalibration])
 
   const onStartCalibration = async () => {
     setCalibrationStarting(true);

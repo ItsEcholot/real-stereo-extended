@@ -92,6 +92,12 @@ const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8A
   context.stroke();
 }
 
+export const prepareAudioMeter = async (): Promise<void> => {
+  console.debug('Preparing for calibration by starting & stopping recording');
+  const microphoneStream = await getMicrophoneStream();
+  if (microphoneStream) stopStream(microphoneStream);
+}
+
 export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const [audioMeterErrors, setAudioMeterErrors] = useState<String[]>([]);
   const [volume, setVolume] = useState(0);
@@ -111,6 +117,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
         const microphoneSource = getMicrophoneSource(microphoneStream);
         const analyserNode = getAnalyserNode(fftWindowSize);
         microphoneSource.connect(analyserNode);
+        console.debug('Starting recording');
 
         const bufferData = new Uint8Array(analyserNode.frequencyBinCount);
         if (!audioContext) throw new Error(`Can't get frequency volume: Missing AudioContext`);
@@ -145,6 +152,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
       if (analyseInterval) clearInterval(analyseInterval);
       if (microphoneStream) stopStream(microphoneStream);
       closeAudioContext();
+      console.debug('Stopped recording');
     }
   }, [enabled, spectrumAnalyzerCanvasRef]);
 
