@@ -44,7 +44,8 @@ class Room:
         :param dict data: JSON data
         :param config.Config config: Config instance
         """
-        self.calibration_points = list(map(lambda calibration_point: RoomCalibrationPoint.from_json(calibration_point, config), data))
+        if data is not None:
+            self.calibration_points = list(map(lambda calibration_point: RoomCalibrationPoint.from_json(calibration_point, config), data))
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.
