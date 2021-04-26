@@ -61,6 +61,11 @@ class PeopleDetector(ABC):
                 cv2.putText(self.drawing_frame, '{} FPS: {:.1f}'.format(self.name, self.fps.get()),
                             (10, 26), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
+                # write coordinate on the image
+                cv2.putText(self.drawing_frame, '{} ({})'.format(self.last_coordinate,
+                                                                 self.people_group),
+                            (10, 56), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
                 # send result
                 self.frame_result_queue.put_nowait(self.drawing_frame)
 
@@ -112,7 +117,7 @@ class PeopleDetector(ABC):
                                                                                - closest):
                     closest = coordinate
 
-            return closest
+            return int(closest)
 
         else:
             raise RuntimeError('Unknown people group algorithm: {}'.format(self.people_group))
