@@ -17,12 +17,13 @@ class PeopleDetector(ABC):
     """Defines methods for the people detection."""
 
     def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
-                 coordinate_queue: Queue):
+                 coordinate_queue: Queue, people_group: str):
         self.name = "Unset"
         self.frame_queue = frame_queue
         self.frame_result_queue = frame_result_queue
         self.return_frame = return_frame
         self.coordinate_queue = coordinate_queue
+        self.people_group = people_group
         self.drawing_frame = None
         self.people = []
         self.fps = Fps()

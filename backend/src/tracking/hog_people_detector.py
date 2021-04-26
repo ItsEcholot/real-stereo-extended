@@ -14,8 +14,9 @@ class HogPeopleDetector(PeopleDetector):
     """Detects people in a given camera frame."""
 
     def __init__(self, frame_queue: Queue, frame_result_queue: Queue, return_frame: Event,
-                 coordinate_queue: Queue):
-        super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue)
+                 coordinate_queue: Queue, people_group: str):
+        super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue,
+                         people_group)
         self.name = "HoG"
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())

@@ -134,6 +134,9 @@ class ClusterSlave(ClusterSocket):
         if message.serviceAcquisition.detector is not None:
             self.tracking.set_detector(message.serviceAcquisition.detector)
 
+        if message.serviceAcquisition.people_group is not None:
+            self.tracking.set_people_group(message.serviceAcquisition.people_group)
+
         self.config.balance = message.serviceAcquisition.track
         await self.config.setting_repository.call_listeners()
 
@@ -149,6 +152,9 @@ class ClusterSlave(ClusterSocket):
 
             if message.serviceUpdate.detector is not None:
                 self.tracking.set_detector(message.serviceUpdate.detector)
+
+            if message.serviceUpdate.people_group is not None:
+                self.tracking.set_people_group(message.serviceUpdate.people_group)
 
     async def on_service_release(self, _: Wrapper, address: str) -> None:
         """Handle service release message.

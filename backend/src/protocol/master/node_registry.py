@@ -47,8 +47,12 @@ class NodeRegistry:
             if node.room is not None and node.acquired is False and node.online:
                 if node.ip_address != self.master_ip:
                     self.master.send_acquisition(node.ip_address)
-                elif node.detector is not None and self.master.direct_slave is not None:
-                    self.master.direct_slave.tracking.set_detector(node.detector)
+                elif self.master.direct_slave is not None:
+                    if node.detector is not None:
+                        self.master.direct_slave.tracking.set_detector(node.detector)
+                    if node.room is not None and node.room.people_group is not None and \
+                            len(node.room.people_group) > 0:
+                        self.master.direct_slave.tracking.set_people_group(node.room.people_group)
 
                 node.acquired = True
                 self.log(node, 'acquired')

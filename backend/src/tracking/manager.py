@@ -18,6 +18,8 @@ DETECTORS = {
     'hog_gray': HogGrayscalePeopleDetector,
     'motion': MotionPeopleDetector,
 }
+DEFAULT_PEOPLE_GROUP = 'average'
+PEOPLE_GROUPS = ['average', 'track']
 
 
 def start_camera(frame_queue, frame_result_queue, return_frame, detection_active,
@@ -29,15 +31,18 @@ def start_camera(frame_queue, frame_result_queue, return_frame, detection_active
 
 
 def start_detector(frame_queue, frame_result_queue, return_frame, coordinate_queue,
-                   detector_algorithm) -> None:
+                   detector_algorithm, people_group) -> None:
     """Starts the people detector in a subprocess."""
     detector = None
 
     if detector_algorithm not in DETECTORS:
         raise RuntimeError('Unknown detection algorithm: {}'.format(detector_algorithm))
 
+    if people_group not in PEOPLE_GROUPS:
+        raise RuntimeError('Unknown people group algorithm: {}'.format(people_group))
+
     detector = DETECTORS[detector_algorithm](frame_queue, frame_result_queue, return_frame,
-                                             coordinate_queue)
+                                             coordinate_queue, people_group)
     detector.process()
 
 
@@ -49,6 +54,7 @@ class TrackingManager:
         self.camera_process = None
         self.detector_process = None
         self.detector = DEFAULT_DETECTOR
+        self.people_group = DEFAULT_PEOPLE_GROUP
         self.on_frame = None
         self.config.setting_repository.register_listener(self.on_settings_changed)
         self.previous_config_value = self.config.balance
@@ -113,12 +119,13 @@ class TrackingManager:
     def start_detector(self) -> None:
         """Start the people detector."""
         if self.detector_process is None:
-            print('[Tracking] Starting people detector: {}'.format(self.detector))
+            print('[Tracking] Starting people detector: {}, {}'.format(self.detector,
+                                                                       self.people_group))
             self.detection_active.set()
             self.detector_process = multiprocessing.Process(
                 target=start_detector, args=(self.frame_queue, self.frame_result_queue,
                                              self.return_frame, self.coordinate_queue,
-                                             self.detector, ))
+                                             self.detector, self.people_group, ))
             self.detector_process.start()
 
     def stop_camera(self) -> None:
@@ -208,6 +215,18 @@ class TrackingManager:
         """
         if self.detector != detector:
             self.detector = detector
+
+            if self.detector_process is not None:
+                self.stop_detector()
+                self.start_detector()
+
+    def set_people_group(self, people_group: str) -> None:
+        """Sets the algorithm used to calculate the coordinate in case of multiple people detected.
+
+        :param str people_group: New people group algorithm
+        """
+        if self.people_group != people_group:
+            self.people_group = people_group
 
             if self.detector_process is not None:
                 self.stop_detector()

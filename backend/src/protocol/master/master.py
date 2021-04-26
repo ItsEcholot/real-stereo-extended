@@ -110,6 +110,10 @@ class ClusterMaster(ClusterSocket):
         if node.detector is not None:
             message.serviceAcquisition.detector = node.detector
 
+        if node.room is not None and node.room.people_group is not None and \
+                len(node.room.people_group) > 0:
+            message.serviceAcquisition.people_group = node.room.people_group
+
         self.send_message(address, message)
 
     def send_release(self, address: str) -> None:
@@ -141,6 +145,10 @@ class ClusterMaster(ClusterSocket):
 
         if node.detector is not None:
             message.serviceUpdate.detector = node.detector
+
+        if node.room is not None and node.room.people_group is not None and \
+                len(node.room.people_group) > 0:
+            message.serviceUpdate.people_group = node.room.people_group
 
         self.send_message(address, message)
 
