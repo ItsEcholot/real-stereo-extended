@@ -24,6 +24,7 @@ class MotionPeopleDetector(PeopleDetector):
         self.last_frame = None
         self.tracker.group_threshold_width = GROUP_THRESHOLD_WIDTH
         self.tracker.group_threshold_height = GROUP_THRESHOLD_HEIGTH
+        self.tracker.history_size = 3
 
     def detect(self, frame: ndarray) -> list:
         """Detects people in a given camera frame.
