@@ -2,6 +2,9 @@
 
 set -e
 
+# stopping real-stereo
+sudo service real-stereo stop
+
 # install dependencies
 sudo apt-get install -y build-essential cmake pkg-config checkinstall \
   libjpeg-dev libpng-dev libtiff-dev libprotobuf-dev protobuf-compiler
@@ -11,8 +14,11 @@ sudo sed -i 's/CONF_SWAPSIZE=100/CONF_SWAPSIZE=2048/g' /etc/dphys-swapfile
 sudo /etc/init.d/dphys-swapfile stop
 sudo /etc/init.d/dphys-swapfile start
 
-# todo: uninstall opencv-python-headless if installed using pip
-# todo: add opencv-python-headless to pi-install.sh
+# remove opencv previously installed through pip
+if [[ $(pip3 list | grep opencv) ]]; then
+  pip3 uninstall opencv-python-headless
+  pip3 uninstall numpy || true # fails if installed with apt-get, which is what we want so it can be ignored
+fi
 
 # clone TBB
 git clone --depth 1 https://github.com/oneapi-src/oneTBB.git /home/pi/tbb
@@ -56,3 +62,5 @@ sudo sed -i 's/CONF_SWAPSIZE=2048/CONF_SWAPSIZE=100/g' /etc/dphys-swapfile
 sudo /etc/init.d/dphys-swapfile stop
 sudo /etc/init.d/dphys-swapfile start
 
+# start real-stereo again
+sudo service real-stereo start
