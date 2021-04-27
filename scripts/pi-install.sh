@@ -58,6 +58,7 @@ else
   (cd "$PROJECT_DIR" && git pull)
 fi
 bash "$PROJECT_DIR/backend/install.sh" --pip
+pip3 install opencv-python-headless
 (cd "$PROJECT_DIR/frontend" && yarn install && yarn run build)
 if [[ ! -f "/etc/systemd/system/real-stereo.service" ]]; then
   sudo ln -s "$PROJECT_DIR/scripts/config/real-stereo.service" /etc/systemd/system/real-stereo.service

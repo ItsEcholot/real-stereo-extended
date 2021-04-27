@@ -18,6 +18,12 @@ This document provides a guide to set up a Raspberry Pi with the Real Stereo App
 1. Run the install script by executing: `curl -sSL https://raw.githubusercontent.com/ItsEcholot/real-stereo-extended/main/scripts/pi-install.sh | bash -`
 1. When the installation has finished, the Raspberry Pi will restart and is ready to use. The real stereo application will start automatically and listens on port `8080`.
 
+### Optimizing OpenCV
+
+It is possible to build opencv optimized for a raspberry pi which results in up to 200% better performance.
+To do so, simply run `/home/pi/real-stereo-extended/scripts/pi-optimize-opencv.sh`.
+The whole process can take up to 2 hours.
+
 ### Wifi setup
 
 Until the feature has been implement into real stereo that the web interface provides a way to connect to a wifi network, you have to do it manually.
