@@ -1,6 +1,7 @@
 """Config module implements loading, parsing and storing of the config file."""
 
 import json
+import asyncio
 from pathlib import Path
 from typing import List
 from models.room import Room
@@ -48,6 +49,7 @@ class Config:
         # otherwise, create the file from a default configuration
         else:
             print('Config ' + str(path) + ' does not exist, creating default configuration')
+            asyncio.create_task(self.store())
 
     def load(self) -> None:
         """Loads the configuration file and parses it into class attributes."""
