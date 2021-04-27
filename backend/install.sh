@@ -17,3 +17,6 @@ if [[ "$1" == "--pip" ]]; then
 else
   poetry install
 fi
+
+# install numpy
+sudo apt-get install python3-numpy
