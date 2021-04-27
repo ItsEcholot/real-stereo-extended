@@ -154,6 +154,48 @@ type CameraCalibrationResponse = {
 }
 ```
 
+### `RoomCalibration`
+```typescript
+type RoomCalibrationRequest = {
+  room: {
+    id: number;
+  };
+  start?: boolean;
+  finish?: boolean;
+  repeatPoint?: boolean;
+  confirmPoint?: boolean;
+  nextPoint?: boolean;
+  nextSpeaker?: boolean;
+}
+
+type RoomCalibrationPoint = {
+  coordinateX: number;
+  coordinateY: number;
+  measuredVolume: number;
+}
+
+type RoomCalibrationResponse = {
+  room: {
+    id: number;
+  };
+  calibrating: boolean;
+  positionX: number;
+  positionY: number;
+  noiseDone: boolean;
+  positionFreeze: boolean;
+  currentSpeakerIndex: number,
+  currentPoints: RoomCalibrationPoint[],
+  previousPoints: RoomCalibrationPoint[],
+}
+
+type RoomCalibrationResult = {
+  room: {
+    id: number;
+  };
+  volume: number;
+}
+```
+
 ### Namespaces
 
 #### `/rooms`

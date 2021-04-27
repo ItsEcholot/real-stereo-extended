@@ -35,7 +35,7 @@ class Sonos:
                     elif existing_speaker is not None:
                         existing_speaker.name = speaker.name
                         existing_speaker.ip_address = speaker.ip_address
-                        self.config.speaker_repository.call_listeners()
+                        await self.config.speaker_repository.call_listeners()
                         continue
                     print('[Balancing] Discovered new Sonos speaker {} with uid {} at {}'
                           .format(

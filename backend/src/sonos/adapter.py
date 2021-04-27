@@ -11,7 +11,7 @@ class SonosAdapter(ABC):
 
     def __init__(self):
         self.calibration_sound_uri = 'http://{}:{}/backend-assets/white_noise.mp3'.format(
-            gethostbyname(gethostname()), 8080)
+            gethostbyname(gethostname()), 8079)
 
     @abstractmethod
     def discover(self) -> Set[Speaker]:
