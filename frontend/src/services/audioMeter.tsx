@@ -15,6 +15,7 @@ const aWeighting = [
   -2.5,
   -9.3,
 ]; // From https://acousticalengineer.com/a-weighting-table/
+export let historicVolume: number[] = [];
 
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
@@ -52,7 +53,6 @@ const closeAudioContext = async () => {
   await audioContext.close();
   audioContext = undefined;
 }
-
 
 // sums up energy in bins per octave
 const sumEnergy = (fftData: Uint8Array): Uint32Array => {
@@ -92,6 +92,12 @@ const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8A
   context.stroke();
 }
 
+export const prepareAudioMeter = async (): Promise<void> => {
+  console.debug('Preparing for calibration by starting & stopping recording');
+  const microphoneStream = await getMicrophoneStream();
+  if (microphoneStream) stopStream(microphoneStream);
+}
+
 export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const [audioMeterErrors, setAudioMeterErrors] = useState<String[]>([]);
   const [volume, setVolume] = useState(0);
@@ -100,6 +106,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
     if (!enabled) {
       setVolume(0);
       setAudioMeterErrors([]);
+      historicVolume = [];
       return;
     }
     let microphoneStream: MediaStream;
@@ -110,6 +117,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
         const microphoneSource = getMicrophoneSource(microphoneStream);
         const analyserNode = getAnalyserNode(fftWindowSize);
         microphoneSource.connect(analyserNode);
+        console.debug('Starting recording');
 
         const bufferData = new Uint8Array(analyserNode.frequencyBinCount);
         if (!audioContext) throw new Error(`Can't get frequency volume: Missing AudioContext`);
@@ -126,7 +134,9 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
         analyseInterval = setInterval(() => {
           analyserNode.getByteFrequencyData(bufferData);
           const energies = sumEnergy(bufferData);
-          setVolume(calculateLoudness(energies));
+          const calcVolume = calculateLoudness(energies);
+          setVolume(calcVolume);
+          historicVolume.push(calcVolume);
 
           if (spectrumAnalyzerCanvasContext) {
             spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
@@ -142,6 +152,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
       if (analyseInterval) clearInterval(analyseInterval);
       if (microphoneStream) stopStream(microphoneStream);
       closeAudioContext();
+      console.debug('Stopped recording');
     }
   }, [enabled, spectrumAnalyzerCanvasRef]);
 

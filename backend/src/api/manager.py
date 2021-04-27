@@ -4,16 +4,21 @@ from pathlib import Path
 from typing import List
 import asyncio
 import socketio
-from aiohttp import web, MultipartWriter
+import ssl
+from aiohttp import web, MultipartWriter, ClientSession
 from numpy import ndarray
 from config import Config, NodeType
 from tracking.manager import TrackingManager
 from protocol.master import ClusterMaster
+from balancing.manager import BalancingManager
 from .controllers.rooms import RoomsController
 from .controllers.nodes import NodesController
 from .controllers.speakers import SpeakersController
 from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
+from .controllers.room_calibration import RoomCalibrationController
+from .ssl_generator import SSLGenerator
+from balancing.sonos import Sonos
 
 # define path of the static frontend files
 frontend_path: Path = (Path(__file__).resolve().parent /
@@ -30,7 +35,8 @@ class ApiManager:
     """
 
     def __init__(self, config: Config, tracking_manager: TrackingManager,
-                 cluster_master: ClusterMaster = None):
+                 cluster_master: ClusterMaster = None,
+                 balancing_manager: BalancingManager = None):
         self.config: Config = config
         self.tracking_manager: TrackingManager = tracking_manager
         self.stream_queues: List[asyncio.Queue] = []
@@ -39,6 +45,7 @@ class ApiManager:
         # register routes for both masters and slaves
         self.app.add_routes([
             web.get('/stream.mjpeg', self.get_stream),
+            web.get('/backend-assets/calibration/{image}/proxy', self.get_proxy_assets),
             web.static('/backend-assets', str(assets_path)),
         ])
 
@@ -49,6 +56,12 @@ class ApiManager:
                     web.get('/{tail:(?!static|socket).*}', self.get_index),
                     web.static('/static', str(frontend_path / 'static')),
                 ])
+
+            # add an insecure http web application used for sonos sound assets
+            self.insecure_app: web.Application = web.Application()
+            self.insecure_app.add_routes([
+                web.static('/backend-assets', str(assets_path)),
+            ])
 
             # attach the socket.io server to the same web server
             self.server = socketio.AsyncServer(cors_allowed_origins='*', async_mode='aiohttp')
@@ -63,6 +76,9 @@ class ApiManager:
             self.server.register_namespace(SettingsController(config=self.config))
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
+            self.server.register_namespace(RoomCalibrationController(config=self.config,
+                                                                     sonos=getattr(balancing_manager, 'sonos', None),
+                                                                     tracking_manager=tracking_manager))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.
@@ -88,6 +104,18 @@ class ApiManager:
         })
         response.force_close()
         await response.prepare(request)
+
+        # proxy if query contains node id
+        if 'nodeId' in request.rel_url.query:
+            node_id = int(request.rel_url.query['nodeId'])
+            node = self.config.node_repository.get_node(node_id)             
+            async with ClientSession() as client:
+                async with client.request(method='get', url='https://{}:8080/stream.mjpeg'.format(node.ip_address), ssl=False) as res:
+                    async for data in res.content.iter_any():
+                        await response.write(data)
+                        if data:
+                            await response.drain()
+            return response
 
         # if no other stream request is open, start catching the camera frames
         if len(self.stream_queues) == 0:
@@ -126,6 +154,21 @@ class ApiManager:
                 print('[Web API] Camera stream stopped')
             self.stream_queues.remove(queue)
 
+    async def get_proxy_assets(self, request: web.Request) -> web.Response:
+        image = request.match_info['image']
+        node_id = int(request.rel_url.query['nodeId'])
+        node = self.config.node_repository.get_node(node_id)
+
+        async with ClientSession() as client:
+            async with client.request(method='get', url='https://{}:8080/backend-assets/calibration/{}'.format(node.ip_address, image), ssl=False) as res:
+                proxied_response = web.Response(headers=res.headers, status=res.status)
+                await proxied_response.prepare(request)
+                async for data in res.content.iter_any():
+                    await proxied_response.write(data)
+                    if data:
+                        await proxied_response.drain()
+        return proxied_response
+
     async def write_stream_frame(self, response, frame) -> None:
         """Writes a frame to the camera stream.
 
@@ -151,8 +194,16 @@ class ApiManager:
 
     async def start(self) -> None:
         """Start the API server."""
-        print('[Web API] Listening on http://localhost:8080')
-        await web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None)  # pylint: disable=protected-access
+        ssl_generator = SSLGenerator()
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context.load_cert_chain(ssl_generator.certificate_path, ssl_generator.certificate_path_key)
+        print('[Web API] Listening on https://localhost:8080')
+        apps = [web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None, ssl_context=ssl_context)] # pylint: disable=protected-access
+        if self.config.type == NodeType.MASTER:
+            print('[Web API INSECURE] Listening on http://localhost:8079 (for Sonos media assets)')
+            apps.append(web._run_app(self.insecure_app, host='0.0.0.0', port=8079, handle_signals=False, print=None)) # pylint: disable=protected-access
+        await asyncio.gather(*apps)
+            
 
     def on_frame(self, frame: ndarray) -> None:
         """`on_frame` callback of a `Camera` instance. Will send the frame to all connected clients

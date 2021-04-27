@@ -1,7 +1,6 @@
 import { FunctionComponent, useState } from 'react';
-import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin, Collapse, Select } from 'antd';
+import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin, Collapse, Select, Typography } from 'antd';
 import {
-  RadarChartOutlined,
   CloseOutlined,
   CheckOutlined,
 } from '@ant-design/icons';
@@ -10,6 +9,7 @@ import { useRooms } from '../../services/rooms';
 import { Acknowledgment } from '../../services/acknowledgment';
 import Text from 'antd/lib/typography/Text';
 import { useSpeakers } from '../../services/speakers';
+import Calibration from '../../components/Calibration';
 import styles from './styles.module.css';
 
 type EditRoomPageProps = {
@@ -76,10 +76,6 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
     setSaveErrors(ack.errors);
   }
 
-  const startCalibration = () => {
-
-  }
-
   return (
     <>
       {saveErrors?.map((error, index) => (
@@ -140,7 +136,10 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
           <br />
           When all positions are calibrated, exit the configuration by pressing the save button.
         </p>
-      <Button type="primary" icon={<RadarChartOutlined />} onClick={startCalibration}>Start calibration</Button>
+      {roomId && currentRoomSpeakers?.length ? 
+        <Calibration roomId={roomId} roomSpeakers={currentRoomSpeakers}/> :
+        <Typography.Text type="warning">Room needs to be saved & have speakers assigned before calibration can be started</Typography.Text>
+      }
     </>
   );
 }
