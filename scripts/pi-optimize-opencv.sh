@@ -16,8 +16,8 @@ sudo /etc/init.d/dphys-swapfile start
 
 # remove opencv previously installed through pip
 if [[ $(pip3 list | grep opencv) ]]; then
-  pip3 uninstall opencv-python-headless
-  pip3 uninstall numpy || true # fails if installed with apt-get, which is what we want so it can be ignored
+  pip3 uninstall -y opencv-python-headless
+  pip3 uninstall -y numpy || true # fails if installed with apt-get, which is what we want so it can be ignored
 fi
 
 # clone TBB

@@ -19,4 +19,4 @@ else
 fi
 
 # install numpy
-sudo apt-get install python3-numpy
+sudo apt-get install -y python3-numpy
