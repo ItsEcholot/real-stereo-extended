@@ -9,3 +9,4 @@ if [[ -z $IP ]]; then
 fi
 
 rsync --recursive --links --times --perms --devices --specials --delete --compress --verbose "$DIR/../scripts/" "pi@$IP:/home/pi/real-stereo-extended/scripts"
+ssh "pi@$IP" 'sudo systemctl daemon-reload'
