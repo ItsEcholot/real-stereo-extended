@@ -35,6 +35,7 @@ sudo apt-get install --yes \
   python3-apt \
   python3-dev \
   python3-distutils \
+  python3-numpy \
   python3-pip \
   python3-protobuf
 
