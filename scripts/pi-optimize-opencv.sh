@@ -18,7 +18,7 @@ sudo /etc/init.d/dphys-swapfile start
 if [[ $(pip3 list | grep opencv) ]]; then
   pip3 uninstall -y opencv-python-headless
   pip3 uninstall -y numpy || true # fails if installed with apt-get, which is what we want so it can be ignored
-  apt-get install -y python3-numpy
+  sudo apt-get install -y python3-numpy
 fi
 
 # clone TBB
