@@ -1,5 +1,5 @@
 import { Row, Col, Divider, Form, Input, Spin, Space, Select, Button, Alert, Badge, Dropdown, Menu, Collapse } from 'antd';
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import {
   CheckOutlined,
   DeleteOutlined
@@ -23,10 +23,18 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
   const { rooms } = useRooms();
   const currentNode = nodes?.find(node => node.id === nodeId);
   const history = useHistory();
+  const [form] = Form.useForm();
 
   const [saving, setSaving] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    form.setFieldsValue({
+      ...currentNode,
+      room: currentNode?.room?.id,
+    });
+  }, [form, currentNode]);
 
   const save = async (values: { name: string, room: number, detector: string }) => {
     if (!currentNode) return;
@@ -94,14 +102,11 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
       ))}
       {showSaveSuccess ? <Alert message="Saved successfully" type="success" showIcon /> : null}
       {currentNode && rooms ? <Form
+        form={form}
         labelCol={{ span: 12 }}
         wrapperCol={{ span: 12 }}
         labelAlign="left"
-        onFinish={save}
-        initialValues={{
-          ...currentNode,
-          room: currentNode.room?.id,
-        }}>
+        onFinish={save}>
         <Form.Item
           label="Node name"
           name="name"
