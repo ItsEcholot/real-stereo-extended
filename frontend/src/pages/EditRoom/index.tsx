@@ -1,4 +1,4 @@
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { Checkbox, Divider, Form, Input, Row, Button, Space, Alert, Spin, Collapse, Select, Typography } from 'antd';
 import {
   CloseOutlined,
@@ -24,10 +24,18 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
   const { speakers, updateSpeaker, deleteSpeaker } = useSpeakers();
   const currentRoom = rooms?.find(room => room.id === roomId);
   const currentRoomSpeakers = speakers?.filter(speaker => speaker.room?.id === currentRoom?.id);
+  const [form] = Form.useForm();
 
   const [saving, setSaving] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [saveErrors, setSaveErrors] = useState<string[]>();
+
+  useEffect(() => {
+    form.setFieldsValue({
+      ...currentRoom,
+      speakers: currentRoomSpeakers?.map(speaker => speaker.id),
+    });
+  }, [form, currentRoom, currentRoomSpeakers]);
 
   const save = async (values: { name: string, speakers: string[], people_group: string }) => {
     setSaving(true);
@@ -83,14 +91,11 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
       ))}
       {showSaveSuccess ? <Alert message="Saved successfully" type="success" showIcon /> : null}
       {((roomId && currentRoom) || (!roomId)) && speakers !== undefined ? <Form
+        form={form}
         labelCol={{ span: 12 }}
         wrapperCol={{ span: 12 }}
         labelAlign="left"
-        onFinish={save}
-        initialValues={{
-          ...currentRoom,
-          speakers: currentRoomSpeakers?.map(speaker => speaker.id),
-        }}>
+        onFinish={save}>
         <Form.Item
           label="Room name"
           name="name"
