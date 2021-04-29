@@ -35,6 +35,7 @@ sudo apt-get install --yes \
   python3-apt \
   python3-dev \
   python3-distutils \
+  python3-numpy \
   python3-pip \
   python3-protobuf
 
@@ -58,6 +59,7 @@ else
   (cd "$PROJECT_DIR" && git pull)
 fi
 bash "$PROJECT_DIR/backend/install.sh" --pip
+pip3 install opencv-python-headless
 (cd "$PROJECT_DIR/frontend" && yarn install && yarn run build)
 if [[ ! -f "/etc/systemd/system/real-stereo.service" ]]; then
   sudo ln -s "$PROJECT_DIR/scripts/config/real-stereo.service" /etc/systemd/system/real-stereo.service

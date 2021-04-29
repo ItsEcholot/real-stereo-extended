@@ -15,4 +15,4 @@ fi
 ssh "pi@$IP" 'if [[ $(sudo systemctl status real-stereo) ]]; then sudo systemctl stop real-stereo; fi'
 
 # start real-stereo interactively
-ssh -o ServerAliveInterval=240 -t "pi@$IP" "cd ~/real-stereo-extended/backend && python src ${@:2}"
+ssh -o ServerAliveInterval=240 -t "pi@$IP" "cd ~/real-stereo-extended/backend && LD_PRELOAD=/usr/lib/gcc/arm-linux-gnueabihf/8/libatomic.so python src ${@:2}"
