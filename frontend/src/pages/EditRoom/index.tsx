@@ -129,17 +129,17 @@ const EditRoomPage: FunctionComponent<EditRoomPageProps> = ({
       </Form> : <Row justify="center"><Spin /></Row>}
       <Divider />
       <p>
-        Place the two cameras in a ~90° angle to each other.
+          Place the two cameras in a ~90° angle to each other.
           <br />
           Make sure that it is as quiet as possible inside the room.
           <br />
-          After starting the calibration, move yourself with the microphone to the specified position.
+          You can add as many calibration positions as you want.
           <br />
-          Stand still until you are told to move to the next position.
+          After selecting a position by clicking on "Next Position" stand still until all the measurements are done.
           <br />
-          When the four corner positions are set up, you can add as many additional positions between those corner positions as you like.
+          After that you can confirm or repeat the last position.
           <br />
-          When all positions are calibrated, exit the configuration by pressing the save button.
+          When all positions are calibrated, exit the configuration by pressing "Finish calibration".
         </p>
       {roomId && currentRoomSpeakers?.length ? 
         <Calibration roomId={roomId} roomSpeakers={currentRoomSpeakers}/> :

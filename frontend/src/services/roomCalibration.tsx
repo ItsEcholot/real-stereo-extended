@@ -99,7 +99,7 @@ const getRandomHexColourString = (index: number): string => {
 
 const drawCurrentPosition = (context: CanvasRenderingContext2D, x: number, y: number) => {
   const crosshairRadius = 3;
-  context.strokeStyle = getRandomHexColourString(x % 32);//'#ff0000';
+  context.strokeStyle = '#ff0000';
   context.beginPath();
   context.moveTo(x - crosshairRadius, y);
   context.lineTo(x + crosshairRadius, y);
