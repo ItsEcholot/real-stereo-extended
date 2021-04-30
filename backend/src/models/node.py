@@ -16,7 +16,8 @@ class Node:
     """
 
     def __init__(self, node_id: int = None, name: str = '', online: bool = False,  # pylint: disable=too-many-arguments
-                 ip_address: str = '', hostname: str = '', room=None, detector: str = None):
+                 ip_address: str = '', hostname: str = '', room=None, detector: str = None,
+                 coordinate_type: str = ''):
         if len(name) == 0:
             raise ValueError('Node name cannot be empty')
 
@@ -27,7 +28,16 @@ class Node:
         self.hostname: str = hostname
         self.room: models.room.Room = room
         self.detector = detector
+        self.coordinate_type = coordinate_type
         self.acquired: bool = False
+
+    def has_coordinate_type(self) -> bool:
+        """Returns if the node has a coordinate type set.
+
+        :returns: True if a coordinate type (x or y) is set
+        :rtype: bool
+        """
+        return self.coordinate_type is not None and len(self.coordinate_type) > 0
 
     @staticmethod
     def from_json(data: dict, config):
@@ -43,7 +53,7 @@ class Node:
 
         node = Node(node_id=data.get('id'), name=data.get('name'),
                     ip_address=data.get('ip'), hostname=data.get('hostname'), room=room,
-                    detector=data.get('detector'))
+                    detector=data.get('detector'), coordinate_type=data.get('coordinate_type'))
         room.nodes.append(node)
         return node
 
@@ -71,6 +81,9 @@ class Node:
 
         if self.detector is not None and len(self.detector) > 0:
             json['detector'] = self.detector
+
+        if self.coordinate_type is not None and len(self.coordinate_type) > 0:
+            json['coordinate_type'] = self.coordinate_type
 
         if live:
             json['online'] = self.online

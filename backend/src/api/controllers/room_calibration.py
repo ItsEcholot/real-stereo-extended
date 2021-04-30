@@ -1,24 +1,24 @@
 """Controller for the /room-calibration namespace."""
 
-import asyncio
 from socketio import AsyncNamespace
 from config import Config
 from models.acknowledgment import Acknowledgment
 from models.room import Room
 from models.speaker import Speaker
+from models.room_calibration_point import RoomCalibrationPoint
 from api.validate import Validate
 from balancing.sonos import Sonos
-from models.room_calibration_point import RoomCalibrationPoint
 from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand
 from tracking.manager import TrackingManager
 
 CALIBRATION_SOUND_VOLUME = 25
 
+
 class RoomCalibrationController(AsyncNamespace):
     """Controller for the /room-calibration namespace.
-    
+
     :param Config config: The application config object.
-    :param Sonos sonos: The sonos control instance 
+    :param Sonos sonos: The sonos control instance
     :param TrackingManager tracking_manager: The instance of an active tracking manager.
     """
 
@@ -48,8 +48,11 @@ class RoomCalibrationController(AsyncNamespace):
         if data.get('room') is None or isinstance(data.get('room'), dict) is False:
             ack.add_error('Room id must not be empty')
         elif validate.integer(data.get('room').get('id'), label='Room id', min_value=1):
-            if self.config.room_repository.get_room(data.get('room').get('id')) is None:
+            room = self.config.room_repository.get_room(data.get('room').get('id'))
+            if room is None:
                 ack.add_error('A room with this id does not exist')
+            elif len(room.nodes) != 2:
+                ack.add_error('A room needs exactly two nodes')
         if start is not None:
             validate.boolean(start, label='Start')
             if start and self.config.room_repository.get_room(data.get('room').get('id')).calibrating:
@@ -65,7 +68,7 @@ class RoomCalibrationController(AsyncNamespace):
         if next_point is not None:
             validate.boolean(next_point, label='Next Point')
         if next_speaker is not None:
-            validate.boolean(next_speaker, label='Next Speaker')                
+            validate.boolean(next_speaker, label='Next Speaker')
 
         return ack
 
@@ -83,8 +86,11 @@ class RoomCalibrationController(AsyncNamespace):
         if data.get('room') is None or isinstance(data.get('room'), dict) is False:
             ack.add_error('Room id must not be empty')
         elif validate.integer(data.get('room').get('id'), label='Room id', min_value=1):
-            if self.config.room_repository.get_room(data.get('room').get('id')) is None:
+            room = self.config.room_repository.get_room(data.get('room').get('id'))
+            if room is None:
                 ack.add_error('A room with this id does not exist')
+            elif len(room.nodes) != 2:
+                ack.add_error('A room needs exactly two nodes')
         validate.float(volume, label="Volume", min_value=0.0)
 
         return ack
@@ -95,12 +101,12 @@ class RoomCalibrationController(AsyncNamespace):
         for room in list(filter(lambda room: room.calibrating == True, self.config.rooms)):
             if not room.calibration_point_freeze:
                 room.calibration_point_x = self.config.tracking_repository.coordinate
-                room.calibration_point_y = self.config.tracking_repository.coordinate # TODO: Get X & Y coordinates
+                room.calibration_point_y = self.config.tracking_repository.coordinate  # TODO: Get X & Y coordinates
                 await self.send_response(room)
 
     async def after_calibration_noise(self, room: Room, speaker: Speaker):
         """Inform the client that the calibration noise ended
-        
+
         :param models.room.Room room: Room
         :param models.speaker.Speaker speaker: Speaker
         """
@@ -144,6 +150,14 @@ class RoomCalibrationController(AsyncNamespace):
                 await self.config.setting_repository.call_listeners()
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
+
+                # set node coordinate types
+                if not room.nodes[0].has_coordinate_type() or room.nodes[1].has_coordinate_type() \
+                        or room.nodes[0].coordinate_type == room.nodes[1].coordinate_type:
+                    room.nodes[0].coordinate_type = 'x'
+                    room.nodes[1].coordinate_type = 'y'
+                    await self.config.node_repository.call_listeners()
+
                 self.tracking_manager.acquire_camera()
                 self.tracking_manager.start_detector()
                 print('[Room Calibration] Starting for room {}'.format(room.name))
@@ -197,7 +211,8 @@ class RoomCalibrationController(AsyncNamespace):
                     self.sonos.send_command(SonosPlayCalibrationSoundCommand([room_speakers[0]]))
                 self.sonos.send_command(SonosVolumeCommand(room_speakers, room_volumes))
 
-                print('[Room Calibration] Next speaker ({}) has been selected for noise'.format(room_speakers[room.calibration_current_speaker_index].name))
+                print('[Room Calibration] Next speaker ({}) has been selected for noise'.format(
+                    room_speakers[room.calibration_current_speaker_index].name))
                 await self.send_response(room)
                 room.calibration_current_speaker_index += 1
                 await self.config.room_repository.call_listeners()
@@ -218,7 +233,8 @@ class RoomCalibrationController(AsyncNamespace):
             room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
                                         self.config.speakers))
             speaker = room_speakers[room.calibration_current_speaker_index - 1]
-            calibration_point = RoomCalibrationPoint(speaker, room.calibration_point_x, room.calibration_point_y, data.get('volume'))
+            calibration_point = RoomCalibrationPoint(
+                speaker, room.calibration_point_x, room.calibration_point_y, data.get('volume'))
             room.calibration_points_current_point.append(calibration_point)
             await self.config.room_repository.call_listeners()
             await self.send_response(room)
