@@ -50,9 +50,56 @@ const mapCoordinate = (cord: number): number => {
   return Math.round((cord / maxCord) * canvasCordSize) + 0.5;
 }
 
+const getRandomHexColourString = (index: number): string => {
+  const maxAmountOfColours = 16;
+  const hueDelta = Math.trunc(360 / maxAmountOfColours);
+  const h = (index % maxAmountOfColours) * hueDelta;
+  let s = 100;
+  let l = 40;
+
+  // convert hsl to rgb from: https://css-tricks.com/converting-color-spaces-in-javascript/
+  s /= 100;
+  l /= 100;
+
+  let c = (1 - Math.abs(2 * l - 1)) * s,
+      x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+      m = l - c/2,
+      r = 0,
+      g = 0, 
+      b = 0; 
+
+    if (0 <= h && h < 60) {
+      r = c; g = x; b = 0;
+    } else if (60 <= h && h < 120) {
+      r = x; g = c; b = 0;
+    } else if (120 <= h && h < 180) {
+      r = 0; g = c; b = x;
+    } else if (180 <= h && h < 240) {
+      r = 0; g = x; b = c;
+    } else if (240 <= h && h < 300) {
+      r = x; g = 0; b = c;
+    } else if (300 <= h && h < 360) {
+      r = c; g = 0; b = x;
+    }
+    // Having obtained RGB, convert channels to hex
+    let rString = Math.round((r + m) * 255).toString(16);
+    let gString = Math.round((g + m) * 255).toString(16);
+    let bString = Math.round((b + m) * 255).toString(16);
+
+    // Prepend 0s, if necessary
+    if (rString.length === 1)
+      rString = "0" + r;
+    if (gString.length === 1)
+      gString = "0" + g;
+    if (bString.length === 1)
+      bString = "0" + b;
+
+    return "#" + rString + gString + bString;
+}
+
 const drawCurrentPosition = (context: CanvasRenderingContext2D, x: number, y: number) => {
   const crosshairRadius = 3;
-  context.strokeStyle = '#ff0000';
+  context.strokeStyle = getRandomHexColourString(x % 32);//'#ff0000';
   context.beginPath();
   context.moveTo(x - crosshairRadius, y);
   context.lineTo(x + crosshairRadius, y);
