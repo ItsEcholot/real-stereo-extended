@@ -155,7 +155,7 @@ class RoomCalibrationController(AsyncNamespace):
                 await self.config.room_repository.call_listeners()
 
                 # set node coordinate types
-                if not room.nodes[0].has_coordinate_type() or room.nodes[1].has_coordinate_type() \
+                if not room.nodes[0].has_coordinate_type() or not room.nodes[1].has_coordinate_type() \
                         or room.nodes[0].coordinate_type == room.nodes[1].coordinate_type:
                     room.nodes[0].coordinate_type = 'x'
                     room.nodes[1].coordinate_type = 'y'
