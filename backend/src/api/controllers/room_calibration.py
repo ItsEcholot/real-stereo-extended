@@ -107,20 +107,10 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_point_y = room.coordinates[1]
                 await self.send_response(room)
 
-    async def after_calibration_noise(self, room: Room, speaker: Speaker):
-        """Inform the client that the calibration noise ended
-
-        :param models.room.Room room: Room
-        :param models.speaker.Speaker speaker: Speaker
-        """
-        self.sonos.send_command(SonosStopCalibrationSoundCommand([speaker]))
-        await self.send_response(room, noise_done=True)
-
-    async def send_response(self, room: Room, noise_done: bool = False) -> None:
+    async def send_response(self, room: Room) -> None:
         """Sends the room calibration response to all clients.
 
         :param models.room.Room room: Room
-        :param bool noise_done: Is the calibration noise done
         """
         await self.emit('get', {
             'room': {
@@ -129,7 +119,6 @@ class RoomCalibrationController(AsyncNamespace):
             'calibrating': room.calibrating,
             'positionX': room.calibration_point_x,
             'positionY': room.calibration_point_y,
-            'noiseDone': noise_done,
             'positionFreeze': room.calibration_point_freeze,
             'currentSpeakerIndex': room.calibration_current_speaker_index,
             'currentPoints': list(map(lambda point: point.to_json(), room.calibration_points_current_point)),
