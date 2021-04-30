@@ -77,15 +77,16 @@ class NodeRegistry:
         while self.running:
             for node in self.config.nodes:
                 # check if the node is still marked as online but didn't send a ping recently
-                if node.online and node.ip_address != self.master_ip \
+                if node.ip_address != self.master_ip \
                     and (node.ip_address not in self.last_pings
                          or self.last_pings[node.ip_address] +
                          NODE_AVAILABILITY_CHECK_INTERVAL < time()):
-                    node.online = False
-                    node.acquired = False
-                    await self.config.node_repository.call_listeners()
-                    await self.config.room_repository.call_listeners()
-                    self.log(node, 'is offline')
+                    if node.online:
+                        node.online = False
+                        node.acquired = False
+                        await self.config.node_repository.call_listeners()
+                        await self.config.room_repository.call_listeners()
+                        self.log(node, 'is offline')
 
                     # if the node is not assigned to a room, remove it from the list
                     if node.room is None:
