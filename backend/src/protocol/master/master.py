@@ -134,14 +134,19 @@ class ClusterMaster(ClusterSocket):
         message.ping.hostname = self.hostname
         self.send_message(address, message)
 
-    def send_service_update(self, address: str) -> None:
+    def send_service_update(self, address: str, track: bool = None) -> None:
         """Sends a service update message to a node.
 
         :param str address: IP Address of the node
+        :param bool track: Overwrites the tracking value of the config for this node
         """
         node = self.config.node_repository.get_node_by_ip(address)
         message = self.build_message()
-        message.serviceUpdate.track = self.config.balance
+
+        if track is not None:
+            message.serviceUpdate.track = track  # pylint: disable=protobuf-type-error
+        else:
+            message.serviceUpdate.track = self.config.balance
 
         if node.detector is not None and len(node.detector) > 0:
             message.serviceUpdate.detector = node.detector

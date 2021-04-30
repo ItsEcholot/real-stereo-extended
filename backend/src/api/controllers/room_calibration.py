@@ -10,6 +10,7 @@ from api.validate import Validate
 from balancing.sonos import Sonos
 from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand
 from tracking.manager import TrackingManager
+from protocol.master import ClusterMaster
 
 CALIBRATION_SOUND_VOLUME = 25
 
@@ -22,9 +23,11 @@ class RoomCalibrationController(AsyncNamespace):
     :param TrackingManager tracking_manager: The instance of an active tracking manager.
     """
 
-    def __init__(self, config: Config, sonos: Sonos, tracking_manager: TrackingManager):
+    def __init__(self, config: Config, sonos: Sonos, tracking_manager: TrackingManager,
+                 cluster_master: ClusterMaster):
         super().__init__(namespace='/room-calibration')
         self.config: Config = config
+        self.cluster_master: ClusterMaster = cluster_master
         self.sonos: Sonos = sonos
         self.tracking_manager = tracking_manager
         self.config.tracking_repository.register_listener(self.position_update)
@@ -158,8 +161,10 @@ class RoomCalibrationController(AsyncNamespace):
                     room.nodes[1].coordinate_type = 'y'
                     await self.config.node_repository.call_listeners()
 
-                self.tracking_manager.acquire_camera()
-                self.tracking_manager.start_detector()
+                # send service update to all nodes of this room
+                for node in room.nodes:
+                    self.cluster_master.send_service_update(node.ip_address, True)
+
                 print('[Room Calibration] Starting for room {}'.format(room.name))
             elif data.get('finish'):
                 # Reset states and stop calibrating
@@ -168,8 +173,11 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_current_speaker_index = 0
                 room.calibration_point_freeze = False
                 await self.config.room_repository.call_listeners()
-                self.tracking_manager.release_camera()
-                self.tracking_manager.stop_detector()
+
+                # send service update to all nodes of this room
+                for node in room.nodes:
+                    self.cluster_master.send_service_update(node.ip_address, False)
+
                 await self.send_response(room)
                 print('[Room Calibration] Finishing for room {}'.format(room.name))
             elif data.get('repeatPoint'):
