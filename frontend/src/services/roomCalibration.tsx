@@ -19,6 +19,7 @@ export type RoomCalibrationPoint = {
   coordinateX: number;
   coordinateY: number;
   measuredVolume: number;
+  speaker_id: string;
 }
 
 export type RoomCalibrationResponse = {
@@ -41,22 +42,37 @@ export type RoomCalibrationResult = {
   volume: number;
 }
 
+const canvasCordSize = 100;
+const maxCord = 640;
+
+const mapCoordinate = (cord: number): number => {
+  // Remove aliasing using +0.5
+  return Math.round((cord / maxCord) * canvasCordSize) + 0.5;
+}
+
 const drawCurrentPosition = (context: CanvasRenderingContext2D, x: number, y: number) => {
-  x = Math.round(x / 10);
-  y = Math.round(y / 10); // TODO: This can be removed when/if we use the same scaling as the old (100:100 coordinates)
   const crosshairRadius = 3;
   context.strokeStyle = '#ff0000';
   context.beginPath();
   context.moveTo(x - crosshairRadius, y);
   context.lineTo(x + crosshairRadius, y);
   context.moveTo(x, y - crosshairRadius);
-  context.lineTo(x, x + crosshairRadius);
+  context.lineTo(x, y + crosshairRadius);
   context.stroke();
+}
+
+const drawPoints = (context: CanvasRenderingContext2D, previousPoints: RoomCalibrationPoint[], fillStyle: string) => {
+  const pointRadius = 2;
+  context.fillStyle = fillStyle;
+  context.beginPath();
+  for (const point of previousPoints) {
+    context.arc(mapCoordinate(point.coordinateX), mapCoordinate(point.coordinateY), pointRadius, 0, 2 * Math.PI);
+    context.fill();
+  }
 }
 
 export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
   const socketRoomName = 'room-calibration';
-  const canvasCordSize = 100;
   const { getSocket, returnSocket } = useContext(SocketContext);
 
   const [roomCalibration, setRoomCalibration] = useState<RoomCalibrationResponse>();
@@ -68,12 +84,14 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
       setRoomCalibration(roomCalibration);
-      //console.dir(roomCalibration);
+      console.dir(roomCalibration);
 
       const context = calibrationMapCanvasRef?.current?.getContext("2d");
       if (context) {
         context.clearRect(0, 0, canvasCordSize, canvasCordSize);
-        drawCurrentPosition(context, roomCalibration.positionX, roomCalibration.positionY);
+        drawPoints(context, roomCalibration.previousPoints, '#555555');
+        drawPoints(context, roomCalibration.currentPoints, '#000000');
+        drawCurrentPosition(context, mapCoordinate(roomCalibration.positionX), mapCoordinate(roomCalibration.positionY));
       }
     }
   }, [roomId, calibrationMapCanvasRef]);
@@ -99,7 +117,6 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
       const context = calibrationMapCanvasRef.current.getContext("2d");
       if (context) {
         context.clearRect(0, 0, canvasCordSize, canvasCordSize);
-        context.fillStyle = '#000000';
       }
     }
   }, [roomCalibration?.calibrating, calibrationMapCanvasRef])
