@@ -77,8 +77,10 @@ class ApiManager:
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
             self.server.register_namespace(RoomCalibrationController(config=self.config,
-                                                                     sonos=getattr(balancing_manager, 'sonos', None),
-                                                                     tracking_manager=tracking_manager))
+                                                                     sonos=getattr(
+                                                                         balancing_manager, 'sonos', None),
+                                                                     tracking_manager=tracking_manager,
+                                                                     cluster_master=cluster_master))
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.
@@ -108,7 +110,7 @@ class ApiManager:
         # proxy if query contains node id
         if 'nodeId' in request.rel_url.query:
             node_id = int(request.rel_url.query['nodeId'])
-            node = self.config.node_repository.get_node(node_id)             
+            node = self.config.node_repository.get_node(node_id)
             async with ClientSession() as client:
                 async with client.request(method='get', url='https://{}:8080/stream.mjpeg'.format(node.ip_address), ssl=False) as res:
                     async for data in res.content.iter_any():
@@ -196,14 +198,16 @@ class ApiManager:
         """Start the API server."""
         ssl_generator = SSLGenerator()
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        ssl_context.load_cert_chain(ssl_generator.certificate_path, ssl_generator.certificate_path_key)
+        ssl_context.load_cert_chain(ssl_generator.certificate_path,
+                                    ssl_generator.certificate_path_key)
         print('[Web API] Listening on https://localhost:8080')
-        apps = [web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False, print=None, ssl_context=ssl_context)] # pylint: disable=protected-access
+        apps = [web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False,  # pylint: disable=protected-access
+                             print=None, ssl_context=ssl_context)]
         if self.config.type == NodeType.MASTER:
             print('[Web API INSECURE] Listening on http://localhost:8079 (for Sonos media assets)')
-            apps.append(web._run_app(self.insecure_app, host='0.0.0.0', port=8079, handle_signals=False, print=None)) # pylint: disable=protected-access
+            apps.append(web._run_app(self.insecure_app, host='0.0.0.0', port=8079,  # pylint: disable=protected-access
+                                     handle_signals=False, print=None))
         await asyncio.gather(*apps)
-            
 
     def on_frame(self, frame: ndarray) -> None:
         """`on_frame` callback of a `Camera` instance. Will send the frame to all connected clients

@@ -28,7 +28,6 @@ export type RoomCalibrationResponse = {
   calibrating: boolean;
   positionX: number;
   positionY: number;
-  noiseDone: boolean;
   positionFreeze: boolean;
   currentSpeakerIndex: number,
   currentPoints: RoomCalibrationPoint[],

@@ -56,7 +56,11 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
 
   const onStartCalibration = async () => {
     setCalibrationStarting(true);
-    await startCalibration();
+    const ack = await startCalibration();
+
+    if (!ack.successful) {
+      setCalibrationStarting(false);
+    }
   }
 
   const onFinishCalibration = async () => {
@@ -119,7 +123,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
                     <Button type="default" disabled={calibrationStep !== 0} loading={calibrationNextPointing} onClick={onNextPoint}>Next Position</Button>
                   </>} />
                   {roomSpeakers.map((speaker, index) => <Steps.Step key={speaker.id} title={`Measuring ${speaker.name}`} description={<>
-                    {calibrationStep === index + 1 ? 
+                    {calibrationStep === index + 1 ?
                       <Progress trailColor="white" percent={Math.round(volume * 100) / 100} /> :
                       roomCalibration.currentPoints[index] ? <Progress trailColor="white" percent={Math.round(roomCalibration.currentPoints[index].measuredVolume * 100) / 100} /> : null}
                   </>} />)}
