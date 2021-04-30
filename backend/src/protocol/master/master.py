@@ -188,8 +188,8 @@ class ClusterMaster(ClusterSocket):
         self.node_registry.on_ping(address)
 
         node = self.config.node_repository.get_node_by_ip(address)
-        if node.room is not None:
-            coordinate_id = node.room.nodes.index(node)
+        if node.room is not None and node.has_coordinate_type:
+            coordinate_id = 0 if node.coordinate_type == 'x' else 1
             node.room.coordinates[coordinate_id] = message.positionUpdate.coordinate
             print('Coordinate: x={}, y={}'.format(node.room.coordinates[0],
                                                   node.room.coordinates[1]))
