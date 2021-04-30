@@ -100,8 +100,8 @@ class RoomCalibrationController(AsyncNamespace):
         room: Room
         for room in list(filter(lambda room: room.calibrating == True, self.config.rooms)):
             if not room.calibration_point_freeze:
-                room.calibration_point_x = self.config.tracking_repository.coordinate
-                room.calibration_point_y = self.config.tracking_repository.coordinate  # TODO: Get X & Y coordinates
+                room.calibration_point_x = room.coordinates[0]
+                room.calibration_point_y = room.coordinates[1]
                 await self.send_response(room)
 
     async def after_calibration_noise(self, room: Room, speaker: Speaker):
