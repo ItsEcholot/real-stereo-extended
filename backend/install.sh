@@ -16,4 +16,7 @@ if [[ "$1" == "--pip" ]]; then
   pip3 install "picamera[array]"
 else
   poetry install
+
+  # manually install numpy since it is moved to apt-get for better opencv performance
+  pip3 install numpy
 fi
