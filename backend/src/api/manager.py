@@ -3,8 +3,8 @@
 from pathlib import Path
 from typing import List
 import asyncio
-import socketio
 import ssl
+import socketio
 from aiohttp import web, MultipartWriter, ClientSession
 from numpy import ndarray
 from config import Config, NodeType
@@ -18,7 +18,6 @@ from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
 from .controllers.room_calibration import RoomCalibrationController
 from .ssl_generator import SSLGenerator
-from balancing.sonos import Sonos
 
 # define path of the static frontend files
 frontend_path: Path = (Path(__file__).resolve().parent /
@@ -201,6 +200,7 @@ class ApiManager:
         ssl_context.load_cert_chain(ssl_generator.certificate_path,
                                     ssl_generator.certificate_path_key)
         print('[Web API] Listening on https://localhost:8080')
+        self.ignore_aiohttp_ssl_eror(asyncio.get_event_loop())
         apps = [web._run_app(self.app, host='0.0.0.0', port=8080, handle_signals=False,  # pylint: disable=protected-access
                              print=None, ssl_context=ssl_context)]
         if self.config.type == NodeType.MASTER:
@@ -218,3 +218,25 @@ class ApiManager:
         # put the frame into all stream request queues so they can be sent in the get_stream method
         for queue in self.stream_queues:
             queue.put_nowait(None if frame is None else frame.tostring())
+
+    def ignore_aiohttp_ssl_eror(self, loop):
+        """Ignore aiohttp ssl errors that occur when the site is loaded in chrome (desktop/android).
+
+        :param asyncio.Loop loop: Loop in which aiohttp is running
+        """
+        original_handler = loop.get_exception_handler()
+        messages = ['SSL error in data received', 'SSL handshake failed']
+
+        def ignore_ssl_error(loop, context):
+            if context.get('message') in messages:
+                exception = context.get('exception')
+                if isinstance(exception, ssl.SSLError) and \
+                        exception.reason == 'SSLV3_ALERT_CERTIFICATE_UNKNOWN':
+                    return
+
+            if original_handler is not None:
+                original_handler(loop, context)
+            else:
+                loop.default_exception_handler(context)
+
+        loop.set_exception_handler(ignore_ssl_error)
