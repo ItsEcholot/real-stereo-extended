@@ -12,23 +12,24 @@ class VolumeInterpolation:
     def __init__(self, room):
         self.room = room
         self.target_volume = 0.0
-        self.calibration_points = []
+        self.calibration_points = {}
+        self.speakers = []
 
     def update(self) -> None:
         """Update the interpolation configuration when the room has changed."""
         self.target_volume = self.calculate_target_volume()
-        self.calibration_points = self.preprocess_calibration_points()
+        self.preprocess_calibration_points()
 
     def preprocess_calibration_points(self) -> None:
         """Preprocesses the calibration points."""
-        points = {}
+        self.calibration_points = {}
+        self.speakers = []
 
         for point in self.room.calibration_points:
-            if point.speaker.speaker_id not in points:
-                points[point.speaker.speaker_id] = []
-            points[point.speaker.speaker_id].append(point)
-
-        return points
+            if point.speaker.speaker_id not in self.calibration_points:
+                self.calibration_points[point.speaker.speaker_id] = []
+                self.speakers.append(point.speaker)
+            self.calibration_points[point.speaker.speaker_id].append(point)
 
     def calculate_target_volume(self) -> float:
         """Calculates the target volume for the room.
@@ -45,17 +46,20 @@ class VolumeInterpolation:
 
         return target_volume
 
-    def calculate_volume(self, coordinate_x: int, coordinate_y: int, speaker: Speaker) -> float:
-        """Calculates the volume for the given coordinate and speaker.
+    def calculate_perceived_volume(self, speaker: Speaker) -> float:
+        """Calculates the perceived volume for the given coordinate and speaker.
 
-        :param int coordinate_x: X coordinate
-        :param int coordinate_y: Y coordinate
         :param models.Speaker speaker: Speaker
+        :returns: Perceived volume
+        :rtype: float
         """
         if speaker.speaker_id not in self.calibration_points:
             print('Speaker with id {} is not calibrated for room {}'.format(
                 speaker.speaker_id, self.room.name))
             return 0.0
+
+        coordinate_x = self.room.coordinates[0]
+        coordinate_y = self.room.coordinates[1]
 
         total_weight = 0.0
         total_volume = 0.0
@@ -76,3 +80,19 @@ class VolumeInterpolation:
             total_weight += weight
 
         return total_volume / total_weight
+
+    def calculate_speaker_volume(self, perceived_volume: float) -> int:
+        """Calculates the volume that should be set for the speaker and the perceived volume.
+
+        :param float perceived_volume: Perceived volume
+        :returns: Speaker volume
+        :rtype: float
+        """
+        # difference from the perceived volume to the target volume
+        # if they are the same, it results in 1
+        # if the perceived volume is lower, it results in >1 (meaning speaker should be louder)
+        # if the perceived volume is higher, it results in <1 (meaning speaker should be quieter)
+        percentage_difference = 2 - 1 / self.target_volume * perceived_volume
+        corrected_speaker_volume = round(self.room.user_volume * percentage_difference)
+
+        return corrected_speaker_volume
