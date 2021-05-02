@@ -48,7 +48,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
       setCalibrationStep(0);
     }
   }, [setCalibrationStep, roomCalibration]);
-
+  
   useEffect(() => {
     if (!roomCalibration?.calibrating) return;
     prepareCalibration();
@@ -104,7 +104,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
       ))}
       {!roomCalibration?.calibrating ?
         <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>
-          Start calibration
+          {roomCalibration?.previousPoints && roomCalibration.previousPoints.length > 0 ? 'Restart calibration' : 'Start calibration'}
         </Button> :
         <>
           <Space direction="vertical" className={styles.space}>

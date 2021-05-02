@@ -109,13 +109,27 @@ const drawCurrentPosition = (context: CanvasRenderingContext2D, x: number, y: nu
 }
 
 const drawPoints = (context: CanvasRenderingContext2D, previousPoints: RoomCalibrationPoint[], fillStyle: string) => {
-  const pointRadius = 2;
-  context.fillStyle = fillStyle;
+  const pointRadius = 5;
+  context.font = '8px sans-serif';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
   context.beginPath();
-  for (const point of previousPoints) {
+  const points = previousPoints.filter((point, index, arr) => {
+    return arr.findIndex(x => (x.coordinateX === point.coordinateX && x.coordinateY === point.coordinateY)) === index
+  });
+
+  // draw all points
+  points.forEach(point => {
+    context.fillStyle = fillStyle;
     context.arc(mapCoordinate(point.coordinateX), mapCoordinate(point.coordinateY), pointRadius, 0, 2 * Math.PI);
     context.fill();
-  }
+  });
+
+  // draw labels over points
+  points.forEach((point, index) => {
+    context.fillStyle = '#ffffff';
+    context.fillText(`${index+1}`, mapCoordinate(point.coordinateX), mapCoordinate(point.coordinateY));
+  });
 }
 
 export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
@@ -131,7 +145,6 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const setRoomCalibrationForRoom = useCallback((roomCalibration: RoomCalibrationResponse) => {
     if (roomCalibration.room.id === roomId) {
       setRoomCalibration(roomCalibration);
-      console.dir(roomCalibration);
 
       const context = calibrationMapCanvasRef?.current?.getContext("2d");
       if (context) {
