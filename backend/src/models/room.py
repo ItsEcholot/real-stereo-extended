@@ -4,6 +4,7 @@ from typing import List
 import models.node
 from models.room_calibration_point import RoomCalibrationPoint
 from tracking.people_detector import DEFAULT_COORDINATE
+from balancing.volume_interpolation import VolumeInterpolation
 
 
 class Room:
@@ -32,6 +33,7 @@ class Room:
         self.calibration_point_freeze: bool = False
         self.people_group: str = people_group
         self.coordinates: List[int] = [DEFAULT_COORDINATE, DEFAULT_COORDINATE]
+        self.volume_interpolation = VolumeInterpolation(self)
 
     @staticmethod
     def from_json(data: dict):
@@ -50,7 +52,9 @@ class Room:
         :param config.Config config: Config instance
         """
         if data is not None:
-            self.calibration_points = list(map(lambda calibration_point: RoomCalibrationPoint.from_json(calibration_point, config), data))
+            self.calibration_points = list(
+                map(lambda calibration_point: RoomCalibrationPoint.from_json(calibration_point, config), data))
+            self.volume_interpolation.update()
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.
