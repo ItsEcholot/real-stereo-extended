@@ -33,6 +33,7 @@ class Room:
         self.calibration_point_freeze: bool = False
         self.people_group: str = people_group
         self.coordinates: List[int] = [DEFAULT_COORDINATE, DEFAULT_COORDINATE]
+        self.user_volume: float = 0.0
         self.volume_interpolation = VolumeInterpolation(self)
 
     @staticmethod

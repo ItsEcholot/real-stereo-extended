@@ -1,7 +1,6 @@
 """Defines methods to send commands to Sonos speakers"""
 from abc import ABC, abstractmethod
 from typing import Set
-from pathlib import Path
 from socket import gethostname, gethostbyname
 from models.speaker import Speaker
 
@@ -28,6 +27,14 @@ class SonosAdapter(ABC):
 
         :param models.speaker.Speaker speaker: Speaker to control
         :param int volume: Volume to set
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_volume(self, speaker: Speaker) -> int:
+        """Gets volume of passed Sonos speaker
+
+        :param models.speaker.Speaker speaker: Speaker for which the volume gets requested
         """
         raise NotImplementedError()
 

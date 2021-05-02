@@ -43,6 +43,14 @@ class SonosSocoAdapter(SonosAdapter):
         for index, slave in enumerate(soco_slaves):
             slave.volume = soco_slaves_volumes[index]
 
+    def get_volume(self, speaker: Speaker) -> int:
+        """Gets volume of passed Sonos speaker
+
+        :param models.speaker.Speaker speaker: Speaker for which the volume gets requested
+        """
+        soco_instance = soco.SoCo(speaker.ip_address)
+        return soco_instance.volume
+
     def ramp_to_volume(self, speaker: Speaker, volume: int):
         """Ramps volume to target volume for the passed Sonos speaker
 
