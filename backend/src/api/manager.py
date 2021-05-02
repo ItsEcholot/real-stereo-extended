@@ -17,6 +17,7 @@ from .controllers.speakers import SpeakersController
 from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
 from .controllers.room_calibration import RoomCalibrationController
+from .controllers.balances import BalancesController
 from .ssl_generator import SSLGenerator
 
 # define path of the static frontend files
@@ -80,6 +81,9 @@ class ApiManager:
                                                                          balancing_manager, 'sonos', None),
                                                                      tracking_manager=tracking_manager,
                                                                      cluster_master=cluster_master))
+            balances_controller = BalancesController()
+            balancing_manager.balances_api_controller = balances_controller
+            self.server.register_namespace(balances_controller)
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.

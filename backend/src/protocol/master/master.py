@@ -198,7 +198,7 @@ class ClusterMaster(ClusterSocket):
         if node.room is not None and node.has_coordinate_type:
             coordinate_id = 0 if node.coordinate_type == 'x' else 1
             node.room.coordinates[coordinate_id] = message.positionUpdate.coordinate
-            self.balancing_manager.balance_room(node.room)
+            await self.balancing_manager.balance_room(node.room)
 
     async def on_camera_calibration_response(self, message: Wrapper, address: str) -> None:
         """Handle camera calibration response.
