@@ -120,6 +120,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
                 <Steps progressDot direction="vertical" size="small" current={calibrationStep}>
                   <Steps.Step title="Position yourself" description={<>
                     <span>When you're at the desired location press</span>
+                    <br/>
                     <Button type="default" disabled={calibrationStep !== 0} loading={calibrationNextPointing} onClick={onNextPoint}>Next Position</Button>
                   </>} />
                   {roomSpeakers.map((speaker, index) => <Steps.Step key={speaker.id} title={`Measuring ${speaker.name}`} description={<>
