@@ -172,6 +172,7 @@ type RoomCalibrationPoint = {
   coordinateX: number;
   coordinateY: number;
   measuredVolume: number;
+  speaker_id: string;
 }
 
 type RoomCalibrationResponse = {

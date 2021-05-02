@@ -1,4 +1,5 @@
 import { RefObject, useEffect, useState } from 'react';
+import { drawSpectrumAnalyzer } from './canvasDrawTools';
 
 const fftWindowSize = 512;
 const aWeighting = [
@@ -79,17 +80,6 @@ const calculateLoudness = (energies: Uint32Array): number => {
     energies[i] = energies[i] * Math.pow(10, aWeighting[i] / 10.0);
   }
   return sum / 255;
-}
-
-const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8Array, frequencyPerArrayItem: number) => {
-  context.beginPath();
-  fftData.forEach((value, index) => {
-    context.lineTo(index * 2, value);
-    if ((frequencyPerArrayItem * index) % 1000 === 0) {
-      context.fillText(`${Math.round(frequencyPerArrayItem * index)}`, index * 2, 250)
-    }
-  });
-  context.stroke();
 }
 
 export const prepareAudioMeter = async (): Promise<void> => {
