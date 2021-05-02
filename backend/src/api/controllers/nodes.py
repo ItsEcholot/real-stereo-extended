@@ -44,6 +44,9 @@ class NodesController(AsyncNamespace):
 
         validate.string(name, label='Name', min_value=1, max_value=50)
 
+        if self.config.balance:
+            ack.add_error('No configuration changes can be made when balancing is active')
+
         if detector is not None:
             validate.string(detector, label='Detection Algorithm', min_value=3, max_value=8)
 
@@ -116,11 +119,14 @@ class NodesController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
+        if self.config.balance:
+            ack.add_error('No configuration changes can be made when balancing is active')
+
         node = self.config.node_repository.get_node(node_id)
         if node is None:
             ack.add_error('A node with this id does not exist')
 
-        if node.room is not None:
+        if ack.successful and node.room is not None:
             node.room.nodes.remove(node)
             node.room = None
 

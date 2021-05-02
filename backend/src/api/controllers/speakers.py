@@ -41,6 +41,9 @@ class SpeakersController(AsyncNamespace):
 
         validate.string(name, label='Name', min_value=1, max_value=50)
 
+        if self.config.balance:
+            ack.add_error('No configuration changes can be made when balancing is active')
+
         if data.get('room') is None or isinstance(data.get('room'), dict) is False:
             ack.add_error('Room id must not be empty')
         elif validate.integer(data.get('room').get('id'), label='Room id', min_value=1):
@@ -101,7 +104,9 @@ class SpeakersController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
-        if await self.config.speaker_repository.remove_speaker(speaker_id) is False:
+        if self.config.balance:
+            ack.add_error('No configuration changes can be made when balancing is active')
+        elif await self.config.speaker_repository.remove_speaker(speaker_id) is False:
             ack.add_error('A speaker with this id does not exist')
 
         return ack.to_json()
