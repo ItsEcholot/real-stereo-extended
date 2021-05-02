@@ -2,6 +2,17 @@ import { RoomCalibrationPoint } from "./roomCalibration";
 
 export const maxCord = 640;
 
+export const drawSpectrumAnalyzer = (context: CanvasRenderingContext2D, fftData: Uint8Array, frequencyPerArrayItem: number) => {
+  context.beginPath();
+  fftData.forEach((value, index) => {
+    context.lineTo(index * 2, value);
+    if ((frequencyPerArrayItem * index) % 1000 === 0) {
+      context.fillText(`${Math.round(frequencyPerArrayItem * index)}`, index * 2, 250)
+    }
+  });
+  context.stroke();
+}
+
 export const mapCoordinate = (cord: number, canvasSize: number): number => {
   // Remove aliasing using +0.5
   return Math.round((cord / maxCord) * canvasSize) + 0.5;
