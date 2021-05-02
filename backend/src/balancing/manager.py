@@ -13,6 +13,7 @@ class BalancingManager:
         self.config = config
         self.sonos = Sonos(config)
         self.previous_config_value = self.config.balance
+        self.previous_volumes = {}
 
         self.config.setting_repository.register_listener(self.on_settings_changed)
 
@@ -65,6 +66,8 @@ class BalancingManager:
             command = SonosVolumeCommand(room.volume_interpolation.speakers, speaker_volumes)
             self.sonos.send_command(command)
 
+        self.previous_volumes = {}
+
     def balance_room(self, room: Room) -> None:
         """Balances the speakers within a room
 
@@ -79,9 +82,12 @@ class BalancingManager:
             speaker_volume = room.volume_interpolation.calculate_speaker_volume(perceived_volume)
             speaker_volumes.append(speaker_volume)
 
-        command = SonosVolumeCommand(room.volume_interpolation.speakers, speaker_volumes)
-        self.sonos.send_command(command)
-        print('{}'.format(speaker_volumes))
+        if room.room_id not in self.previous_volumes or \
+                self.previous_volumes[room.room_id] != speaker_volumes:
+            self.previous_volumes[room.room_id] = speaker_volumes
+            command = SonosVolumeCommand(room.volume_interpolation.speakers, speaker_volumes)
+            self.sonos.send_command(command)
+            print('{}'.format(speaker_volumes))
 
     async def on_settings_changed(self) -> None:
         """Update the balancing status when the settings have changed."""
