@@ -9,6 +9,7 @@ export type RoomCalibrationRequest = {
     id: number;
   };
   start?: boolean;
+  startVolume?: number;
   finish?: boolean;
   repeatPoint?: boolean;
   confirmPoint?: boolean;
@@ -98,12 +99,13 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
     prepareAudioMeter();
   }, []);
 
-  const startCalibration = useCallback((): Promise<Acknowledgment> => {
+  const startCalibration = useCallback((startVolume: number): Promise<Acknowledgment> => {
     const calibrationSocket = getSocket(socketRoomName);
     return new Promise(resolve => {    
       calibrationSocket.emit('update', {
         room: {id: roomId},
         start: true,
+        startVolume,
       }, (ack: Acknowledgment) => {
         if (!ack.successful && ack.errors !== undefined) {
           const ackErrors = ack.errors;

@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useRef, useState } from 'react';
-import { Button, Alert, Space, Row, Col, Steps, Divider, Progress } from 'antd';
+import { Button, Alert, Space, Row, Col, Steps, Divider, Progress, Slider } from 'antd';
 import {
   RadarChartOutlined,
   CheckOutlined,
@@ -34,6 +34,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
   const { speakers } = useSpeakers();
 
   const [calibrationStarting, setCalibrationStarting] = useState(false);
+  const [calibrationVolume, setCalibrationVolume] = useState(0);
   const [calibrationFinishing, setCalibrationFinishing] = useState(false);
   const [calibrationNextPointing, setCalibrationNextPointing] = useState(false);
   const [calibrationConfirmingPoint, setCalibrationConfirmingPoint] = useState(false);
@@ -48,7 +49,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
       setCalibrationStep(0);
     }
   }, [setCalibrationStep, roomCalibration]);
-  
+
   useEffect(() => {
     if (!roomCalibration?.calibrating) return;
     prepareCalibration();
@@ -56,7 +57,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
 
   const onStartCalibration = async () => {
     setCalibrationStarting(true);
-    const ack = await startCalibration();
+    const ack = await startCalibration(calibrationVolume);
 
     if (!ack.successful) {
       setCalibrationStarting(false);
@@ -102,10 +103,15 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
       {audioMeterErrors.map((error, index) => (
         <Alert key={`ame${index}`} message={error} type="error" showIcon />
       ))}
-      {!roomCalibration?.calibrating ?
-        <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>
-          {roomCalibration?.previousPoints && roomCalibration.previousPoints.length > 0 ? 'Restart calibration' : 'Start calibration'}
-        </Button> :
+      {!roomCalibration?.calibrating ? <Space direction="vertical" className={styles.space}>
+          <Row gutter={10} align="middle">
+            <Col>Calibration Volume</Col>
+            <Col flex="auto"><Slider defaultValue={30} onChange={setCalibrationVolume} /></Col>
+          </Row>
+          <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>
+            {roomCalibration?.previousPoints && roomCalibration.previousPoints.length > 0 ? 'Restart calibration' : 'Start calibration'}
+          </Button>
+        </Space> :
         <>
           <Space direction="vertical" className={styles.space}>
             <Space>
@@ -120,7 +126,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
                 <Steps progressDot direction="vertical" size="small" current={calibrationStep}>
                   <Steps.Step title="Position yourself" description={<>
                     <span>When you're at the desired location press</span>
-                    <br/>
+                    <br />
                     <Button type="default" disabled={calibrationStep !== 0} loading={calibrationNextPointing} onClick={onNextPoint}>Next Position</Button>
                   </>} />
                   {roomSpeakers.map((speaker, index) => <Steps.Step key={speaker.id} title={`Measuring ${speaker.name}`} description={<>
