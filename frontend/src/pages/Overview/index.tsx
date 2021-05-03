@@ -39,7 +39,7 @@ const OverviewPage: FunctionComponent<{}> = () => {
       {settings ? <Row>
         <Col flex="auto">Enable balancing</Col>
         <Col>
-          <Switch defaultChecked={settings?.balance} onChange={onChangeEnableBalancing} loading={saving} />
+          <Switch checked={settings.balance} onChange={onChangeEnableBalancing} loading={saving} />
         </Col>
       </Row> : <Row justify="center"><Spin /></Row>}
       {balances && balances.length > 0 && settings?.balance && (
