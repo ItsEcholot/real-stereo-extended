@@ -296,7 +296,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "soco"
-version = "0.21.3"
+version = "0.22.1"
 description = "SoCo (Sonos Controller) is a simple library to control Sonos speakers."
 category = "main"
 optional = false
@@ -306,6 +306,9 @@ python-versions = ">=3.5"
 ifaddr = "*"
 requests = "*"
 xmltodict = "*"
+
+[package.extras]
+events_asyncio = ["aiohttp"]
 
 [[package]]
 name = "toml"
@@ -376,7 +379,7 @@ typing-extensions = {version = ">=3.7.4", markers = "python_version < \"3.8\""}
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "3290341f57b967c837b9447484a8c0bdf34abb8f2810dc7bab85bdc8272f6639"
+content-hash = "c4311f06895e6836e4c36f3032b0a8803dd7b00c9625fb340c88221f83c4c263"
 
 [metadata.files]
 aiohttp = [
@@ -635,8 +638,8 @@ six = [
     {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
 ]
 soco = [
-    {file = "soco-0.21.3-py2.py3-none-any.whl", hash = "sha256:0614e490878bae65848a72974a21472496b0149b83699c1937784edc63d516f5"},
-    {file = "soco-0.21.3.tar.gz", hash = "sha256:bab37ac93240435b88e667a7b77840a1214525aa46b11bba9625d421ccc4594c"},
+    {file = "soco-0.22.1-py2.py3-none-any.whl", hash = "sha256:fe145f2d39a5f194e0887dd9c9fa81b1e3a7613f776d6ba1ec2eeb9becd6350d"},
+    {file = "soco-0.22.1.tar.gz", hash = "sha256:72939ff58ab28286174b69fb7aa3696bf8cf9fd55ff785698386e4109e097148"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

@@ -2,8 +2,12 @@
 from typing import Set
 from models.speaker import Speaker
 import soco
+from soco import events_asyncio
 from soco.snapshot import Snapshot
 from .adapter import SonosAdapter
+
+
+soco.config.EVENTS_MODULE = events_asyncio
 
 
 class SonosSocoAdapter(SonosAdapter):
@@ -93,6 +97,21 @@ class SonosSocoAdapter(SonosAdapter):
             raise ValueError(
                 'Instance doesn\'t contain a snapshot... Did you call save_snapshot before restoring?')
         soco_instance.snapshot.restore()
+
+    async def subscribe(self, speaker: Speaker, event_handler: callable):
+        """Subscribe to sonos events
+
+        :param models.speaker.Speaker speaker: Register event handler for this speaker
+        :param callable event_handler: Function that will receive the events
+        :returns: Subscription with the master ip
+        :rtype: (soco.events_asyncio.Subscription, str)
+        """
+        coordinator = self.get_coordinator_instance(speaker)
+        subscription = await coordinator.renderingControl.subscribe(requested_timeout=300,
+                                                                    auto_renew=True)
+        subscription.callback = event_handler
+
+        return (subscription, coordinator.ip_address)
 
     def get_coordinator_instance(self, speaker: Speaker) -> soco.SoCo:
         """Get the SoCo instance of the passed speaker or, if the passed speaker is in a
