@@ -79,3 +79,14 @@ class SonosEnsureSpeakersInGroupCommand(SonosCommand):
     def run(self, sonos_adapter: SonosAdapter):
         """Executes the command"""
         sonos_adapter.ensure_speakers_in_group(self.speakers)
+
+class SonosRestoreSpeakerGroupsCommand(SonosCommand):
+    """Contains information about the speakers whose group states
+    should be restored.
+
+    :param list[Speaker] speakers: Speakers which should be in a group together
+    """
+
+    def run(self, sonos_adapter: SonosAdapter):
+        """Executes the command"""
+        sonos_adapter.restore_speakers_groups(self.speakers)

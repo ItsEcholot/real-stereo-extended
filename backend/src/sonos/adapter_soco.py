@@ -89,7 +89,7 @@ class SonosSocoAdapter(SonosAdapter):
         :param models.speaker.Speaker speaker: Speaker whos last snapshot should be restored
         """
         soco_instance = self.get_coordinator_instance(speaker)
-        if soco_instance.snapshot is None:
+        if not hasattr(soco_instance, 'snapshot'):
             raise ValueError(
                 'Instance doesn\'t contain a snapshot... Did you call save_snapshot before restoring?')
         soco_instance.snapshot.restore()
@@ -129,7 +129,7 @@ class SonosSocoAdapter(SonosAdapter):
         a new group is created and the first speaker of the list is selected
         as the coordinator.
 
-        :param list[models.speaker.Speaker] speaker: Speaker to control
+        :param list[models.speaker.Speaker] speakers: Speakers to add to a single group
         """
         biggest_group = None
         biggest_group_size = 0
@@ -156,3 +156,17 @@ class SonosSocoAdapter(SonosAdapter):
                     soco_instance.previous_group_coordinator = soco_instance.group.coordinator
                 soco_instance.join(biggest_group.coordinator)
 
+    def restore_speakers_groups(self, speakers: List[Speaker]):
+        """Restores the previous group state like it was before
+        calling ensure_speakers_in_group
+
+        :param list[models.speaker.Speaker] speaker: Speaker to control
+        """
+        for speaker in speakers:
+            soco_instance = soco.SoCo(speaker.ip_address)
+            if hasattr(soco_instance, 'previous_group_coordinator'):
+                print('[SoCo Adapter] Adding {} to the group of {}'.format(speaker.ip_address, soco_instance.previous_group_coordinator.ip_address))
+                if soco_instance.previous_group_coordinator != soco_instance:
+                    soco_instance.join(soco_instance.previous_group_coordinator)
+                else:
+                    soco_instance.unjoin()
