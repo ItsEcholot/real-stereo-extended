@@ -62,6 +62,8 @@ class RoomCalibrationController(AsyncNamespace):
                 ack.add_error('The room is already calibrating currently')
             elif start and start_volume is None:
                 ack.add_error('Calibration start volume is required')
+            elif start:
+                validate.integer(start_volume, label='Calibration Start Volume')
 
         if finish is not None:
             validate.boolean(finish, label='Finish')
