@@ -9,6 +9,7 @@ export type RoomCalibrationRequest = {
     id: number;
   };
   start?: boolean;
+  startVolume?: number;
   finish?: boolean;
   repeatPoint?: boolean;
   confirmPoint?: boolean;

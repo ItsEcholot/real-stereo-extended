@@ -25,6 +25,7 @@ class Room:
         self.name: str = name
         self.nodes: List[models.node.Node] = nodes or []
         self.calibrating: bool = False
+        self.calibration_volume: int = 30
         self.calibration_points: List[RoomCalibrationPoint] = []
         self.calibration_points_current_point: List[RoomCalibrationPoint] = []
         self.calibration_current_speaker_index = 0

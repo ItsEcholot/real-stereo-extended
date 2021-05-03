@@ -41,6 +41,7 @@ class RoomCalibrationController(AsyncNamespace):
         ack = Acknowledgment()
         validate = Validate(ack)
         start = data.get('start')
+        start_volume = data.get('startVolume')
         finish = data.get('finish')
         repeat_point = data.get('repeatPoint')
         confirm_point = data.get('confirmPoint')
@@ -59,6 +60,9 @@ class RoomCalibrationController(AsyncNamespace):
             validate.boolean(start, label='Start')
             if start and self.config.room_repository.get_room(data.get('room').get('id')).calibrating:
                 ack.add_error('The room is already calibrating currently')
+            elif start and start_volume is None:
+                ack.add_error('Calibration start volume is required')
+
         if finish is not None:
             validate.boolean(finish, label='Finish')
             if finish and not self.config.room_repository.get_room(data.get('room').get('id')).calibrating:
@@ -136,6 +140,7 @@ class RoomCalibrationController(AsyncNamespace):
             room = self.config.room_repository.get_room(data.get('room').get('id'))
             if data.get('start'):
                 self.config.balance = False
+                room.calibration_volume = data.get('startVolume')
                 room.calibration_points = []
                 room.calibration_current_speaker_index = 0
                 await self.config.setting_repository.call_listeners()
@@ -202,7 +207,7 @@ class RoomCalibrationController(AsyncNamespace):
                     return ack.to_json()
 
                 room_volumes = [0] * len(room_speakers)
-                room_volumes[room.calibration_current_speaker_index] = CALIBRATION_SOUND_VOLUME
+                room_volumes[room.calibration_current_speaker_index] = room.calibration_volume
                 if room.calibration_current_speaker_index == 0:
                     self.sonos.send_command(SonosPlayCalibrationSoundCommand([room_speakers[0]]))
                 self.sonos.send_command(SonosVolumeCommand(room_speakers, room_volumes))
