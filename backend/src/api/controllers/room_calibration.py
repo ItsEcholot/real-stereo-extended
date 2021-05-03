@@ -4,7 +4,6 @@ from socketio import AsyncNamespace
 from config import Config
 from models.acknowledgment import Acknowledgment
 from models.room import Room
-from models.speaker import Speaker
 from models.room_calibration_point import RoomCalibrationPoint
 from api.validate import Validate
 from balancing.sonos import Sonos

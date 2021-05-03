@@ -37,6 +37,7 @@ class Config:
 
         # register repository change listeners
         self.room_repository.register_listener(self.store)
+        self.room_repository.register_listener(self.update_volume_interpolation)
         self.node_repository.register_listener(self.store)
         self.speaker_repository.register_listener(self.store)
 
@@ -86,3 +87,9 @@ class Config:
 
         with open(str(self.path), 'w') as file:
             json.dump(data, file, indent=4)
+
+    async def update_volume_interpolation(self) -> None:
+        """Updates the volume interpolation for all rooms."""
+        for room in self.rooms:
+            if room.volume_interpolation is not None:
+                room.volume_interpolation.update()

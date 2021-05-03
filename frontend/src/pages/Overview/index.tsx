@@ -1,7 +1,8 @@
-import { Col, Divider, Row, Switch, Spin, Alert, Progress } from 'antd';
+import { Col, Divider, Row, Switch, Spin, Alert, Progress, Typography } from 'antd';
 import { FunctionComponent, useState } from 'react';
 import { useSettings } from '../../services/settings';
-import { useBalances } from '../../services/balances';
+import { Balance, useBalances } from '../../services/balances';
+import styles from './styles.module.css';
 
 const OverviewPage: FunctionComponent<{}> = () => {
   const { settings, updateSettings } = useSettings();
@@ -20,6 +21,16 @@ const OverviewPage: FunctionComponent<{}> = () => {
     setSaving(false);
   };
 
+  const roomBalances: Record<string, Balance[]> = {};
+  if (balances) {
+    balances.forEach((balance) => {
+      if (!Object.keys(roomBalances).includes(balance.speaker.room.name)) {
+        roomBalances[balance.speaker.room.name] = [];
+      }
+      roomBalances[balance.speaker.room.name].push(balance);
+    });
+  }
+
   return (
     <>
       {saveErrors?.map((error, index) => (
@@ -31,16 +42,27 @@ const OverviewPage: FunctionComponent<{}> = () => {
           <Switch defaultChecked={settings?.balance} onChange={onChangeEnableBalancing} loading={saving} />
         </Col>
       </Row> : <Row justify="center"><Spin /></Row>}
-      <Divider />
-      Current balance:
-      {balances?.map(balance => (
-        <Row>
-          <Col>{balance.speaker.name}</Col>
-          <Col>
-            <Progress trailColor="white" percent={balance.volume} showInfo={false} />
-          </Col>
-        </Row>
-      ))}
+      {balances && balances.length > 0 && settings?.balance && (
+        <>
+          <Divider />
+          <Typography.Title level={4}>Current balance</Typography.Title>
+          {Object.keys(roomBalances).map((roomName) => (
+            <>
+              <Row key={roomName} className={styles.BalanceRoom}>
+                <Col><Typography.Text type="secondary">{roomName}</Typography.Text></Col>
+              </Row>
+              {roomBalances[roomName].map(balance => (
+                <Row key={balance.speaker.id}>
+                  <Col span={8}>{balance.speaker.name}</Col>
+                  <Col span={16}>
+                    <Progress trailColor="white" percent={balance.volume} />
+                  </Col>
+                </Row>
+              ))}
+            </>
+          ))}
+        </>
+      )}
     </>
   );
 }

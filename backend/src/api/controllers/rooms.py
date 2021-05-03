@@ -44,6 +44,9 @@ class RoomsController(AsyncNamespace):
 
         validate.string(name, label='Name', min_value=1, max_value=50)
 
+        if self.config.balance:
+            ack.add_error('No configuration changes can be made when balancing is active')
+
         if people_group is not None:
             validate.string(people_group, label='Handle multiple people', min_value=5, max_value=10)
 
@@ -126,7 +129,9 @@ class RoomsController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
-        if await self.config.room_repository.remove_room(room_id) is False:
+        if self.config.balance:
+            ack.add_error('No configuration changes can be made when balancing is active')
+        elif await self.config.room_repository.remove_room(room_id) is False:
             ack.add_error('A room with this id does not exist')
 
         return ack.to_json()

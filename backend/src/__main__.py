@@ -22,8 +22,8 @@ async def main():
 
     if config.type == NodeType.MASTER or '--master' in argv:
         cluster_slave = ClusterSlave(config, tracking)
-        cluster_master = ClusterMaster(config, cluster_slave)
         balancing = BalancingManager(config)
+        cluster_master = ClusterMaster(config, cluster_slave, balancing)
         api = ApiManager(config, tracking, cluster_master, balancing)
 
         await asyncio.gather(

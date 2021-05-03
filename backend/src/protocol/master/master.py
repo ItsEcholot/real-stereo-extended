@@ -4,6 +4,7 @@ from socket import socket, gethostname, AF_INET, SOCK_STREAM, MSG_DONTWAIT, MSG_
 import asyncio
 import asyncio_dgram
 from config import Config
+from balancing.manager import BalancingManager
 from ..socket import ClusterSocket
 from ..constants import PORT
 from ..cluster_pb2 import Wrapper
@@ -13,11 +14,12 @@ from .node_registry import NodeRegistry
 class ClusterMaster(ClusterSocket):
     """Master for the cluster protocol."""
 
-    def __init__(self, config: Config, direct_slave=None):
+    def __init__(self, config: Config, direct_slave, balancing_manager: BalancingManager):
         super().__init__()
         self.receive_socket = None
         self.config = config
         self.direct_slave = direct_slave
+        self.balancing_manager = balancing_manager
         self.node_registry = NodeRegistry(config, self)
         self.hostname = gethostname()
         self.slave_sockets = {}
@@ -196,8 +198,7 @@ class ClusterMaster(ClusterSocket):
         if node.room is not None and node.has_coordinate_type:
             coordinate_id = 0 if node.coordinate_type == 'x' else 1
             node.room.coordinates[coordinate_id] = message.positionUpdate.coordinate
-            print('Coordinate: x={}, y={}'.format(node.room.coordinates[0],
-                                                  node.room.coordinates[1]))
+            await self.balancing_manager.balance_room(node.room)
 
     async def on_camera_calibration_response(self, message: Wrapper, address: str) -> None:
         """Handle camera calibration response.

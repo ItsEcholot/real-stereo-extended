@@ -17,6 +17,7 @@ from .controllers.speakers import SpeakersController
 from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
 from .controllers.room_calibration import RoomCalibrationController
+from .controllers.balances import BalancesController
 from .ssl_generator import SSLGenerator
 
 # define path of the static frontend files
@@ -80,6 +81,9 @@ class ApiManager:
                                                                          balancing_manager, 'sonos', None),
                                                                      tracking_manager=tracking_manager,
                                                                      cluster_master=cluster_master))
+            balances_controller = BalancesController()
+            balancing_manager.balances_api_controller = balances_controller
+            self.server.register_namespace(balances_controller)
 
     async def get_index(self, _: web.Request) -> web.Response:
         """Returns the index.html on the / route.
@@ -230,9 +234,10 @@ class ApiManager:
         def ignore_ssl_error(loop, context):
             if context.get('message') in messages:
                 exception = context.get('exception')
-                if isinstance(exception, ssl.SSLError) and \
-                        exception.reason == 'SSLV3_ALERT_CERTIFICATE_UNKNOWN':
-                    return
+                if isinstance(exception, ssl.SSLError):
+                    if exception.reason == 'SSLV3_ALERT_CERTIFICATE_UNKNOWN' or \
+                            exception.reason == 'KRB5_S_INIT':
+                        return
 
             if original_handler is not None:
                 original_handler(loop, context)
