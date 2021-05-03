@@ -7,7 +7,7 @@ from models.room import Room
 from models.room_calibration_point import RoomCalibrationPoint
 from api.validate import Validate
 from balancing.sonos import Sonos
-from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand
+from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand, SonosEnsureSpeakersInGroupCommand
 from tracking.manager import TrackingManager
 from protocol.master import ClusterMaster
 
@@ -141,6 +141,11 @@ class RoomCalibrationController(AsyncNamespace):
                 await self.config.setting_repository.call_listeners()
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
+
+                # make sure all room speakers are in a group together
+                room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
+                                            self.config.speakers))
+                self.sonos.send_command(SonosEnsureSpeakersInGroupCommand(room_speakers))
 
                 # set node coordinate types
                 if not room.nodes[0].has_coordinate_type() or not room.nodes[1].has_coordinate_type() \
