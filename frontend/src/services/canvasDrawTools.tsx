@@ -18,11 +18,11 @@ export const mapCoordinate = (cord: number, canvasSize: number): number => {
   return Math.round((cord / maxCord) * canvasSize) + 0.5;
 }
 
-export const getRandomHexColourString = (index: number): string => {
+export const getRandomHexColourString = (index: number, saturation: number): string => {
   const maxAmountOfColours = 16;
   const hueDelta = Math.trunc(360 / maxAmountOfColours);
   const h = (index % maxAmountOfColours) * hueDelta;
-  let s = 100;
+  let s = saturation;
   let l = 40;
 
   // convert hsl to rgb from: https://css-tricks.com/converting-color-spaces-in-javascript/
@@ -99,4 +99,37 @@ export const drawPoints = (context: CanvasRenderingContext2D, canvasSize: number
     context.fillStyle = '#ffffff';
     context.fillText(`${index+1}`, mapCoordinate(point.coordinateX, canvasSize), mapCoordinate(point.coordinateY, canvasSize));
   });
+}
+
+export const drawInterpolation = (context: CanvasRenderingContext2D, canvasSize: number, previousPoints: RoomCalibrationPoint[], colourIndex: number) => {
+  const interpolationDebugResolution = 10;
+  const powerParam = 1.5;
+  for (let x = 0; x < interpolationDebugResolution; x++) {
+    for (let y = 0; y < interpolationDebugResolution; y++) {
+      const mappedX = x * maxCord / interpolationDebugResolution;
+      const mappedY = y * maxCord / interpolationDebugResolution;
+      let totalWeight = 0;
+      let totalVolume = 0;
+      let result = 0;
+      for (const roomCalibrationPoint of previousPoints) {
+        if (roomCalibrationPoint.coordinateX === mappedX && roomCalibrationPoint.coordinateY === mappedY) {
+          result = roomCalibrationPoint.measuredVolume;
+          break;
+        }
+
+        const distanceX = roomCalibrationPoint.coordinateX - mappedX;
+        const distanceY = roomCalibrationPoint.coordinateY - mappedY;
+        const weight = 1 / Math.pow(Math.sqrt(distanceX**2 + distanceY**2), powerParam)
+
+        totalWeight += weight;
+        totalVolume += weight * roomCalibrationPoint.measuredVolume
+      }
+      if (result === 0) {
+        result = totalVolume / totalWeight;
+      }
+
+      context.fillStyle = getRandomHexColourString(colourIndex, result);
+      context.fillRect((canvasSize / interpolationDebugResolution) * x, (canvasSize / interpolationDebugResolution) * y, (canvasSize / interpolationDebugResolution), (canvasSize / interpolationDebugResolution));
+    }
+  }
 }
