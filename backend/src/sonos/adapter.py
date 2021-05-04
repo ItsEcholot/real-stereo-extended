@@ -71,3 +71,14 @@ class SonosAdapter(ABC):
         :param models.speaker.Speaker speaker: Speaker whos last snapshot should be restored
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    async def subscribe(self, speaker: Speaker, event_handler: callable):
+        """Subscribe to sonos events
+
+        :param models.speaker.Speaker speaker: Register event handler for this speaker
+        :param callable event_handler: Function that will receive the events
+        :returns: Subscription with the master ip
+        :rtype: (soco.events_asyncio.Subscription, str)
+        """
+        raise NotImplementedError()
