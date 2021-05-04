@@ -8,6 +8,7 @@ from models.room_calibration_point import RoomCalibrationPoint
 from api.validate import Validate
 from balancing.sonos import Sonos
 from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand
+from balancing.sonos_command import SonosEnsureSpeakersInGroupCommand, SonosRestoreSpeakerGroupsCommand
 from tracking.manager import TrackingManager
 from protocol.master import ClusterMaster
 
@@ -149,6 +150,11 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibrating = True
                 await self.config.room_repository.call_listeners()
 
+                # make sure all room speakers are in a group together
+                room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
+                                            self.config.speakers))
+                self.sonos.send_command(SonosEnsureSpeakersInGroupCommand(room_speakers))
+
                 # set node coordinate types
                 if not room.nodes[0].has_coordinate_type() or not room.nodes[1].has_coordinate_type() \
                         or room.nodes[0].coordinate_type == room.nodes[1].coordinate_type:
@@ -168,6 +174,11 @@ class RoomCalibrationController(AsyncNamespace):
                 room.calibration_current_speaker_index = 0
                 room.calibration_point_freeze = False
                 await self.config.room_repository.call_listeners()
+
+                # restore the speaker group state from before calibration
+                room_speakers = list(filter(lambda speaker: speaker.room.room_id == room.room_id,
+                                            self.config.speakers))
+                self.sonos.send_command(SonosRestoreSpeakerGroupsCommand(room_speakers))
 
                 # send service update to all nodes of this room
                 for node in room.nodes:

@@ -1,5 +1,5 @@
 """Defines methods to send commands to Sonos speakers using the soco library"""
-from typing import Set
+from typing import Set, List
 from models.speaker import Speaker
 import soco
 from soco.snapshot import Snapshot
@@ -89,7 +89,7 @@ class SonosSocoAdapter(SonosAdapter):
         :param models.speaker.Speaker speaker: Speaker whos last snapshot should be restored
         """
         soco_instance = self.get_coordinator_instance(speaker)
-        if soco_instance.snapshot is None:
+        if not hasattr(soco_instance, 'snapshot'):
             raise ValueError(
                 'Instance doesn\'t contain a snapshot... Did you call save_snapshot before restoring?')
         soco_instance.snapshot.restore()
@@ -109,7 +109,7 @@ class SonosSocoAdapter(SonosAdapter):
 
     def get_stereo_pair_slaves(self, speaker: Speaker) -> Set[soco.SoCo]:
         """Checks if the passed speaker is a stereo pair coordinator and
-           returns the all speakers which could be a pair slave.
+        returns the all speakers which could be a pair slave.
 
         :param models.speaker.Speaker speaker: Speaker to check
         :returns: Slave speaker of stereo pair
@@ -121,3 +121,52 @@ class SonosSocoAdapter(SonosAdapter):
         speaker_group: soco.groups.ZoneGroup = soco_instance.group
         return {x for x in speaker_group if not x.is_visible and
                 x.player_name == soco_instance.player_name}
+
+    def ensure_speakers_in_group(self, speakers: List[Speaker]):
+        """Ensures that all the passed speakers are in a group together.
+        First checking if any speaker is already part of a group and if so
+        adding all the other speakers to that group. If that isn't the case
+        a new group is created and the first speaker of the list is selected
+        as the coordinator.
+
+        :param list[models.speaker.Speaker] speakers: Speakers to add to a single group
+        """
+        biggest_group = None
+        biggest_group_size = 0
+
+        # find biggest group with only the passed speakers in it
+        for speaker in speakers:
+            soco_instance = soco.SoCo(speaker.ip_address)
+            if soco_instance.is_visible and soco_instance.group is not None:
+                group_size = len(soco_instance.group.members)
+                group_pure = True
+                for group_speaker in soco_instance.group:
+                    if not any(x.speaker_id == group_speaker.uid for x in speakers):
+                        group_pure = False
+                if group_pure and group_size > biggest_group_size:
+                    biggest_group_size = group_size
+                    biggest_group = soco_instance.group
+
+        # add all other speakers to this group
+        for speaker in speakers:
+            soco_instance = soco.SoCo(speaker.ip_address)
+            if not any(x.uid == speaker.speaker_id for x in biggest_group.members):
+                print('[SoCo Adapter] Adding {} to the group of {}'.format(speaker.ip_address, biggest_group.coordinator.ip_address))
+                if soco_instance.group is not None:
+                    soco_instance.previous_group_coordinator = soco_instance.group.coordinator
+                soco_instance.join(biggest_group.coordinator)
+
+    def restore_speakers_groups(self, speakers: List[Speaker]):
+        """Restores the previous group state like it was before
+        calling ensure_speakers_in_group
+
+        :param list[models.speaker.Speaker] speaker: Speaker to control
+        """
+        for speaker in speakers:
+            soco_instance = soco.SoCo(speaker.ip_address)
+            if hasattr(soco_instance, 'previous_group_coordinator'):
+                print('[SoCo Adapter] Adding {} to the group of {}'.format(speaker.ip_address, soco_instance.previous_group_coordinator.ip_address))
+                if soco_instance.previous_group_coordinator != soco_instance:
+                    soco_instance.join(soco_instance.previous_group_coordinator)
+                else:
+                    soco_instance.unjoin()

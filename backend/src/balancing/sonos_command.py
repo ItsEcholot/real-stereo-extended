@@ -67,3 +67,26 @@ class SonosStopCalibrationSoundCommand(SonosCommand):
         """Executes the command"""
         for speaker in self.speakers:
             sonos_adapter.restore_snapshot(speaker)
+
+
+class SonosEnsureSpeakersInGroupCommand(SonosCommand):
+    """Contains information about the speakers which should be ensured
+    to be in a group.
+
+    :param list[Speaker] speakers: Speakers which should be in a group together
+    """
+
+    def run(self, sonos_adapter: SonosAdapter):
+        """Executes the command"""
+        sonos_adapter.ensure_speakers_in_group(self.speakers)
+
+class SonosRestoreSpeakerGroupsCommand(SonosCommand):
+    """Contains information about the speakers whose group states
+    should be restored.
+
+    :param list[Speaker] speakers: Speakers which should be in a group together
+    """
+
+    def run(self, sonos_adapter: SonosAdapter):
+        """Executes the command"""
+        sonos_adapter.restore_speakers_groups(self.speakers)
