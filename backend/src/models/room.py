@@ -37,6 +37,10 @@ class Room:
         self.user_volume: float = 0.0
         self.volume_interpolation = VolumeInterpolation(self)
 
+    def force_recalibration(self) -> None:
+        """Forces a re-calibration of the room."""
+        self.calibration_points = []
+
     @staticmethod
     def from_json(data: dict):
         """Reads data from a JSON object and returns a new room instance.
