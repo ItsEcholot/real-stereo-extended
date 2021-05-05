@@ -34,7 +34,7 @@ const OverviewPage: FunctionComponent<{}> = () => {
   return (
     <>
       {saveErrors?.map((error, index) => (
-        <Alert key={index} message={error} type="error" showIcon />
+        <Alert key={index} message={error} type="error" showIcon className={styles.Error} />
       ))}
       {settings ? <Row>
         <Col flex="auto">Enable balancing</Col>
