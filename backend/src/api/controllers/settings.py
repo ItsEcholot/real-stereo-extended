@@ -69,7 +69,16 @@ class SettingsController(AsyncNamespace):
 
         # update the settings
         if ack.successful:
-            self.config.balance = data['balance']
-            await self.config.setting_repository.call_listeners()
+            # check if the balance setting has changed
+            if self.config.balance != data['balance']:
+                # check if all rooms are calibrated
+                uncalibrated_rooms = list(filter(lambda room: len(room.calibration_points) == 0,
+                                                 self.config.rooms))
+                if len(uncalibrated_rooms) > 0:
+                    ack.add_error('The following rooms must be calibrated: {}'.format(', '.join(
+                        map(lambda room: room.name, uncalibrated_rooms))))
+                else:
+                    self.config.balance = data['balance']
+                    await self.config.setting_repository.call_listeners()
 
         return ack.to_json()
