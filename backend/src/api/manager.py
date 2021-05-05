@@ -82,7 +82,8 @@ class ApiManager:
                                                                      tracking_manager=tracking_manager,
                                                                      cluster_master=cluster_master))
             balances_controller = BalancesController()
-            balancing_manager.balances_api_controller = balances_controller
+            if balancing_manager is not None:
+                balancing_manager.balances_api_controller = balances_controller
             self.server.register_namespace(balances_controller)
 
     async def get_index(self, _: web.Request) -> web.Response:
