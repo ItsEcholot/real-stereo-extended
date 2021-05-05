@@ -34,7 +34,7 @@ class HogPeopleDetector(PeopleDetector):
         (rects, _) = self.hog.detectMultiScale(frame, winStride=(3, 3), padding=(8, 8), scale=1.2)
 
         # reduce multiple overlapping bounding boxes to a single one
-        reduced_rects = non_max_suppression(rects, probs=None, overlapThresh=0.1)
+        reduced_rects = non_max_suppression(rects, probs=None, overlapThresh=0.01)
         reduced_rects = self.group_nearby_rects(rects, GROUP_THRESHOLD_WIDTH,
                                                 GROUP_THRESHOLD_HEIGTH)
 

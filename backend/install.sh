@@ -17,6 +17,6 @@ if [[ "$1" == "--pip" ]]; then
 else
   poetry install
 
-  # manually install numpy since it is moved to apt-get for better opencv performance
-  pip3 install numpy
+  # manually install numpy & opencv since they are moved to apt-get/custom compile for better performance
+  pip3 install numpy opencv-python-headless
 fi
