@@ -109,7 +109,7 @@ class SonosSocoAdapter(SonosAdapter):
         """
         coordinator = self.get_coordinator_instance(speaker)
         subscription = Subscription(coordinator.renderingControl, event_handler)
-        await subscription.subscribe(requested_timeout=60*60*24, auto_renew=True)
+        await subscription.subscribe(requested_timeout=300, auto_renew=True)
 
         return (subscription, coordinator.ip_address)
 
