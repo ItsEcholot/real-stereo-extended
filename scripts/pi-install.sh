@@ -100,6 +100,9 @@ fi
 if [[ ! -f /etc/dhcp/dhcpd.conf ]]; then
   sudo apt-get install -y hostapd dnsmasq
   sudo systemctl unmask hostapd
+  sudo systemctl disable hostapd
+  sudo systemctl disable dhcpcd
+  sudo systemctl disable dnsmasq
 
   echo -e "interface wlan0\n    static ip_address=10.1.1.1/24\n    nohook wpa_supplicant" | sudo dd of=/etc/dhcpcd.conf oflag=append conv=notrunc
   sudo cp "$PROJECT_DIR/scripts/config/hostapd.conf" /etc/hostapd/hostapd.conf
