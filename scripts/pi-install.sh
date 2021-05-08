@@ -69,7 +69,8 @@ sudo systemctl start real-stereo
 
 # set up wifi
 if [[ ! $(sudo cat /etc/wpa_supplicant/wpa_supplicant.conf | grep 'country') ]]; then
-  sudo cp $PROJECT_DIR/scripts/config/wpa_supplicant.conf /boot/wpa_supplicant.conf
+  sudo cp $PROJECT_DIR/scripts/config/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+  sudo chown pi:root /etc/wpa_supplicant/wpa_supplicant.conf
   sudo rfkill unblock wifi
   sudo ifconfig wlan0 up
 fi
@@ -101,7 +102,9 @@ fi
 if [[ ! -f /etc/dhcp/dhcpd.conf ]]; then
   sudo apt-get install -y hostapd dnsmasq
 
-  echo -e "# --ad-hoc-start--\n#interface wlan0\n#    static ip_address=10.1.1.1/24\n#    nohook wpa_supplicant\n# --ad-hoc-end--" | sudo dd of=/etc/dhcpcd.conf oflag=append conv=notrunc
+  sudo chown pi:root /etc/dhcpcd.conf
+
+  echo -e "# --ad-hoc-start--\n#interface wlan0\n#    static ip_address=10.1.1.1/24\n#    nohook wpa_supplicant\n# --ad-hoc-end--" >> /etc/dhcpcd.conf
   sudo cp "$PROJECT_DIR/scripts/config/hostapd.conf" /etc/hostapd/hostapd.conf
   sudo sed -i "s/--hostname--/$(cat /etc/hostname | head -n 1 | cut -c5-8)/g" /etc/hostapd/hostapd.conf
 
