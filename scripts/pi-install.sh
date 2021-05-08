@@ -96,5 +96,15 @@ if [[ $(hostname) == 'raspberrypi' ]]; then
   echo "rse-$(hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random)" | sudo dd of=/etc/hostname
 fi
 
+# setup the ad hoc network
+if [[ ! -f /etc/dhcp/dhcpd.conf ]]; then
+  sudo apt-get install -y hostapd dnsmasq
+  sudo systemctl unmask hostapd
+
+  echo -e "interface wlan0\n    static ip_address=10.1.1.1/24\n    nohook wpa_supplicant" | sudo dd of=/etc/dhcpcd.conf oflag=append conv=notrunc
+  sudo cp "$PROJECT_DIR/scripts/config/hostapd.conf" /etc/hostapd/hostapd.conf
+  sudo sed -i "s/--hostname--/$(cat /etc/hostname | head -n 1 | cut -c5-9)/g" /etc/hostapd/hostapd.conf
+fi
+
 # reboot to apply all config changes
 sudo shutdown -r now
