@@ -2,6 +2,10 @@
     width: 100%;
 }
 
+.select {
+    width: 100%;
+}
+
 .canvas {
     display: block;
     border: black 1px solid;

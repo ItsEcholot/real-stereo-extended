@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useRef, useState } from 'react';
-import { Button, Alert, Space, Row, Col, Steps, Divider, Progress, Slider } from 'antd';
+import { Button, Alert, Space, Row, Col, Steps, Divider, Progress, Slider, Select } from 'antd';
 import {
   RadarChartOutlined,
   CheckOutlined,
@@ -18,6 +18,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
   roomSpeakers,
 }) => {
   const calibrationMapCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [calibrationMapRoomId, setCalibrationMapRoomId] = useState(roomSpeakers[0].id);
   const {
     roomCalibration,
     errors,
@@ -30,7 +31,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
     confirmPoint,
     repeatPoint,
     volume
-  } = useRoomCalibration(roomId, calibrationMapCanvasRef);
+  } = useRoomCalibration(roomId, calibrationMapCanvasRef, calibrationMapRoomId);
   const { speakers } = useSpeakers();
 
   const [calibrationStarting, setCalibrationStarting] = useState(false);
@@ -95,6 +96,10 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
     setCalibrationRepeatingPoint(false);
   }
 
+  const onCalibrationMapRoomChange = (option: any) => {
+    setCalibrationMapRoomId(option.value)
+  }
+
   return (
     <>
       {errors.map((error, index) => (
@@ -121,6 +126,16 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
             <Row gutter={10}>
               <Col span="6">
                 <canvas className={styles.canvas} ref={calibrationMapCanvasRef} />
+                <Select
+                  className={styles.select}
+                  labelInValue
+                  dropdownMatchSelectWidth={false}
+                  onChange={onCalibrationMapRoomChange}
+                  defaultValue={{label: roomSpeakers[0].name, value: roomSpeakers[0].id}}>
+                    {roomSpeakers.map(speaker =>
+                      <Select.Option value={speaker.id}>{speaker.name}</Select.Option>
+                    )}
+                </Select>
               </Col>
               <Col span="18">
                 <Steps progressDot direction="vertical" size="small" current={calibrationStep}>
