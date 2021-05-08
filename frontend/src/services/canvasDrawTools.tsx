@@ -102,8 +102,12 @@ export const drawPoints = (context: CanvasRenderingContext2D, canvasSize: number
 }
 
 export const drawInterpolation = (context: CanvasRenderingContext2D, canvasSize: number, previousPoints: RoomCalibrationPoint[], colourIndex: number) => {
-  const interpolationDebugResolution = 10;
+  const interpolationDebugResolution = canvasSize; // Or anything where canvasSize % interpolationDebugResolution === 0
   const powerParam = 1.5;
+
+  const results = new Array(interpolationDebugResolution);
+  let maxResult = 0;
+
   for (let x = 0; x < interpolationDebugResolution; x++) {
     for (let y = 0; y < interpolationDebugResolution; y++) {
       const mappedX = x * maxCord / interpolationDebugResolution;
@@ -128,8 +132,21 @@ export const drawInterpolation = (context: CanvasRenderingContext2D, canvasSize:
         result = totalVolume / totalWeight;
       }
 
-      context.fillStyle = getRandomHexColourString(colourIndex, result);
-      context.fillRect((canvasSize / interpolationDebugResolution) * x, (canvasSize / interpolationDebugResolution) * y, (canvasSize / interpolationDebugResolution), (canvasSize / interpolationDebugResolution));
+      if (!results[x]) {
+        results[x] = new Array(interpolationDebugResolution);
+      }
+      results[x][y] = result;
+      if (result > maxResult) {
+        maxResult = result;
+      }
+    }
+  }
+
+  for (let x = 0; x < interpolationDebugResolution; x++) {
+    for (let y = 0; y < interpolationDebugResolution; y++) {
+      const mappedResult = results[x][y] * 100 / maxResult;
+      context.fillStyle = getRandomHexColourString(colourIndex, mappedResult);
+      context.fillRect((canvasSize / interpolationDebugResolution) * x, (canvasSize / interpolationDebugResolution) * y, (canvasSize / interpolationDebugResolution), (canvasSize / interpolationDebugResolution));    
     }
   }
 }
