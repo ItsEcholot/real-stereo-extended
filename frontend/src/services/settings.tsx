@@ -2,13 +2,15 @@ import { useContext, useState, useEffect, useCallback } from 'react';
 import { Acknowledgment } from './acknowledgment';
 import { SocketContext } from './socketProvider';
 
-export type Settings = {
+type Settings = {
   configured: boolean;
   balance: boolean;
+  testMode: boolean;
 }
 
-export type UpdateSettings = {
-  balance: boolean;
+type UpdateSettings = {
+  balance?: boolean;
+  testMode?: boolean;
 }
 
 export const useSettings = () => {

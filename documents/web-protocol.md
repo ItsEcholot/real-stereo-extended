@@ -116,10 +116,12 @@ type Balance = {
 type Settings = {
   configured: boolean;
   balance: boolean;
+  testMode: boolean;
 }
 
 type UpdateSettings = {
-  balance: boolean;
+  balance?: boolean;
+  testMode?: boolean;
 }
 ```
 

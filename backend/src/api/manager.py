@@ -73,7 +73,7 @@ class ApiManager:
             self.server.register_namespace(NodesController(config=self.config,
                                                            cluster_master=cluster_master))
             self.server.register_namespace(SpeakersController(config=self.config))
-            self.server.register_namespace(SettingsController(config=self.config))
+            self.server.register_namespace(SettingsController(config=self.config, sonos=getattr(balancing_manager, 'sonos', None)))
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
             self.server.register_namespace(RoomCalibrationController(config=self.config,
