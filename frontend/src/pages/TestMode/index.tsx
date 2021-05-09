@@ -45,7 +45,7 @@ const TestModePage: FunctionComponent = () => {
         </Row>
         <Row>
           <Col span={24}>
-            <canvas className={styles.canvas} width="500" height="255" ref={spectrumAnalyzerCanvasRef} />
+            <canvas className={styles.canvas} ref={spectrumAnalyzerCanvasRef} />
           </Col>
         </Row>
         

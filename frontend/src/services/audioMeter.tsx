@@ -2,6 +2,8 @@ import { RefObject, useEffect, useState } from 'react';
 import { drawSpectrumAnalyzer } from './canvasDrawTools';
 
 const fftWindowSize = 512;
+const spectrumAnalyzerCanvasWidth = 500;
+const spectrumAnalyzerCanvasHeight = 255;
 const aWeighting = [
   -85.4,
   -63.6,
@@ -97,6 +99,15 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
       setVolume(0);
       setAudioMeterErrors([]);
       historicVolume = [];
+
+      const spectrumAnalyzerCanvasContext = spectrumAnalyzerCanvasRef?.current?.getContext('2d');
+      if (spectrumAnalyzerCanvasRef && spectrumAnalyzerCanvasRef.current) {
+        spectrumAnalyzerCanvasRef.current.width = spectrumAnalyzerCanvasWidth;
+        spectrumAnalyzerCanvasRef.current.height = spectrumAnalyzerCanvasHeight;
+        if (spectrumAnalyzerCanvasContext) {
+          spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasWidth, spectrumAnalyzerCanvasHeight);
+        }
+      }
       return;
     }
     let microphoneStream: MediaStream;
@@ -129,7 +140,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
           historicVolume.push(calcVolume);
 
           if (spectrumAnalyzerCanvasContext) {
-            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
+            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasWidth, spectrumAnalyzerCanvasHeight);
             drawSpectrumAnalyzer(spectrumAnalyzerCanvasContext, bufferData, frequencyPerArrayItem);
           }
         }, 50);
