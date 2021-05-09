@@ -22,6 +22,7 @@ class SettingsController(AsyncNamespace):
 
         # add settings repository change listener
         config.setting_repository.register_listener(self.send_settings)
+        config.tracking_repository.register_listener(self.position_update)
 
     def build_settings(self) -> dict:
         """Builds the settings.
@@ -42,6 +43,17 @@ class SettingsController(AsyncNamespace):
                         clients will receive the settings.
         """
         await self.emit('get', self.build_settings(), room=sid)
+
+    async def position_update(self) -> None:
+        """Gets called when the tracking repository contains new coordinates."""
+        if not self.config.test_mode:
+            return
+        
+        result = []
+        room: Room
+        for room in self.config.rooms:
+            result.append({'room': room.to_json(), 'positionX': room.coordinates[0], 'positionY': room.coordinates[1]})
+        await self.emit('testModeResult', result)
 
     def validate(self, data: dict) -> Acknowledgment:  # pylint: disable=no-self-use
         """Validates the input data.

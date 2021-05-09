@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect, useCallback } from 'react';
 import { Acknowledgment } from './acknowledgment';
+import { Room } from './rooms';
 import { SocketContext } from './socketProvider';
 
 type Settings = {
@@ -12,6 +13,12 @@ type UpdateSettings = {
   balance?: boolean;
   testMode?: boolean;
 }
+
+type SettingsTestModeResult = {
+  room: Room;
+  positionX: number;
+  positionY: number;
+}[]
 
 export const useSettings = () => {
   const { getSocket, returnSocket } = useContext(SocketContext);

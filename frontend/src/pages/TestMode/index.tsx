@@ -9,14 +9,8 @@ const TestModePage: FunctionComponent = () => {
   const [testModeEnabled, setTestModeEnabled] = useState(false);
   const {readyToTestLocation, errors} = useTestMode(testModeEnabled);
   const spectrumAnalyzerCanvasRef = useRef<HTMLCanvasElement>(null);
+  const testModeMapCanvasRef = useRef<HTMLCanvasElement>(null);
   const { volume, audioMeterErrors } = useAudioMeter(testModeEnabled, spectrumAnalyzerCanvasRef);
-  const { updateSettings } = useSettings();
-
-  useEffect(() => {
-    return () => {
-      updateSettings({testMode: false});
-    }
-  }, []);
 
   return (
     <>
@@ -48,7 +42,11 @@ const TestModePage: FunctionComponent = () => {
             <canvas className={styles.canvas} ref={spectrumAnalyzerCanvasRef} />
           </Col>
         </Row>
-        
+        <Row>
+          <Col span={16} offset={4}>
+            <canvas className={styles.canvas} ref={testModeMapCanvasRef} />
+          </Col>
+        </Row>
       </Space>
     </>
   );

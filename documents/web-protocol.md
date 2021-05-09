@@ -123,6 +123,12 @@ type UpdateSettings = {
   balance?: boolean;
   testMode?: boolean;
 }
+
+type SettingsTestModeResult = {
+  room: Room;
+  positionX: number;
+  positionY: number;
+}[]
 ```
 
 #### `Acknowledgment`
@@ -242,6 +248,7 @@ Shows and updates settings.
 
 Available events:
 - `get: () => Settings`
+- `testModeResult: () => SettingsTestModeResult`
 - `update: (data: Settings) => Acknowledgment`
 
 #### `/camera-calibration`
@@ -251,3 +258,12 @@ Updates the camera calibration process.
 Available events:
 - `get: () => CameraCalibrationResponse`
 - `update: (data: CameraCalibrationRequest) => Acknowledgment`
+
+### `/room-calibration`
+
+Updates the room calibration process.
+
+Available events:
+- `get: () => RoomCalibrationResponse`
+- `update: (data: RoomCalibrationRequest) => Acknowledgment`
+- `result: (data: RoomCalibrationResult) => Acknowledgment`
