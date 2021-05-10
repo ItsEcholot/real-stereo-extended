@@ -121,6 +121,7 @@ type Settings = {
 
 type UpdateSettings = {
   balance: boolean;
+  nodeType?: 'master' | 'tracking';
 }
 ```
 

@@ -1,5 +1,6 @@
 """Controller for the /settings namespace."""
 
+import asyncio
 from socketio import AsyncNamespace
 from config import Config, NodeType
 from models.acknowledgment import Acknowledgment
@@ -46,8 +47,12 @@ class SettingsController(AsyncNamespace):
         ack = Acknowledgment()
         validate = Validate(ack)
         balance = data.get('balance')
+        node_type = data.get('nodeType')
 
         validate.boolean(balance, label='Balance')
+
+        if node_type is not None and node_type != 'master' and node_type != 'tracking':
+            ack.add_error('nodeType must be either master or tracking')
 
         return ack
 
@@ -82,4 +87,20 @@ class SettingsController(AsyncNamespace):
                     self.config.balance = data['balance']
                     await self.config.setting_repository.call_listeners()
 
+            # check if node type has changed
+            if data.get('nodeType') is not None:
+                node_type = data.get('nodeType')
+                if self.config.type == NodeType.UNCONFIGURED or \
+                    (node_type == 'master' and self.config.type != NodeType.MASTER) or \
+                        (node_type == 'tracking' and self.config.type != NodeType.TRACKING):
+                    self.config.type = NodeType.MASTER if node_type == 'master' else NodeType.TRACKING
+                    await self.config.setting_repository.call_listeners()
+                    asyncio.create_task(self.delayed_restart())
+
         return ack.to_json()
+
+    async def delayed_restart(self) -> None:
+        """Restarts real stereo after a short delay to allow the ack message to still get delivered.
+        """
+        await asyncio.sleep(5)
+        exit(0)
