@@ -3,27 +3,27 @@ import { Acknowledgment } from './acknowledgment';
 import { Room } from './rooms';
 import { SocketContext } from './socketProvider';
 
-type Settings = {
+export type Settings = {
   configured: boolean;
   balance: boolean;
   testMode: boolean;
 }
 
-type UpdateSettings = {
+export type UpdateSettings = {
   balance?: boolean;
   testMode?: boolean;
 }
 
-type SettingsTestModeResult = {
+export type SettingsTestModeResult = {
   room: Room;
   positionX: number;
   positionY: number;
-}[]
+}
 
 export const useSettings = () => {
   const { getSocket, returnSocket } = useContext(SocketContext);
   const [settings, setSettings] = useState<Settings>();
-  const [settingsTestModeResult, setSettingsTestModeResult] = useState<SettingsTestModeResult>();
+  const [settingsTestModeResult, setSettingsTestModeResult] = useState<SettingsTestModeResult[]>();
   useEffect(() => {
     const settingsSocket = getSocket('settings');
     settingsSocket.emit('get', setSettings);

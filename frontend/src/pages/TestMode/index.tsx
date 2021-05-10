@@ -60,7 +60,7 @@ const TestModePage: FunctionComponent = () => {
             </Select>
           </Col>
           <Col>
-            <Button type="primary" onClick={measurePoint} loading={!readyToTestLocation}>Measure volume</Button>
+            <Button type="primary" onClick={measurePoint} disabled={!testModeEnabled} loading={!readyToTestLocation && testModeEnabled}>Measure volume</Button>
           </Col>
         </Row> : <Row justify="center"><Spin /></Row> }
         <Divider />
