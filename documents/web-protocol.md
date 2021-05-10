@@ -116,10 +116,20 @@ type Balance = {
 type Settings = {
   configured: boolean;
   balance: boolean;
+  network: 'client' | 'adhoc';
 }
 
 type UpdateSettings = {
   balance: boolean;
+}
+```
+
+#### `Network`
+
+```typescript
+type CreateNetwork = {
+  ssid: string;
+  psk?: string;
 }
 ```
 
@@ -249,3 +259,10 @@ Updates the camera calibration process.
 Available events:
 - `get: () => CameraCalibrationResponse`
 - `update: (data: CameraCalibrationRequest) => Acknowledgment`
+
+#### `/networks`
+
+Stores WLAN network configuration.
+
+Available events:
+- `create: (data: CreateNetwork) => Acknowledgment`

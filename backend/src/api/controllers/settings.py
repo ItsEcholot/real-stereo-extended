@@ -25,6 +25,7 @@ class SettingsController(AsyncNamespace):
         return {
             'configured': self.config.type != NodeType.UNCONFIGURED,
             'balance': self.config.balance,
+            'network': self.config.network,
         }
 
     async def send_settings(self, sid: str = None) -> None:

@@ -18,6 +18,7 @@ from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
 from .controllers.room_calibration import RoomCalibrationController
 from .controllers.balances import BalancesController
+from .controllers.networks import NetworksController
 from .ssl_generator import SSLGenerator
 
 # define path of the static frontend files
@@ -81,6 +82,7 @@ class ApiManager:
                                                                          balancing_manager, 'sonos', None),
                                                                      tracking_manager=tracking_manager,
                                                                      cluster_master=cluster_master))
+            self.server.register_namespace(NetworksController())
             balances_controller = BalancesController()
             if balancing_manager is not None:
                 balancing_manager.balances_api_controller = balances_controller
