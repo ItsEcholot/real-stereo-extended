@@ -40,7 +40,7 @@ async def main():
         )
     else:
         cluster_slave = ClusterSlave(config, tracking)
-        api = ApiManager(config, tracking)
+        api = ApiManager(config, tracking, networking_manager=networking)
 
         await asyncio.gather(
             cluster_slave.start(),
