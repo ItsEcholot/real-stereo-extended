@@ -58,7 +58,7 @@ class SettingsController(AsyncNamespace):
 
         if data.get('network') is not None:
             network_ack = self.networks_controller.validate(data.get('network'))
-            if not network_ack.successful():
+            if not network_ack.successful:
                 for error in network_ack.errors:
                     ack.add_error(error)
 
