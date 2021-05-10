@@ -8,21 +8,23 @@ import styles from './styles.module.css';
 
 type HeaderProps = {
   title: string;
+  hasSider: boolean;
   siderCollapsed: boolean;
   onSiderCollapse: (siderCollapsed: boolean) => void;
 }
 
 const Header: FunctionComponent<HeaderProps> = ({
   title,
+  hasSider,
   siderCollapsed,
   onSiderCollapse: onSiderCollapseSwitch
 }) => {
   return (
     <Layout.Header className={styles.header}>
       <Space size="middle">
-        {siderCollapsed ?
+        {hasSider && siderCollapsed ?
           <MenuUnfoldOutlined onClick={() => onSiderCollapseSwitch(false)} /> :
-          <MenuFoldOutlined onClick={() => onSiderCollapseSwitch(true)} />}
+          hasSider && <MenuFoldOutlined onClick={() => onSiderCollapseSwitch(true)} />}
 
         <span className={styles.title}>{title}</span>
       </Space>

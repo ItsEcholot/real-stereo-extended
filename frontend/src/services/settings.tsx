@@ -5,10 +5,12 @@ import { SocketContext } from './socketProvider';
 export type Settings = {
   configured: boolean;
   balance: boolean;
+  network: 'client' | 'adhoc';
 }
 
 export type UpdateSettings = {
   balance: boolean;
+  nodeType?: 'master' | 'tracking';
 }
 
 export const useSettings = () => {

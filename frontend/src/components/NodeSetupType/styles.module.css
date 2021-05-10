@@ -1,0 +1,20 @@
+.Card {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.IconRow span {
+  margin: auto;
+}
+
+.IconRow span svg {
+  width: 64px;
+  height: 64px;
+}
+
+.Text {
+  display: inline-block;
+  margin-top: 16px;
+  text-align: center;
+  font-size: 16px;
+}

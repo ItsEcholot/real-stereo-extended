@@ -13,3 +13,7 @@
 .content {
   padding: 20px;
 }
+
+.fullHeight {
+  min-height: 100vh !important;
+}
