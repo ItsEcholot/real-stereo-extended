@@ -6,9 +6,9 @@ import styles from './styles.module.css';
 
 const TestModePage: FunctionComponent = () => {
   const [testModeEnabled, setTestModeEnabled] = useState(false);
-  const {readyToTestLocation, errors} = useTestMode(testModeEnabled);
-  const spectrumAnalyzerCanvasRef = useRef<HTMLCanvasElement>(null);
   const testModeMapCanvasRef = useRef<HTMLCanvasElement>(null);
+  const {readyToTestLocation, errors} = useTestMode(testModeEnabled, testModeMapCanvasRef);
+  const spectrumAnalyzerCanvasRef = useRef<HTMLCanvasElement>(null);
   const { volume, audioMeterErrors } = useAudioMeter(testModeEnabled, spectrumAnalyzerCanvasRef);
 
   return (
@@ -28,21 +28,21 @@ const TestModePage: FunctionComponent = () => {
       <Divider />
       <Space direction="vertical" style={{ width: '100%' }}>
         <Row>
+          <Col flex="none">Spectrum Analyzer</Col>
+          <Col flex="auto">
+            <canvas className={styles.canvas} ref={spectrumAnalyzerCanvasRef} />
+          </Col>
+        </Row>
+        <Divider />
+        <Row>
           <Col span={12}>Current volume</Col>
           <Col flex="auto">
             <Progress trailColor="white" percent={Math.round(volume * 100) / 100} />
           </Col>
         </Row>
         <Row>
-          <Col span={24}>Spectrum Analyzer</Col>
-        </Row>
-        <Row>
-          <Col span={24}>
-            <canvas className={styles.canvas} ref={spectrumAnalyzerCanvasRef} />
-          </Col>
-        </Row>
-        <Row>
-          <Col span={16} offset={4}>
+          <Col flex="none">Volume Map</Col>
+          <Col flex="auto">
             <canvas className={styles.canvas} ref={testModeMapCanvasRef} />
           </Col>
         </Row>
