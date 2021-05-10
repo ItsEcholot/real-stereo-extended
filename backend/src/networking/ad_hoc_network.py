@@ -56,7 +56,7 @@ class AdHocNetwork:
             system('sudo service hostapd restart')
 
             # enable the dhcp server for the adhoc network
-            system('sudo service enable --now dnsmasq')
+            system('sudo systemctl enable --now dnsmasq')
 
         self.config.network = 'adhoc'
 
@@ -85,7 +85,7 @@ class AdHocNetwork:
             system('sudo systemctl disable --now hostapd')
 
             # disable the dhcp server for the adhoc network
-            system('sudo service disable --now dnsmasq')
+            system('sudo systemctl disable --now dnsmasq')
 
             # restart the network
             self.restart_network()
