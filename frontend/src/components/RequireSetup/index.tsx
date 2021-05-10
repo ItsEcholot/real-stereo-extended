@@ -7,7 +7,7 @@ const RequireSetup: FunctionComponent<{}> = ({ children }) => {
   const location = useLocation();
 
   // redirect to setup page if necessary
-  if (settings && settings.network === 'adhoc' && !location.pathname.startsWith('/setup')) {
+  if (settings && (settings.network === 'adhoc' || !settings.configured) && !location.pathname.startsWith('/setup')) {
     return <Redirect to="/setup" />
   }
 
