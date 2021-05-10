@@ -23,12 +23,15 @@ type SettingsTestModeResult = {
 export const useSettings = () => {
   const { getSocket, returnSocket } = useContext(SocketContext);
   const [settings, setSettings] = useState<Settings>();
+  const [settingsTestModeResult, setSettingsTestModeResult] = useState<SettingsTestModeResult>();
   useEffect(() => {
     const settingsSocket = getSocket('settings');
     settingsSocket.emit('get', setSettings);
     settingsSocket.on('get', setSettings);
+    settingsSocket.on('testModeResult', setSettingsTestModeResult);
     return () => {
       settingsSocket.off('get', setSettings);
+      settingsSocket.off('testModeResult', setSettingsTestModeResult);
       returnSocket('settings');
     };
   }, [getSocket, returnSocket]);
@@ -44,5 +47,5 @@ export const useSettings = () => {
     });
   }, [getSocket, returnSocket]);
 
-  return { settings, updateSettings };
+  return { settings, settingsTestModeResult, updateSettings };
 }

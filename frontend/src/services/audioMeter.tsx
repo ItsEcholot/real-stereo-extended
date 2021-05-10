@@ -18,7 +18,8 @@ const aWeighting = [
   -2.5,
   -9.3,
 ]; // From https://acousticalengineer.com/a-weighting-table/
-export let historicVolume: number[] = [];
+let historicVolume: number[] = [];
+let collectHistoricVolume: boolean = true;
 
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
@@ -84,6 +85,23 @@ const calculateLoudness = (energies: Uint32Array): number => {
   return sum / 255;
 }
 
+export const disableHistoricVolume = () => {
+  collectHistoricVolume = false;
+  historicVolume = [];
+}
+
+export const enableHistoricVolume = () => {
+  collectHistoricVolume = true;
+}
+
+export const medianHistoricVolume = (): number => {
+  historicVolume.sort();
+  const length = historicVolume.length;
+  const mid = Math.ceil(length / 2);
+  const medianVolume = length % 2 === 0 ? (historicVolume[mid] + historicVolume[mid - 1]) / 2 : historicVolume[mid - 1];
+  return medianVolume;
+}
+
 export const prepareAudioMeter = async (): Promise<void> => {
   console.debug('Preparing for calibration by starting & stopping recording');
   const microphoneStream = await getMicrophoneStream();
@@ -110,6 +128,7 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
       }
       return;
     }
+    collectHistoricVolume = true;
     let microphoneStream: MediaStream;
     let analyseInterval: NodeJS.Timeout;
     (async () => {
@@ -137,7 +156,9 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
           const energies = sumEnergy(bufferData);
           const calcVolume = calculateLoudness(energies);
           setVolume(calcVolume);
-          historicVolume.push(calcVolume);
+          if (collectHistoricVolume) {
+            historicVolume.push(calcVolume);
+          }
 
           if (spectrumAnalyzerCanvasContext) {
             spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasWidth, spectrumAnalyzerCanvasHeight);

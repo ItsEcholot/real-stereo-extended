@@ -1,7 +1,6 @@
 import { Row, Col, Switch, Divider, Progress, Space, Alert } from 'antd';
-import { FunctionComponent, useEffect, useRef, useState } from 'react';
+import { FunctionComponent, useRef, useState } from 'react';
 import { useAudioMeter } from '../../services/audioMeter';
-import { useSettings } from '../../services/settings';
 import { useTestMode } from '../../services/testMode';
 import styles from './styles.module.css';
 

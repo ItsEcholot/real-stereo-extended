@@ -1,7 +1,7 @@
 import { RefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { SocketContext } from './socketProvider';
 import { Acknowledgment } from './acknowledgment';
-import { useAudioMeter, historicVolume, prepareAudioMeter } from './audioMeter';
+import { useAudioMeter, prepareAudioMeter, medianHistoricVolume } from './audioMeter';
 import { drawCurrentPosition, drawInterpolation, drawPoints, mapCoordinate } from './canvasDrawTools';
 
 export type RoomCalibrationRequest = {
@@ -172,11 +172,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         } else if (record) {
           setMeasuringVolume(true);
           setTimeout(() => {
-            historicVolume.sort();
-            const length = historicVolume.length;
-            const mid = Math.ceil(length / 2);
-            //const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
-            const medianVolume = length % 2 === 0 ? (historicVolume[mid] + historicVolume[mid - 1]) / 2 : historicVolume[mid - 1];
+            const medianVolume = medianHistoricVolume();
             console.debug(`Calibration measured average volume: ${medianVolume}`);
             calibrationSocket.emit('result', {
               room: {id: roomId},
