@@ -3,6 +3,7 @@ from asyncio import sleep
 import netifaces
 from config import Config, NodeType
 from .ad_hoc_network import AdHocNetwork
+from .wpa_supplicant import WpaSupplicant
 
 
 class NetworkingManager:
@@ -11,6 +12,7 @@ class NetworkingManager:
     def __init__(self, config: Config):
         self.config = config
         self.ad_hoc = AdHocNetwork(config)
+        self.wpa_supplicant = WpaSupplicant()
 
         if self.config.type == NodeType.UNCONFIGURED and not self.ad_hoc.is_enabled():
             self.ad_hoc.enable()
@@ -24,7 +26,7 @@ class NetworkingManager:
         """Initially checks if a network connection could be established.
         If not, it starts the adhoc network to allow the user to configure a new network.
         """
-        if self.config.type == NodeType.UNCONFIGURED:
+        if self.config.type == NodeType.UNCONFIGURED or self.config.network == 'adhoc':
             return
 
         await sleep(30)

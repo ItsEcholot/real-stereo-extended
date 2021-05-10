@@ -1,17 +1,20 @@
 """Controller for the /networks namespace."""
 
+import asyncio
 from socketio import AsyncNamespace
+from config import Config
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
-from networking.wpa_supplicant import WpaSupplicant
+from networking.manager import NetworkingManager
 
 
 class NetworksController(AsyncNamespace):
     """Controller for the /networks namespace."""
 
-    def __init__(self):
+    def __init__(self, config: Config, networking_manager: NetworkingManager):
         super().__init__(namespace='/networks')
-        self.wpa_supplicant = WpaSupplicant()
+        self.config = config
+        self.networking_manager = networking_manager
 
     def validate(self, data: dict) -> Acknowledgment:
         """Validates the input data.
@@ -45,6 +48,11 @@ class NetworksController(AsyncNamespace):
             ssid = data.get('ssid')
             psk = data.get('psk')
 
-            self.wpa_supplicant.store_network(ssid, psk)
+            self.networking_manager.wpa_supplicant.store_network(ssid, psk)
+
+            # if in the ad hoc networking mode, switch to the client again and try to connect
+            if self.config.network == 'adhoc':
+                self.networking_manager.ad_hoc.disable()
+                asyncio.create_task(self.networking_manager.initial_check())
 
         return ack.to_json()
