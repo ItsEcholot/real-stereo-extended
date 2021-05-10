@@ -28,6 +28,7 @@
 		"python.linting.pylintPath": "${workspaceFolder}/backend/.venv/bin/pylint",
 		"python.linting.pylintArgs": [
 			"--extension-pkg-whitelist=cv2",
+			"--extension-pkg-allow-list=netifaces",
 			"--load-plugins=pylint_protobuf"
 		],
 		"editor.formatOnSave": true,

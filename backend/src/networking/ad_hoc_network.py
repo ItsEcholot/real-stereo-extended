@@ -1,5 +1,6 @@
 """Handles the Ad Hoc Network used for initial setup and wifi configuration."""
 from os import system
+from config import Config
 
 
 DHCP_CONFIG = '/etc/dhcpcd.conf'
@@ -11,6 +12,9 @@ END_POINTER = '# --ad-hoc-end--\n'
 class AdHocNetwork:
     """Handles the Ad Hoc Network used for initial setup and wifi configuration."""
 
+    def __init__(self, config: Config):
+        self.config = config
+
     def is_enabled(self) -> bool:
         """Check if the ad hoc network is enabled.
 
@@ -21,7 +25,7 @@ class AdHocNetwork:
             config = config_file.readlines()
             return ENABLED_START_POINTER in config
 
-    async def enable(self):
+    def enable(self):
         """Enables the ad hoc network"""
         print('[AdHoc] Enabling the ad hoc network')
 
@@ -51,6 +55,8 @@ class AdHocNetwork:
             # restart the hostapd service to use the new dhcp config
             system('sudo service hostapd restart')
 
+        self.config.network = 'adhoc'
+
     def disable(self):
         """Disable the ad hoc network"""
         print('[AdHoc] Disabling the ad hoc network')
@@ -77,6 +83,8 @@ class AdHocNetwork:
 
             # restart the network
             self.restart_network()
+
+        self.config.network = 'client'
 
     def restart_network(self) -> None:
         """Restarts the dhcp service and network interface."""

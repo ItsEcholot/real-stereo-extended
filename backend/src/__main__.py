@@ -10,6 +10,7 @@ from config import Config, NodeType
 from balancing.manager import BalancingManager
 from protocol.master import ClusterMaster
 from protocol.slave import ClusterSlave
+from networking.manager import NetworkingManager
 
 
 async def main():
@@ -19,6 +20,7 @@ async def main():
     print('Starting as ' + str(config.type))
 
     tracking = TrackingManager(config)
+    networking = NetworkingManager(config)
 
     if config.type == NodeType.MASTER or '--master' in argv:
         cluster_slave = ClusterSlave(config, tracking)
@@ -34,6 +36,7 @@ async def main():
             tracking.await_frames(),
             tracking.await_coordinates(),
             tracking.await_camera_calibration_responses(),
+            networking.initial_check(),
         )
     else:
         cluster_slave = ClusterSlave(config, tracking)
@@ -45,6 +48,7 @@ async def main():
             tracking.await_frames(),
             tracking.await_coordinates(),
             tracking.await_camera_calibration_responses(),
+            networking.initial_check(),
         )
 
 

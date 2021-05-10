@@ -26,6 +26,7 @@ class Config:
         self.path: Path = path
         self.type: NodeType = NodeType.UNCONFIGURED
         self.balance: bool = False
+        self.network = 'client'
         self.rooms: List[Room] = []
         self.nodes: List[Node] = []
         self.speakers: List[Speaker] = []
