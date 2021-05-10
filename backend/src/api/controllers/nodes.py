@@ -102,8 +102,15 @@ class NodesController(AsyncNamespace):
             if node.room is None or node.room.room_id != room.room_id:
                 if node.room is not None:
                     node.room.nodes.remove(node)
+
+                    # force re-calibration of the old room
+                    node.room.force_recalibration()
+
                 node.room = room
                 node.room.nodes.append(node)
+
+                # force re-calibration of the new room
+                node.room.force_recalibration()
 
             # store the update and send the new state to all clients
             await self.config.node_repository.call_listeners()
@@ -128,6 +135,7 @@ class NodesController(AsyncNamespace):
 
         if ack.successful and node.room is not None:
             node.room.nodes.remove(node)
+            node.room.force_recalibration()
             node.room = None
 
             # store the update and send the new state to all clients

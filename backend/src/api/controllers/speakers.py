@@ -89,7 +89,15 @@ class SpeakersController(AsyncNamespace):
 
             # update room reference if necessary
             if speaker.room is None or speaker.room.room_id != room.room_id:
+                if speaker.room is not None:
+                    # force re-calibration of the old room
+                    speaker.room.force_recalibration()
+
                 speaker.room = room
+
+                # force re-calibration of the new room
+                speaker.room.force_recalibration()
+                await self.config.room_repository.call_listeners()
 
             # store the update and send the new state to all clients
             await self.config.speaker_repository.call_listeners()
@@ -104,9 +112,16 @@ class SpeakersController(AsyncNamespace):
         """
         ack = Acknowledgment()
 
+        speaker = self.config.speaker_repository.get_speaker(speaker_id)
+
         if self.config.balance:
             ack.add_error('No configuration changes can be made when balancing is active')
-        elif await self.config.speaker_repository.remove_speaker(speaker_id) is False:
+
+        if speaker is None:
             ack.add_error('A speaker with this id does not exist')
+        elif ack.successful:
+            if speaker.room is not None:
+                speaker.room.force_recalibration()
+            await self.config.speaker_repository.remove_speaker(speaker_id)
 
         return ack.to_json()

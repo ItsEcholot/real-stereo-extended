@@ -80,7 +80,7 @@ class YoloPeopleDetector(PeopleDetector):
 
         # reduce multiple overlapping bounding boxes to a single one
         final_boxes = []
-        idxs = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.65)  # pylint: disable=no-member
+        idxs = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.01)  # pylint: disable=no-member
 
         if len(idxs) > 0:
             for box_id in idxs.flatten():

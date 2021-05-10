@@ -4,6 +4,7 @@ from models.speaker import Speaker
 import soco
 from soco import events_asyncio
 from soco.snapshot import Snapshot
+from soco.events_asyncio import Subscription
 from .adapter import SonosAdapter
 
 
@@ -107,9 +108,8 @@ class SonosSocoAdapter(SonosAdapter):
         :rtype: (soco.events_asyncio.Subscription, str)
         """
         coordinator = self.get_coordinator_instance(speaker)
-        subscription = await coordinator.renderingControl.subscribe(requested_timeout=300,
-                                                                    auto_renew=True)
-        subscription.callback = event_handler
+        subscription = Subscription(coordinator.renderingControl, event_handler)
+        await subscription.subscribe(requested_timeout=300, auto_renew=True)
 
         return (subscription, coordinator.ip_address)
 
@@ -170,7 +170,8 @@ class SonosSocoAdapter(SonosAdapter):
         for speaker in speakers:
             soco_instance = soco.SoCo(speaker.ip_address)
             if not any(x.uid == speaker.speaker_id for x in biggest_group.members):
-                print('[SoCo Adapter] Adding {} to the group of {}'.format(speaker.ip_address, biggest_group.coordinator.ip_address))
+                print('[SoCo Adapter] Adding {} to the group of {}'.format(
+                    speaker.ip_address, biggest_group.coordinator.ip_address))
                 if soco_instance.group is not None:
                     soco_instance.previous_group_coordinator = soco_instance.group.coordinator
                 soco_instance.join(biggest_group.coordinator)
@@ -184,7 +185,8 @@ class SonosSocoAdapter(SonosAdapter):
         for speaker in speakers:
             soco_instance = soco.SoCo(speaker.ip_address)
             if hasattr(soco_instance, 'previous_group_coordinator'):
-                print('[SoCo Adapter] Adding {} to the group of {}'.format(speaker.ip_address, soco_instance.previous_group_coordinator.ip_address))
+                print('[SoCo Adapter] Adding {} to the group of {}'.format(
+                    speaker.ip_address, soco_instance.previous_group_coordinator.ip_address))
                 if soco_instance.previous_group_coordinator != soco_instance:
                     soco_instance.join(soco_instance.previous_group_coordinator)
                 else:
