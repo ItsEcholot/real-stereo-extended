@@ -1,11 +1,11 @@
-import { RefObject, useEffect, useState } from "react";
-import { disableHistoricVolume, medianHistoricVolume } from "./audioMeter";
+import { RefObject, useCallback, useEffect, useState } from "react";
+import { disableHistoricVolume, enableHistoricVolume, medianHistoricVolume } from "./audioMeter";
 import { drawCurrentPosition } from "./canvasDrawTools";
 import { useSettings } from "./settings";
 
 const testModeMapCanvasSize = 500;
 
-export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
+export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HTMLCanvasElement> | null = null, mapCanvasRoomId: number | null = null) => {
   const { settingsTestModeResult, updateSettings } = useSettings();
 
   const [errors, setErrors] = useState<string[]>([]);
@@ -44,9 +44,12 @@ export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HT
     if (!settingsTestModeResult) return;
 
     const testModeMapContext = testModeMapCanvasRef?.current?.getContext('2d');
-    if (testModeMapContext) {
+    if (testModeMapContext && mapCanvasRoomId) {
       testModeMapContext.clearRect(0, 0, testModeMapCanvasSize, testModeMapCanvasSize);
-      drawCurrentPosition(testModeMapContext, testModeMapCanvasSize, settingsTestModeResult[0].positionX, settingsTestModeResult[0].positionY)
+      const result = settingsTestModeResult.find(res => res.room.id === mapCanvasRoomId);
+      if (result) {
+        drawCurrentPosition(testModeMapContext, testModeMapCanvasSize, result.positionX, result.positionY)
+      }
     }
 
     const medianVolume = medianHistoricVolume();
@@ -54,10 +57,17 @@ export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HT
       console.log(`volume ${medianVolume}`);
     }
     disableHistoricVolume();
-  }, [settingsTestModeResult]);
+    setReadyToTestLocation(true);
+  }, [settingsTestModeResult, testModeMapCanvasRef, mapCanvasRoomId]);
+
+  const measurePoint = useCallback(() => {
+    setReadyToTestLocation(false);
+    enableHistoricVolume();
+  }, []);
 
   return {
     readyToTestLocation,
+    measurePoint,
     errors,
   }
 }
