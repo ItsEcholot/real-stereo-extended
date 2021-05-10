@@ -55,6 +55,9 @@ class AdHocNetwork:
             # restart the hostapd service to use the new dhcp config
             system('sudo service hostapd restart')
 
+            # enable the dhcp server for the adhoc network
+            system('sudo service enable --now dnsmasq')
+
         self.config.network = 'adhoc'
 
     def disable(self):
@@ -80,6 +83,9 @@ class AdHocNetwork:
         if system('sudo service hostapd status > /dev/null') < 1:
             # disable the hostapd service
             system('sudo systemctl disable --now hostapd')
+
+            # disable the dhcp server for the adhoc network
+            system('sudo service disable --now dnsmasq')
 
             # restart the network
             self.restart_network()

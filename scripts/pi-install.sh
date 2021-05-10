@@ -107,6 +107,7 @@ if [[ ! -f /etc/dhcp/dhcpd.conf ]]; then
   echo -e "# --ad-hoc-start--\n#interface wlan0\n#    static ip_address=10.1.1.1/24\n#    nohook wpa_supplicant\n# --ad-hoc-end--" >> /etc/dhcpcd.conf
   sudo cp "$PROJECT_DIR/scripts/config/hostapd.conf" /etc/hostapd/hostapd.conf
   sudo sed -i "s/--hostname--/$(cat /etc/hostname | head -n 1 | cut -c5-8)/g" /etc/hostapd/hostapd.conf
+  echo -e "interface=wlan0\ndhcp-range=10.1.1.10,10.1.1.250,255.255.255.0,24h\ndomain=local\naddress=/setup.rse/10.1.1.1" | sudo dd of=/etc/dnsmasq.conf oflag=append conv=notrunc
 
   sudo systemctl daemon-reload
   sudo systemctl unmask hostapd
