@@ -4,17 +4,25 @@ from socketio import AsyncNamespace
 from config import Config, NodeType
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
+from balancing.sonos import Sonos
+from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand
 
 
 class SettingsController(AsyncNamespace):
-    """Controller for the /settings namespace."""
+    """Controller for the /settings namespace.
 
-    def __init__(self, config: Config):
+    :param Config config: The application config object.
+    :param Sonos sonos: The sonos control instance
+    """
+
+    def __init__(self, config: Config, sonos: Sonos):
         super().__init__(namespace='/settings')
         self.config: Config = config
+        self.sonos: Sonos = sonos
 
         # add settings repository change listener
         config.setting_repository.register_listener(self.send_settings)
+        config.tracking_repository.register_listener(self.position_update)
 
     def build_settings(self) -> dict:
         """Builds the settings.
@@ -25,6 +33,7 @@ class SettingsController(AsyncNamespace):
         return {
             'configured': self.config.type != NodeType.UNCONFIGURED,
             'balance': self.config.balance,
+            'test_mode': self.config.test_mode,
         }
 
     async def send_settings(self, sid: str = None) -> None:
@@ -34,6 +43,17 @@ class SettingsController(AsyncNamespace):
                         clients will receive the settings.
         """
         await self.emit('get', self.build_settings(), room=sid)
+
+    async def position_update(self) -> None:
+        """Gets called when the tracking repository contains new coordinates."""
+        if not self.config.test_mode:
+            return
+        
+        result = []
+        room: Room
+        for room in self.config.rooms:
+            result.append({'room': room.to_json(), 'positionX': room.coordinates[0], 'positionY': room.coordinates[1]})
+        await self.emit('testModeResult', result)
 
     def validate(self, data: dict) -> Acknowledgment:  # pylint: disable=no-self-use
         """Validates the input data.
@@ -45,8 +65,12 @@ class SettingsController(AsyncNamespace):
         ack = Acknowledgment()
         validate = Validate(ack)
         balance = data.get('balance')
+        test_mode = data.get('testMode')
 
-        validate.boolean(balance, label='Balance')
+        if balance is not None:
+            validate.boolean(balance, label='Balance')
+        if test_mode is not None:
+            validate.boolean(test_mode, label='Test Mode')
 
         return ack
 
@@ -69,6 +93,13 @@ class SettingsController(AsyncNamespace):
 
         # update the settings
         if ack.successful:
+            if data.get('testMode') and not self.config.test_mode:
+                self.sonos.send_command(SonosPlayCalibrationSoundCommand(self.config.speakers))
+                self.config.test_mode = True
+            elif data.get('testMode') == False and self.config.test_mode:
+                self.sonos.send_command(SonosStopCalibrationSoundCommand(self.config.speakers))
+                self.config.test_mode = False
+            
             # check if the balance setting has changed
             if self.config.balance != data['balance']:
                 # check if all rooms are calibrated

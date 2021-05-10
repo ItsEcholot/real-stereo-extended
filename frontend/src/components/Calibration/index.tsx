@@ -133,7 +133,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
                   onChange={onCalibrationMapRoomChange}
                   defaultValue={{label: roomSpeakers[0].name, value: roomSpeakers[0].id}}>
                     {roomSpeakers.map(speaker =>
-                      <Select.Option value={speaker.id}>{speaker.name}</Select.Option>
+                      <Select.Option key={speaker.id} value={speaker.id}>{speaker.name}</Select.Option>
                     )}
                 </Select>
               </Col>

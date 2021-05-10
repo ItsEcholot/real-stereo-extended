@@ -1,25 +1,37 @@
 import { useContext, useState, useEffect, useCallback } from 'react';
 import { Acknowledgment } from './acknowledgment';
+import { Room } from './rooms';
 import { SocketContext } from './socketProvider';
 
 export type Settings = {
   configured: boolean;
   balance: boolean;
+  testMode: boolean;
 }
 
 export type UpdateSettings = {
-  balance: boolean;
+  balance?: boolean;
+  testMode?: boolean;
+}
+
+export type SettingsTestModeResult = {
+  room: Room;
+  positionX: number;
+  positionY: number;
 }
 
 export const useSettings = () => {
   const { getSocket, returnSocket } = useContext(SocketContext);
   const [settings, setSettings] = useState<Settings>();
+  const [settingsTestModeResult, setSettingsTestModeResult] = useState<SettingsTestModeResult[]>();
   useEffect(() => {
     const settingsSocket = getSocket('settings');
     settingsSocket.emit('get', setSettings);
     settingsSocket.on('get', setSettings);
+    settingsSocket.on('testModeResult', setSettingsTestModeResult);
     return () => {
       settingsSocket.off('get', setSettings);
+      settingsSocket.off('testModeResult', setSettingsTestModeResult);
       returnSocket('settings');
     };
   }, [getSocket, returnSocket]);
@@ -35,5 +47,5 @@ export const useSettings = () => {
     });
   }, [getSocket, returnSocket]);
 
-  return { settings, updateSettings };
+  return { settings, settingsTestModeResult, updateSettings };
 }

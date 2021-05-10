@@ -2,6 +2,8 @@ import { RefObject, useEffect, useState } from 'react';
 import { drawSpectrumAnalyzer } from './canvasDrawTools';
 
 const fftWindowSize = 512;
+const spectrumAnalyzerCanvasWidth = 500;
+const spectrumAnalyzerCanvasHeight = 255;
 const aWeighting = [
   -85.4,
   -63.6,
@@ -16,7 +18,8 @@ const aWeighting = [
   -2.5,
   -9.3,
 ]; // From https://acousticalengineer.com/a-weighting-table/
-export let historicVolume: number[] = [];
+let historicVolume: number[] = [];
+let collectHistoricVolume: boolean = true;
 
 const AudioContext = window.AudioContext // Default
   || (window as any).webkitAudioContext // Safari and old versions of Chrome;
@@ -82,6 +85,23 @@ const calculateLoudness = (energies: Uint32Array): number => {
   return sum / 255;
 }
 
+export const disableHistoricVolume = () => {
+  collectHistoricVolume = false;
+  historicVolume = [];
+}
+
+export const enableHistoricVolume = () => {
+  collectHistoricVolume = true;
+}
+
+export const medianHistoricVolume = (): number => {
+  historicVolume.sort();
+  const length = historicVolume.length;
+  const mid = Math.ceil(length / 2);
+  const medianVolume = length % 2 === 0 ? (historicVolume[mid] + historicVolume[mid - 1]) / 2 : historicVolume[mid - 1];
+  return medianVolume;
+}
+
 export const prepareAudioMeter = async (): Promise<void> => {
   console.debug('Preparing for calibration by starting & stopping recording');
   const microphoneStream = await getMicrophoneStream();
@@ -97,8 +117,18 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
       setVolume(0);
       setAudioMeterErrors([]);
       historicVolume = [];
+
+      const spectrumAnalyzerCanvasContext = spectrumAnalyzerCanvasRef?.current?.getContext('2d');
+      if (spectrumAnalyzerCanvasRef && spectrumAnalyzerCanvasRef.current) {
+        spectrumAnalyzerCanvasRef.current.width = spectrumAnalyzerCanvasWidth;
+        spectrumAnalyzerCanvasRef.current.height = spectrumAnalyzerCanvasHeight;
+        if (spectrumAnalyzerCanvasContext) {
+          spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasWidth, spectrumAnalyzerCanvasHeight);
+        }
+      }
       return;
     }
+    collectHistoricVolume = true;
     let microphoneStream: MediaStream;
     let analyseInterval: NodeJS.Timeout;
     (async () => {
@@ -126,10 +156,12 @@ export const useAudioMeter = (enabled: boolean, spectrumAnalyzerCanvasRef: RefOb
           const energies = sumEnergy(bufferData);
           const calcVolume = calculateLoudness(energies);
           setVolume(calcVolume);
-          historicVolume.push(calcVolume);
+          if (collectHistoricVolume) {
+            historicVolume.push(calcVolume);
+          }
 
           if (spectrumAnalyzerCanvasContext) {
-            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasRef?.current?.width || 0, spectrumAnalyzerCanvasRef?.current?.height || 0);
+            spectrumAnalyzerCanvasContext.clearRect(0, 0, spectrumAnalyzerCanvasWidth, spectrumAnalyzerCanvasHeight);
             drawSpectrumAnalyzer(spectrumAnalyzerCanvasContext, bufferData, frequencyPerArrayItem);
           }
         }, 50);
