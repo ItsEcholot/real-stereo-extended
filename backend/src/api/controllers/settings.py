@@ -5,14 +5,16 @@ from socketio import AsyncNamespace
 from config import Config, NodeType
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
+from .networks import NetworksController
 
 
 class SettingsController(AsyncNamespace):
     """Controller for the /settings namespace."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, networks_controller: NetworksController):
         super().__init__(namespace='/settings')
         self.config: Config = config
+        self.networks_controller = networks_controller
 
         # add settings repository change listener
         config.setting_repository.register_listener(self.send_settings)
@@ -53,6 +55,12 @@ class SettingsController(AsyncNamespace):
 
         if node_type is not None and node_type != 'master' and node_type != 'tracking':
             ack.add_error('nodeType must be either master or tracking')
+
+        if data.get('network') is not None:
+            network_ack = self.networks_controller.validate(data.get('network'))
+            if not network_ack.successful():
+                for error in network_ack.errors:
+                    ack.add_error(error)
 
         return ack
 
@@ -95,12 +103,16 @@ class SettingsController(AsyncNamespace):
                         (node_type == 'tracking' and self.config.type != NodeType.TRACKING):
                     self.config.type = NodeType.MASTER if node_type == 'master' else NodeType.TRACKING
                     await self.config.setting_repository.call_listeners()
-                    asyncio.create_task(self.delayed_restart())
+                    asyncio.create_task(self.delayed_restart(data.get('network')))
 
         return ack.to_json()
 
-    async def delayed_restart(self) -> None:
+    async def delayed_restart(self, network_data: dict = None) -> None:
         """Restarts real stereo after a short delay to allow the ack message to still get delivered.
         """
+        # check if a network should get configured in the same set
+        if network_data is not None:
+            await self.networks_controller.on_create('', network_data)
+
         await asyncio.sleep(5)
         exit(0)

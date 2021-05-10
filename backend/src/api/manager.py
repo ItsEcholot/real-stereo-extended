@@ -76,7 +76,6 @@ class ApiManager:
             self.server.register_namespace(NodesController(config=self.config,
                                                            cluster_master=cluster_master))
             self.server.register_namespace(SpeakersController(config=self.config))
-            self.server.register_namespace(SettingsController(config=self.config))
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
             self.server.register_namespace(RoomCalibrationController(config=self.config,
@@ -84,8 +83,11 @@ class ApiManager:
                                                                          balancing_manager, 'sonos', None),
                                                                      tracking_manager=tracking_manager,
                                                                      cluster_master=cluster_master))
-            self.server.register_namespace(NetworksController(config=self.config,
-                                                              networking_manager=networking_manager))
+            networks_controller = NetworksController(config=self.config,
+                                                     networking_manager=networking_manager)
+            self.server.register_namespace(networks_controller)
+            self.server.register_namespace(SettingsController(config=self.config,
+                                                              networks_controller=networks_controller))
 
             balances_controller = BalancesController()
             if balancing_manager is not None:

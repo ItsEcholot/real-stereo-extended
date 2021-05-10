@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect, useCallback } from 'react';
 import { Acknowledgment } from './acknowledgment';
+import { CreateNetwork } from './networks';
 import { SocketContext } from './socketProvider';
 
 export type Settings = {
@@ -11,6 +12,7 @@ export type Settings = {
 export type UpdateSettings = {
   balance: boolean;
   nodeType?: 'master' | 'tracking';
+  network?: CreateNetwork;
 }
 
 export const useSettings = () => {

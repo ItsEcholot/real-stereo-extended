@@ -20,12 +20,13 @@ const SetupPage: FunctionComponent<{}> = () => {
     setSaving(true);
 
     try {
-      await createNetwork(values);
-
-      if (!settings?.configured) {
+      if (settings && settings.configured) {
+        await createNetwork(values);
+      } else {
         await updateSettings({
           balance: false,
           nodeType,
+          network: values,
         });
       }
 
