@@ -26,6 +26,7 @@ class Config:
         self.path: Path = path
         self.type: NodeType = NodeType.UNCONFIGURED
         self.balance: bool = False
+        self.network = 'client'
         self.test_mode: bool = False
         self.rooms: List[Room] = []
         self.nodes: List[Node] = []
@@ -41,6 +42,7 @@ class Config:
         self.room_repository.register_listener(self.update_volume_interpolation)
         self.node_repository.register_listener(self.store)
         self.speaker_repository.register_listener(self.store)
+        self.setting_repository.register_listener(self.store)
 
         # load file if it exists
         if path.exists():

@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect, useCallback } from 'react';
 import { Acknowledgment } from './acknowledgment';
+import { CreateNetwork } from './networks';
 import { Room } from './rooms';
 import { SocketContext } from './socketProvider';
 
@@ -7,10 +8,13 @@ export type Settings = {
   configured: boolean;
   balance: boolean;
   testMode: boolean;
+  network: 'client' | 'adhoc';
 }
 
 export type UpdateSettings = {
   balance?: boolean;
+  nodeType?: 'master' | 'tracking';
+  network?: CreateNetwork;
   testMode?: boolean;
 }
 

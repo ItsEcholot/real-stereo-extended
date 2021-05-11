@@ -11,6 +11,7 @@ from config import Config, NodeType
 from tracking.manager import TrackingManager
 from protocol.master import ClusterMaster
 from balancing.manager import BalancingManager
+from networking.manager import NetworkingManager
 from .controllers.rooms import RoomsController
 from .controllers.nodes import NodesController
 from .controllers.speakers import SpeakersController
@@ -18,6 +19,7 @@ from .controllers.settings import SettingsController
 from .controllers.camera_calibration import CameraCalibrationController
 from .controllers.room_calibration import RoomCalibrationController
 from .controllers.balances import BalancesController
+from .controllers.networks import NetworksController
 from .ssl_generator import SSLGenerator
 
 # define path of the static frontend files
@@ -36,7 +38,8 @@ class ApiManager:
 
     def __init__(self, config: Config, tracking_manager: TrackingManager,
                  cluster_master: ClusterMaster = None,
-                 balancing_manager: BalancingManager = None):
+                 balancing_manager: BalancingManager = None,
+                 networking_manager: NetworkingManager = None):
         self.config: Config = config
         self.tracking_manager: TrackingManager = tracking_manager
         self.stream_queues: List[asyncio.Queue] = []
@@ -73,7 +76,6 @@ class ApiManager:
             self.server.register_namespace(NodesController(config=self.config,
                                                            cluster_master=cluster_master))
             self.server.register_namespace(SpeakersController(config=self.config))
-            self.server.register_namespace(SettingsController(config=self.config, sonos=getattr(balancing_manager, 'sonos', None)))
             self.server.register_namespace(CameraCalibrationController(config=self.config,
                                                                        cluster_master=cluster_master))
             self.server.register_namespace(RoomCalibrationController(config=self.config,
@@ -81,6 +83,13 @@ class ApiManager:
                                                                          balancing_manager, 'sonos', None),
                                                                      tracking_manager=tracking_manager,
                                                                      cluster_master=cluster_master))
+            networks_controller = NetworksController(config=self.config,
+                                                     networking_manager=networking_manager)
+            self.server.register_namespace(networks_controller)
+            self.server.register_namespace(SettingsController(config=self.config,
+                                                              sonos=getattr(balancing_manager, 'sonos', None),
+                                                              networks_controller=networks_controller))
+
             balances_controller = BalancesController()
             if balancing_manager is not None:
                 balancing_manager.balances_api_controller = balances_controller

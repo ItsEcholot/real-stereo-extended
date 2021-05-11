@@ -1,24 +1,27 @@
 """Controller for the /settings namespace."""
 
+import asyncio
 from socketio import AsyncNamespace
 from config import Config, NodeType
 from models.acknowledgment import Acknowledgment
 from api.validate import Validate
+from .networks import NetworksController
 from balancing.sonos import Sonos
 from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand
 
 
 class SettingsController(AsyncNamespace):
     """Controller for the /settings namespace.
-
+    
     :param Config config: The application config object.
     :param Sonos sonos: The sonos control instance
     """
 
-    def __init__(self, config: Config, sonos: Sonos):
+    def __init__(self, config: Config, sonos: Sonos, networks_controller: NetworksController):
         super().__init__(namespace='/settings')
         self.config: Config = config
         self.sonos: Sonos = sonos
+        self.networks_controller = networks_controller
 
         # add settings repository change listener
         config.setting_repository.register_listener(self.send_settings)
@@ -33,6 +36,7 @@ class SettingsController(AsyncNamespace):
         return {
             'configured': self.config.type != NodeType.UNCONFIGURED,
             'balance': self.config.balance,
+            'network': self.config.network,
             'test_mode': self.config.test_mode,
         }
 
@@ -65,12 +69,22 @@ class SettingsController(AsyncNamespace):
         ack = Acknowledgment()
         validate = Validate(ack)
         balance = data.get('balance')
+        node_type = data.get('nodeType')
         test_mode = data.get('testMode')
 
         if balance is not None:
             validate.boolean(balance, label='Balance')
         if test_mode is not None:
             validate.boolean(test_mode, label='Test Mode')
+
+        if node_type is not None and node_type != 'master' and node_type != 'tracking':
+            ack.add_error('nodeType must be either master or tracking')
+
+        if data.get('network') is not None:
+            network_ack = self.networks_controller.validate(data.get('network'))
+            if not network_ack.successful:
+                for error in network_ack.errors:
+                    ack.add_error(error)
 
         return ack
 
@@ -112,4 +126,24 @@ class SettingsController(AsyncNamespace):
                     self.config.balance = data['balance']
                     await self.config.setting_repository.call_listeners()
 
+            # check if node type has changed
+            if data.get('nodeType') is not None:
+                node_type = data.get('nodeType')
+                if self.config.type == NodeType.UNCONFIGURED or \
+                    (node_type == 'master' and self.config.type != NodeType.MASTER) or \
+                        (node_type == 'tracking' and self.config.type != NodeType.TRACKING):
+                    self.config.type = NodeType.MASTER if node_type == 'master' else NodeType.TRACKING
+                    await self.config.setting_repository.call_listeners()
+                    asyncio.create_task(self.delayed_restart(data.get('network')))
+
         return ack.to_json()
+
+    async def delayed_restart(self, network_data: dict = None) -> None:
+        """Restarts real stereo after a short delay to allow the ack message to still get delivered.
+        """
+        # check if a network should get configured in the same set
+        if network_data is not None:
+            await self.networks_controller.on_create('', network_data)
+
+        await asyncio.sleep(5)
+        exit(0)

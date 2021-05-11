@@ -13,6 +13,7 @@ soco = "^0.22.1"
 asyncio-dgram = "^1.2.0"
 imutils = "^0.5.4"
 cryptography = "^3.4.7"
+netifaces = "^0.10.9"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.7.2"

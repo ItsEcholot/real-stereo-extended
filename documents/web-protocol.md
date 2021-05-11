@@ -117,11 +117,14 @@ type Settings = {
   configured: boolean;
   balance: boolean;
   testMode: boolean;
+  network: 'client' | 'adhoc';
 }
 
 type UpdateSettings = {
   balance?: boolean;
   testMode?: boolean;
+  nodeType?: 'master' | 'tracking';
+  network?: CreateNetwork;
 }
 
 type SettingsTestModeResult = {
@@ -129,6 +132,15 @@ type SettingsTestModeResult = {
   positionX: number;
   positionY: number;
 }[]
+```
+
+#### `Network`
+
+```typescript
+type CreateNetwork = {
+  ssid: string;
+  psk?: string;
+}
 ```
 
 #### `Acknowledgment`
@@ -258,6 +270,13 @@ Updates the camera calibration process.
 Available events:
 - `get: () => CameraCalibrationResponse`
 - `update: (data: CameraCalibrationRequest) => Acknowledgment`
+
+#### `/networks`
+
+Stores WLAN network configuration.
+
+Available events:
+- `create: (data: CreateNetwork) => Acknowledgment`
 
 ### `/room-calibration`
 

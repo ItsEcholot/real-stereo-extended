@@ -3,6 +3,7 @@
 import asyncio
 from time import time
 from socket import socket, gethostname, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST
+from config import NodeType
 from ..socket import ClusterSocket
 from ..constants import PORT, SLAVE_PING_INTERVAL, MASTER_AVAILABILITY_CHECK_INTERVAL
 from ..cluster_pb2 import Wrapper
@@ -26,6 +27,9 @@ class ClusterSlave(ClusterSocket):
 
     async def init(self) -> None:
         """Initializes the slave socket and starts listening."""
+        if self.config.type == NodeType.UNCONFIGURED:
+            return
+
         self.running = True
         self.send_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.send_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
@@ -78,7 +82,10 @@ class ClusterSlave(ClusterSocket):
         if self.direct_master is not None:
             asyncio.create_task(self.direct_master.call_events(message, receiver_address))
         else:
-            self.send_socket.sendto(message.SerializeToString(), (receiver_address, PORT))
+            try:
+                self.send_socket.sendto(message.SerializeToString(), (receiver_address, PORT))
+            except OSError as error:
+                self.log('Unable to send message: {}'.format(str(error)))
 
     async def receive(self) -> None:
         """Starts the receiving socket server."""
