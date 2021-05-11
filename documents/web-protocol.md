@@ -116,14 +116,22 @@ type Balance = {
 type Settings = {
   configured: boolean;
   balance: boolean;
+  testMode: boolean;
   network: 'client' | 'adhoc';
 }
 
 type UpdateSettings = {
-  balance: boolean;
+  balance?: boolean;
+  testMode?: boolean;
   nodeType?: 'master' | 'tracking';
   network?: CreateNetwork;
 }
+
+type SettingsTestModeResult = {
+  room: Room;
+  positionX: number;
+  positionY: number;
+}[]
 ```
 
 #### `Network`
@@ -252,6 +260,7 @@ Shows and updates settings.
 
 Available events:
 - `get: () => Settings`
+- `testModeResult: () => SettingsTestModeResult`
 - `update: (data: Settings) => Acknowledgment`
 
 #### `/camera-calibration`
@@ -268,3 +277,12 @@ Stores WLAN network configuration.
 
 Available events:
 - `create: (data: CreateNetwork) => Acknowledgment`
+
+### `/room-calibration`
+
+Updates the room calibration process.
+
+Available events:
+- `get: () => RoomCalibrationResponse`
+- `update: (data: RoomCalibrationRequest) => Acknowledgment`
+- `result: (data: RoomCalibrationResult) => Acknowledgment`

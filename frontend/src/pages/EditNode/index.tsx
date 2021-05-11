@@ -106,7 +106,8 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
         labelCol={{ span: 12 }}
         wrapperCol={{ span: 12 }}
         labelAlign="left"
-        onFinish={save}>
+        onFinish={save}
+        initialValues={{detector: 'yolo'}}>
         <Form.Item
           label="Node name"
           name="name"
@@ -127,7 +128,7 @@ const EditNodePage: FunctionComponent<EditNodePageProps> = ({
             <Form.Item
               label="Detection algorithm"
               name="detector">
-              <Select defaultValue="yolo">
+              <Select>
                 <Option value="hog">HoG</Option>
                 <Option value="hog_gray">HoG (Grayscale)</Option>
                 <Option value="motion">Motion</Option>

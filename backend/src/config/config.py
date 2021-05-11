@@ -27,6 +27,7 @@ class Config:
         self.type: NodeType = NodeType.UNCONFIGURED
         self.balance: bool = False
         self.network = 'client'
+        self.test_mode: bool = False
         self.rooms: List[Room] = []
         self.nodes: List[Node] = []
         self.speakers: List[Speaker] = []

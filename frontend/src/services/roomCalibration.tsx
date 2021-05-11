@@ -1,8 +1,8 @@
 import { RefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { SocketContext } from './socketProvider';
 import { Acknowledgment } from './acknowledgment';
-import { useAudioMeter, historicVolume, prepareAudioMeter } from './audioMeter';
-import { drawCurrentPosition, drawPoints, mapCoordinate } from './canvasDrawTools';
+import { useAudioMeter, prepareAudioMeter, medianHistoricVolume } from './audioMeter';
+import { drawCurrentPosition, drawInterpolation, drawPoints, mapCoordinate } from './canvasDrawTools';
 
 export type RoomCalibrationRequest = {
   room: {
@@ -46,7 +46,7 @@ export type RoomCalibrationResult = {
 
 const canvasSize = 250;
 
-export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefObject<HTMLCanvasElement> | null = null) => {
+export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefObject<HTMLCanvasElement> | null = null, selectedCalibrationMapSpeakerId: string) => {
   const socketRoomName = 'room-calibration';
   const { getSocket, returnSocket } = useContext(SocketContext);
 
@@ -63,12 +63,16 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
       const context = calibrationMapCanvasRef?.current?.getContext("2d");
       if (context) {
         context.clearRect(0, 0, canvasSize, canvasSize);
+        
+        const speakerIdSet: Set<string> = new Set();
+        roomCalibration.previousPoints.forEach(previousPoint => speakerIdSet.add(previousPoint.speaker_id));
+        drawInterpolation(context, canvasSize, roomCalibration.previousPoints.filter(prevPoint => prevPoint.speaker_id === selectedCalibrationMapSpeakerId), Array.from(speakerIdSet).indexOf(selectedCalibrationMapSpeakerId));
         drawPoints(context, canvasSize, roomCalibration.previousPoints, '#555555');
         drawPoints(context, canvasSize, roomCalibration.currentPoints, '#000000');
         drawCurrentPosition(context, canvasSize, mapCoordinate(roomCalibration.positionX, canvasSize), mapCoordinate(roomCalibration.positionY, canvasSize));
       }
     }
-  }, [roomId, calibrationMapCanvasRef]);
+  }, [roomId, calibrationMapCanvasRef, selectedCalibrationMapSpeakerId]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -168,11 +172,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         } else if (record) {
           setMeasuringVolume(true);
           setTimeout(() => {
-            historicVolume.sort();
-            const length = historicVolume.length;
-            const mid = Math.ceil(length / 2);
-            //const averageVolume = historicVolume.reduce((acc, volume) => acc + volume) / historicVolume.length;
-            const medianVolume = length % 2 === 0 ? (historicVolume[mid] + historicVolume[mid - 1]) / 2 : historicVolume[mid - 1];
+            const medianVolume = medianHistoricVolume();
             console.debug(`Calibration measured average volume: ${medianVolume}`);
             calibrationSocket.emit('result', {
               room: {id: roomId},

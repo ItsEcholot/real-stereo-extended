@@ -87,6 +87,7 @@ class ApiManager:
                                                      networking_manager=networking_manager)
             self.server.register_namespace(networks_controller)
             self.server.register_namespace(SettingsController(config=self.config,
+                                                              sonos=getattr(balancing_manager, 'sonos', None),
                                                               networks_controller=networks_controller))
 
             balances_controller = BalancesController()
