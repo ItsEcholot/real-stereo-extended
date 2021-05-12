@@ -22,8 +22,9 @@ if [[ $(pip3 list | grep opencv) ]]; then
 fi
 
 # clone TBB
-git clone --depth 1 https://github.com/oneapi-src/oneTBB.git /home/pi/tbb
+git clone https://github.com/oneapi-src/oneTBB.git /home/pi/tbb
 cd /home/pi/tbb
+git checkout 9e15720bc7744f85dff611d34d65e9099e077da4
 CXXFLAGS="-DTBB_USE_GCC_BUILTINS=1 -D__TBB_64BIT_ATOMICS=0" cmake -DTBB_TEST:BOOL=OFF --configure .
 CXXFLAGS="-DTBB_USE_GCC_BUILTINS=1 -D__TBB_64BIT_ATOMICS=0" cmake --build .
 sudo cmake -DCOMPONENT=runtime -P cmake_install.cmake
