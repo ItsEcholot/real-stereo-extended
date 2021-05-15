@@ -22,6 +22,7 @@ class Speaker:
         self.name: str = name
         self.ip_address: str = ip_address
         self.room: models.room.Room = room
+        self.times_discovery_missed: int = -1
 
     @staticmethod
     def from_json(data: dict, config):

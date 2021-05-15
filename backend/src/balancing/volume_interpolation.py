@@ -26,6 +26,9 @@ class VolumeInterpolation:
         self.speakers = []
 
         for point in self.room.calibration_points:
+            if point.speaker is None:
+                continue
+
             if point.speaker.speaker_id not in self.calibration_points:
                 self.calibration_points[point.speaker.speaker_id] = []
                 self.speakers.append(point.speaker)

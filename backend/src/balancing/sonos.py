@@ -31,10 +31,12 @@ class Sonos:
                     if existing_speaker is not None and \
                             existing_speaker.name == speaker.name and \
                             existing_speaker.ip_address == speaker.ip_address:
+                        existing_speaker.times_discovery_missed = -1
                         continue
                     elif existing_speaker is not None:
                         existing_speaker.name = speaker.name
                         existing_speaker.ip_address = speaker.ip_address
+                        existing_speaker.times_discovery_missed = -1
                         await self.config.speaker_repository.call_listeners()
                         continue
                     print('[Balancing] Discovered new Sonos speaker {} with uid {} at {}'
@@ -44,6 +46,18 @@ class Sonos:
                               speaker.ip_address,
                           ))
                     await self.config.speaker_repository.add_speaker(speaker)
+
+                for speaker in self.config.speakers:
+                    speaker.times_discovery_missed += 1
+            else:
+                for speaker in self.config.speakers:
+                    speaker.times_discovery_missed += 1
+
+            # delete speakers that have missed 2 discovery cycles
+            for speaker in self.config.speakers:
+                if speaker.times_discovery_missed >= 2:
+                    await self.config.speaker_repository.remove_speaker(speaker.speaker_id)
+
             await asyncio.sleep(15)
 
     def stop_discover_loop(self):
