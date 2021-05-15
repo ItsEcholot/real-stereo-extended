@@ -115,7 +115,7 @@ class SettingsController(AsyncNamespace):
                 self.config.test_mode = False
             
             # check if the balance setting has changed
-            if self.config.balance != data['balance']:
+            if data.get('balance') is not None and self.config.balance != data.get('balance'):
                 # check if all rooms are calibrated
                 uncalibrated_rooms = list(filter(lambda room: len(room.calibration_points) == 0,
                                                  self.config.rooms))

@@ -7,6 +7,7 @@ import ssl
 import socketio
 from aiohttp import web, MultipartWriter, ClientSession
 from numpy import ndarray
+from threading import Thread
 from config import Config, NodeType
 from tracking.manager import TrackingManager
 from protocol.master import ClusterMaster
@@ -207,6 +208,14 @@ class ApiManager:
         await self.write_stream_frame(response, image)
         await self.write_stream_frame(response, image)  # send a second time to flush previous
 
+    def start_insecure_app(self, runner):
+        insecure_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(insecure_loop)
+        insecure_loop.run_until_complete(runner.setup())
+        site = web.TCPSite(runner, '0.0.0.0', 8079)
+        insecure_loop.run_until_complete(site.start())
+        insecure_loop.run_forever()
+        
     async def start(self) -> None:
         """Start the API server."""
         ssl_generator = SSLGenerator()
@@ -219,8 +228,9 @@ class ApiManager:
                              print=None, ssl_context=ssl_context)]
         if self.config.type == NodeType.MASTER:
             print('[Web API INSECURE] Listening on http://localhost:8079 (for Sonos media assets)')
-            apps.append(web._run_app(self.insecure_app, host='0.0.0.0', port=8079,  # pylint: disable=protected-access
-                                     handle_signals=False, print=None))
+            runner = web.AppRunner(self.insecure_app)
+            thread = Thread(target=self.start_insecure_app, args=(runner,))
+            thread.start()
         await asyncio.gather(*apps)
 
     def on_frame(self, frame: ndarray) -> None:
