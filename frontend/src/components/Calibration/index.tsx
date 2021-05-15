@@ -35,7 +35,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
   const { speakers } = useSpeakers();
 
   const [calibrationStarting, setCalibrationStarting] = useState(false);
-  const [calibrationVolume, setCalibrationVolume] = useState(0);
+  const [calibrationVolume, setCalibrationVolume] = useState(30);
   const [calibrationFinishing, setCalibrationFinishing] = useState(false);
   const [calibrationNextPointing, setCalibrationNextPointing] = useState(false);
   const [calibrationConfirmingPoint, setCalibrationConfirmingPoint] = useState(false);
@@ -111,7 +111,7 @@ const Calibration: FunctionComponent<CalibrationProps> = ({
       {!roomCalibration?.calibrating ? <Space direction="vertical" className={styles.space}>
           <Row gutter={10} align="middle">
             <Col>Calibration Volume</Col>
-            <Col flex="auto"><Slider defaultValue={30} onChange={setCalibrationVolume} /></Col>
+            <Col flex="auto"><Slider defaultValue={calibrationVolume} onChange={setCalibrationVolume} /></Col>
           </Row>
           <Button type="primary" loading={calibrationStarting} icon={<RadarChartOutlined />} onClick={onStartCalibration}>
             {roomCalibration?.previousPoints && roomCalibration.previousPoints.length > 0 ? 'Restart calibration' : 'Start calibration'}
