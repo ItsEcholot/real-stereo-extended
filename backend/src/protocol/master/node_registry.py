@@ -1,9 +1,9 @@
 """Holds information about all available nodes and their state."""
 from time import time
-from socket import gethostname, gethostbyname
 import asyncio
 from config import Config
 from models.node import Node
+from networking.helpers import get_hostname, get_ip_address
 from ..constants import MASTER_PING_INTERVAL, NODE_AVAILABILITY_CHECK_INTERVAL
 from ..cluster_pb2 import Wrapper
 
@@ -106,11 +106,10 @@ class NodeRegistry:
 
     async def add_self(self) -> None:
         """Adds the master as a node since it also runs a camera node instance."""
-        hostname = gethostname()
+        hostname = get_hostname()
 
-        try:
-            self.master_ip = gethostbyname(hostname)
-        except:  # pylint: disable=bare-except
+        self.master_ip = get_ip_address()
+        if self.master_ip is None:
             self.master_ip = '127.0.0.1'
 
         if self.master.direct_slave is not None:

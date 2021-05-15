@@ -1,21 +1,27 @@
 """Checks and generates a new SSL certificate if necessary"""
 from pathlib import Path
-from socket import gethostname, gethostbyname
 import datetime
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
+from networking.helpers import get_hostname, get_ip_address
+
 
 class SSLGenerator:
     """Checks and generates a new SSL certificate if necessary"""
 
     def __init__(self):
         print('[Web API] Checking for SSL Certificate')
-        self.hostname = gethostname()
-        self.ip_address = gethostbyname(self.hostname)
-        self.certificate_path: Path = (Path(__file__).resolve().parent / '..' / '..' / 'certificate.crt').resolve()
-        self.certificate_path_key: Path = (Path(__file__).resolve().parent / '..' / '..' / 'certificate.key').resolve()
+        self.hostname = get_hostname()
+        self.ip_address = get_ip_address()
+        if self.ip_address is None:
+            self.ip_address = '127.0.0.1'
+
+        self.certificate_path: Path = (Path(__file__).resolve()
+                                       .parent / '..' / '..' / 'certificate.crt').resolve()
+        self.certificate_path_key: Path = (Path(__file__).resolve()
+                                           .parent / '..' / '..' / 'certificate.key').resolve()
 
         if not self.certificate_path.is_file() or not self.certificate_path_key.is_file():
             print('[Web API] No certificate found, generating one')
@@ -51,21 +57,21 @@ class SSLGenerator:
             x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, self.hostname),
         ])
         cert = x509.CertificateBuilder().issuer_name(issuer
-                                       ).subject_name(subject
-                                       ).public_key(key.public_key()
-                                       ).serial_number(x509.random_serial_number()
-                                       ).not_valid_before(datetime.datetime.utcnow()
-                                       ).not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=365 * 5)
-                                       ).add_extension(
-                                            x509.SubjectAlternativeName([
-                                                x509.DNSName("localhost"),
-                                                x509.DNSName("127.0.0.1"),
-                                                x509.DNSName(self.hostname),
-                                                x509.DNSName(self.ip_address)]),
-                                            critical=False).sign(key, hashes.SHA256(), default_backend())
+                                                     ).subject_name(subject
+                                                                    ).public_key(key.public_key()
+                                                                                 ).serial_number(x509.random_serial_number()
+                                                                                                 ).not_valid_before(datetime.datetime.utcnow()
+                                                                                                                    ).not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=365 * 5)
+                                                                                                                                      ).add_extension(
+            x509.SubjectAlternativeName([
+                x509.DNSName("localhost"),
+                x509.DNSName("127.0.0.1"),
+                x509.DNSName(self.hostname),
+                x509.DNSName(self.ip_address)]),
+            critical=False).sign(key, hashes.SHA256(), default_backend())
         with open(self.certificate_path, "wb") as file:
             file.write(cert.public_bytes(serialization.Encoding.PEM))
-    
+
     def check_if_cert_contains_current_ip(self, cert: x509.Certificate) -> bool:
         """Checks if the passed cert contains the current ip & hostname
 
