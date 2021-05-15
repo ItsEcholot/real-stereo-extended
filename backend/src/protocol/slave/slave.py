@@ -2,8 +2,9 @@
 
 import asyncio
 from time import time
-from socket import socket, gethostname, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST
+from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST
 from config import NodeType
+from networking.helpers import get_hostname
 from ..socket import ClusterSocket
 from ..constants import PORT, SLAVE_PING_INTERVAL, MASTER_AVAILABILITY_CHECK_INTERVAL
 from ..cluster_pb2 import Wrapper
@@ -52,7 +53,7 @@ class ClusterSlave(ClusterSocket):
     async def update_state(self) -> None:
         """Update state of the slave socket."""
         message = self.build_message()
-        message.serviceAnnouncement.hostname = gethostname()
+        message.serviceAnnouncement.hostname = get_hostname()
 
         while self.running:
             # send service announcement if not yet acquired

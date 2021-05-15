@@ -1,10 +1,11 @@
 """Defines methods to send commands to Sonos speakers using the soco library"""
 from typing import Set, List
-from models.speaker import Speaker
 import soco
 from soco import events_asyncio
 from soco.snapshot import Snapshot
 from soco.events_asyncio import Subscription
+from models.speaker import Speaker
+from networking.helpers import get_ip_address
 from .adapter import SonosAdapter
 
 
@@ -75,8 +76,10 @@ class SonosSocoAdapter(SonosAdapter):
 
         :param models.speaker.Speaker speaker: Speaker on which calibration sound should be played on
         """
+        calibration_sound_uri = 'http://{}:{}/backend-assets/white_noise.mp3'.format(
+            get_ip_address(), 8079)
         soco_instance = self.get_coordinator_instance(speaker)
-        soco_instance.play_uri(uri=self.calibration_sound_uri, title='RS Calibration Sound')
+        soco_instance.play_uri(uri=calibration_sound_uri, title='RS Calibration Sound')
         soco_instance.play_mode = 'REPEAT_ONE'
 
     def save_snapshot(self, speaker: Speaker):

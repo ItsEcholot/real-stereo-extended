@@ -164,7 +164,8 @@ class RoomCalibrationController(AsyncNamespace):
 
                 # send service update to all nodes of this room
                 for node in room.nodes:
-                    self.cluster_master.send_service_update(node.ip_address, True)
+                    if node.acquired:
+                        self.cluster_master.send_service_update(node.ip_address, True)
 
                 print('[Room Calibration] Starting for room {}'.format(room.name))
             elif data.get('finish'):

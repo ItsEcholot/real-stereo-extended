@@ -1,10 +1,11 @@
 """Master for the cluster protocol."""
 
-from socket import socket, gethostname, AF_INET, SOCK_STREAM, MSG_DONTWAIT, MSG_PEEK
+from socket import socket, AF_INET, SOCK_STREAM, MSG_DONTWAIT, MSG_PEEK
 import asyncio
 import asyncio_dgram
 from config import Config
 from balancing.manager import BalancingManager
+from networking.helpers import get_hostname
 from ..socket import ClusterSocket
 from ..constants import PORT
 from ..cluster_pb2 import Wrapper
@@ -21,7 +22,7 @@ class ClusterMaster(ClusterSocket):
         self.direct_slave = direct_slave
         self.balancing_manager = balancing_manager
         self.node_registry = NodeRegistry(config, self)
-        self.hostname = gethostname()
+        self.hostname = get_hostname()
         self.slave_sockets = {}
         self.camera_calibration_response_listener = None
 
