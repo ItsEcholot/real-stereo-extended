@@ -166,7 +166,10 @@ class BalancingManager:
             # check if this event confirms the last volume change of real stereo
             event_volume = int(event.variables['volume']['Master'])
             last_change_volume = self.room_info[room.room_id]['current_volume']
-            last_change_master_volume = last_change_volume[self.room_info[room.room_id]['master_index']]
+            try:
+                last_change_master_volume = last_change_volume[self.room_info[room.room_id]['master_index']]
+            except IndexError:
+                last_change_master_volume = None
             if last_change_master_volume == event_volume and \
                     not self.room_info[room.room_id]['volume_confirmed']:
                 self.room_info[room.room_id]['volume_confirmed'] = True
