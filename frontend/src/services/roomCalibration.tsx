@@ -53,6 +53,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
   const [roomCalibration, setRoomCalibration] = useState<RoomCalibrationResponse>();
   const [errors, setErrors] = useState<string[]>([]);
   const [measuringVolume, setMeasuringVolume] = useState(false);
+  const [nextSpeakerTimeout, setNextSpeakerTimeout] = useState<NodeJS.Timeout>();
 
   const { audioMeterErrors, volume } = useAudioMeter(measuringVolume);
 
@@ -128,6 +129,10 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         room: {id: roomId},
         finish: true,
       }, (ack: Acknowledgment) => {
+        if (nextSpeakerTimeout) {
+          clearTimeout(nextSpeakerTimeout);
+          setNextSpeakerTimeout(undefined);
+        }
         if (!ack.successful && ack.errors !== undefined) {
           const ackErrors = ack.errors;
           setErrors(prevErrors => [...prevErrors, ...ackErrors])
@@ -137,7 +142,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         returnSocket(socketRoomName);
       });
     });
-  }, [getSocket, returnSocket, roomId]);
+  }, [getSocket, returnSocket, roomId, nextSpeakerTimeout]);
 
   const nextPoint = useCallback((): Promise<Acknowledgment> => {
     const calibrationSocket = getSocket(socketRoomName);
@@ -171,7 +176,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
           returnSocket(socketRoomName);
         } else if (record) {
           setMeasuringVolume(true);
-          setTimeout(() => {
+          setNextSpeakerTimeout(setTimeout(() => {
             const medianVolume = medianHistoricVolume();
             console.debug(`Calibration measured average volume: ${medianVolume}`);
             calibrationSocket.emit('result', {
@@ -186,7 +191,7 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
               returnSocket(socketRoomName);
             });
             setMeasuringVolume(false);
-          }, 5000);
+          }, 5000));
         } else {
           resolve(ack);
           returnSocket(socketRoomName);
