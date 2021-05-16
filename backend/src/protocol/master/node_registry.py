@@ -126,14 +126,15 @@ class NodeRegistry:
         hostname = message.serviceAnnouncement.hostname
 
         # update node
-        await self.update_node(hostname, address)
+        await self.update_node(hostname, address, acquire=True)
         self.last_pings[address] = time()
 
-    async def update_node(self, hostname: str, ip_address: str) -> None:
+    async def update_node(self, hostname: str, ip_address: str, acquire: bool = False) -> None:
         """Updates the given node or creates a new one if it does not yet exist.
 
         :param str hostname: Hostname of the node
         :param str ip_address: IP Address of the node
+        :param bool acquire: True, if the node should get acquired
         """
         # search by hostname since IPs can change
         node = self.config.node_repository.get_node_by_hostname(hostname)
@@ -156,12 +157,17 @@ class NodeRegistry:
             await self.config.room_repository.call_listeners()
 
         # acquire node if necessary
-        if node.room is not None and node.acquired is False:
-            if node.ip_address != self.master_ip:
-                self.master.send_acquisition(node.ip_address)
+        if node.room is not None:
+            if node.acquired is False:
+                if node.ip_address != self.master_ip:
+                    self.master.send_acquisition(node.ip_address)
 
-            node.acquired = True
-            self.log(node, 'acquired')
+                node.acquired = True
+                self.log(node, 'acquired')
+            elif acquire and node.ip_address != self.master_ip:
+                # re-acquire if announcement is received again (e.g. in case of a restart)
+                self.master.send_acquisition(node.ip_address)
+                self.log(node, 're-acquired')
 
     def on_ping(self, address: str) -> None:
         """Records a new ping received from the given ip address.
