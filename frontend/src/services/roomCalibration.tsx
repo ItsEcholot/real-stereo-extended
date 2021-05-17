@@ -67,7 +67,10 @@ export const useRoomCalibration = (roomId: number, calibrationMapCanvasRef: RefO
         
         const speakerIdSet: Set<string> = new Set();
         roomCalibration.previousPoints.forEach(previousPoint => speakerIdSet.add(previousPoint.speaker_id));
-        drawInterpolation(context, canvasSize, roomCalibration.previousPoints.filter(prevPoint => prevPoint.speaker_id === selectedCalibrationMapSpeakerId), Array.from(speakerIdSet).indexOf(selectedCalibrationMapSpeakerId));
+        const previousPointsForSelectedSpeaker = roomCalibration.previousPoints.filter(prevPoint => prevPoint.speaker_id === selectedCalibrationMapSpeakerId);
+        if (previousPointsForSelectedSpeaker.length > 0) {
+          drawInterpolation(context, canvasSize, previousPointsForSelectedSpeaker, Array.from(speakerIdSet).indexOf(selectedCalibrationMapSpeakerId));
+        }
         drawPoints(context, canvasSize, roomCalibration.previousPoints, '#555555');
         drawPoints(context, canvasSize, roomCalibration.currentPoints, '#000000');
         drawCurrentPosition(context, canvasSize, mapCoordinate(roomCalibration.positionX, canvasSize), mapCoordinate(roomCalibration.positionY, canvasSize));
