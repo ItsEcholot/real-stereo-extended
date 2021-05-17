@@ -32,10 +32,13 @@ class SpeakerRepository(Repository):
         """
         return next(filter(lambda s: s.name == name, self.config.speakers), None)
 
-    async def remove_speaker(self, speaker_id: str) -> bool:
+    async def remove_speaker(self, speaker_id: str, delete_from_runtime_store: bool = False) -> bool:
         """Removes a speaker and stores the config file.
 
         :param str speaker_id: Speaker id
+        :param bool delete_from_runtime_Store: If True speaker will be completly removed from the
+                                               config runtime store. If the speaker is discovered
+                                               in the next discovery round, it will be added again.
         :returns: False if no speaker could be found with this id and so no removal was possible,
                   otherwise True.
         :rtype: bool
@@ -45,6 +48,8 @@ class SpeakerRepository(Repository):
         if speaker is not None:
             # remove speaker
             speaker.room = None
+            if delete_from_runtime_store:
+                self.config.speakers.remove(speaker)
             await self.call_listeners()
 
             return True

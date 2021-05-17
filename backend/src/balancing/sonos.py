@@ -56,7 +56,7 @@ class Sonos:
             # delete speakers that have missed 2 discovery cycles
             for speaker in self.config.speakers:
                 if speaker.times_discovery_missed >= 2:
-                    await self.config.speaker_repository.remove_speaker(speaker.speaker_id)
+                    await self.config.speaker_repository.remove_speaker(speaker.speaker_id, delete_from_runtime_store=True)
 
             await asyncio.sleep(15)
 
