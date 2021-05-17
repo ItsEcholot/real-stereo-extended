@@ -155,7 +155,7 @@ class BalancingManager:
         """
         def handle_event(event):
             if room.room_id not in self.room_info or \
-                    not room.calibrating or \
+                    room.calibrating or \
                     self.room_info[room.room_id]['current_volume'] is None:
                 return
 
