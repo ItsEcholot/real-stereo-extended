@@ -18,12 +18,12 @@ export const mapCoordinate = (cord: number, canvasSize: number): number => {
   return Math.round((cord / maxCord) * canvasSize) + 0.5;
 }
 
-export const getRandomHexColourString = (index: number, saturation: number): string => {
-  const maxAmountOfColours = 16;
+export const getRandomHexColourString = (index: number, lightness: number): string => {
+  const maxAmountOfColours = 12;
   const hueDelta = Math.trunc(360 / maxAmountOfColours);
-  const h = (index % maxAmountOfColours) * hueDelta;
-  let s = saturation;
-  let l = 40;
+  const h = (index+1 % maxAmountOfColours) * hueDelta;
+  let s = 100;
+  let l = lightness * 0.5;
 
   // convert hsl to rgb from: https://css-tricks.com/converting-color-spaces-in-javascript/
   s /= 100;
