@@ -11,8 +11,9 @@ class RoomCalibrationPoint:
     :param float measured_volume: The measured volume of the sample
     """
     def __init__(self, speaker: Speaker, coordinate_x: int, coordinate_y: int, 
-                 measured_volume: float):
+                 measured_volume: float, speaker_id: str = None):
         self.speaker: Speaker = speaker
+        self.old_speaker_id: str = speaker_id
         self.coordinate_x: int = coordinate_x
         self.coordinate_y: int = coordinate_y
         self.measured_volume: float = measured_volume
@@ -27,7 +28,9 @@ class RoomCalibrationPoint:
         :rtype: RoomCalibrationPoint
         """
         speaker = config.speaker_repository.get_speaker(data.get('speaker_id'))
-        return RoomCalibrationPoint(speaker, data.get('coordinateX'), data.get('coordinateY'), data.get('measuredVolume'))
+        return RoomCalibrationPoint(speaker, data.get('coordinateX'), 
+                                    data.get('coordinateY'), data.get('measuredVolume'), 
+                                    speaker_id=data.get('speaker_id') if speaker is None else None)
 
     def to_json(self, recursive: bool = False) -> dict:
         """Creates a JSON serializable object.
@@ -44,9 +47,11 @@ class RoomCalibrationPoint:
             'measuredVolume': self.measured_volume,
         }
 
-        if recursive:
+        if recursive and self.speaker is not None:
             json['speaker'] = self.speaker.to_json()
-        else:
+        elif self.speaker is not None:
             json['speaker_id'] = self.speaker.speaker_id
+        else:
+            json['speaker_id'] = self.old_speaker_id
 
         return json
