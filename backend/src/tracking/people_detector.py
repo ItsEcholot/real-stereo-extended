@@ -163,8 +163,8 @@ class PeopleDetector(ABC):
                     max_bottom = max(grouped_rect[1] + grouped_rect[3], pos_y + height)
                     grouped_rect[0] = min(grouped_rect[0], pos_x)
                     grouped_rect[1] = min(grouped_rect[1], pos_y)
-                    grouped_rect[2] = max_right - pos_x
-                    grouped_rect[3] = max_bottom - pos_y
+                    grouped_rect[2] = max_right - grouped_rect[0]
+                    grouped_rect[3] = max_bottom - grouped_rect[1]
 
             if not intersects:
                 grouped.append(rect)
