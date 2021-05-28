@@ -1,0 +1,16 @@
+@startuml processes
+
+interface "Frame Queue" as FQ
+interface "Coordinate Queue" as CQ
+
+[Camera Process] .r.> FQ : put
+FQ .r.> [Processing Process] : get
+[Processing Process] ..> CQ : put
+CQ ..> [Main Process] : get
+
+note bottom of FQ
+  Die Queue wird bei einem `put` geleert,
+  falls sich noch Objekte darin befinden.
+end note
+
+@enduml

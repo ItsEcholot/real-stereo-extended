@@ -1,0 +1,15 @@
+@startuml service acquisition
+"Tracking Node" -> "<broadcast>": udp.service_announcement(hostname)
+...
+"Tracking Node" -> "<broadcast>": udp.service_announcement(hostname)
+create "Coordinator Node"
+"<broadcast>" -> "Coordinator Node": udp.service_announcement(hostname)
+"Tracking Node" <- "Coordinator Node": tcp.service_acquisition(hostname, track, detector, people_group)
+"Tracking Node" -> "Coordinator Node": udp.position_update(coordinate)
+"Tracking Node" -> "Coordinator Node": udp.position_update(coordinate)
+...
+"Tracking Node" <- "Coordinator Node": tcp.service_release(hostname)
+"Tracking Node" -> "<broadcast>": udp.service_announcement(hostname)
+...
+
+@enduml

@@ -1,0 +1,10 @@
+@startuml protocol
+skinparam nodesep 100
+object "Tracking Node" as tracking
+object "Coordinator Node" as coordinator
+object "<broadcast>" as broadcast
+
+tracking "UDP" -r-> broadcast
+coordinator -l-> "        TCP" tracking
+tracking -r-> "UDP      " coordinator
+@enduml

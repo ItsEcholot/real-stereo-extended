@@ -1,0 +1,24 @@
+@startuml "AdHoc Network"
+start
+:Warte 30 Sekunden;
+while (WLAN Verbindung aufgebaut?) is (nein)
+  :Stoppe WLAN Adapter
+  im Client Modus;
+  :Starte WLAN Adapter
+  im AdHoc Netzwerk Modus;
+  if (Gerät bereits konfiguriert?) then (ja)
+  else (nein)
+    :Frage nach Gerätetyp
+    (Coordinator/Tracking);
+  endif
+  :Frage nach WLAN
+  Anmeldeinformationen;
+  :Speichere Konfiguration;
+  :Stoppe WLAN Adapter im
+  AdHoc Netzwerk Modus;
+  :Starte WLAN Adapter
+  im Client Modus;
+  :Warte 30 Sekunden;
+endwhile (ja)
+stop
+@enduml
