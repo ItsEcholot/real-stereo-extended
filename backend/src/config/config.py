@@ -28,6 +28,7 @@ class Config:
         self.balance: bool = False
         self.network = 'client'
         self.test_mode: bool = False
+        self.test_mode_speaker: str = None
         self.rooms: List[Room] = []
         self.nodes: List[Node] = []
         self.speakers: List[Speaker] = []

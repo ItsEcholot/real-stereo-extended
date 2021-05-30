@@ -105,7 +105,13 @@ class BalancingManager:
         for index, speaker in enumerate(room.volume_interpolation.speakers):
             perceived_volume = room.volume_interpolation.calculate_perceived_volume(speaker)
             speaker_volume = room.volume_interpolation.calculate_speaker_volume(perceived_volume)
-            speaker_volumes.append(speaker_volume)
+
+            if self.config.test_mode and self.config.test_mode_speaker is not None \
+                    and self.config.test_mode_speaker != speaker.speaker_id:
+                speaker_volumes.append(0)
+            else:
+                speaker_volumes.append(speaker_volume)
+
             if self.room_info[speaker.room.room_id]['master_ip_address'] == speaker.ip_address and \
                     index != self.room_info[speaker.room.room_id]['master_index']:
                 self.room_info[speaker.room.room_id]['master_index'] = index
@@ -156,6 +162,7 @@ class BalancingManager:
         def handle_event(event):
             if room.room_id not in self.room_info or \
                     room.calibrating or \
+                    not self.config.balance or \
                     self.room_info[room.room_id]['current_volume'] is None:
                 return
 
