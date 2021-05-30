@@ -12,14 +12,14 @@ type TestPoint = {
   volume: number;
 }
 
-export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HTMLCanvasElement> | null = null, mapCanvasRoomId: number | null = null) => {
+export const useTestMode = (enabled: boolean, balance: boolean, testModeSpeaker: string | null = null, testModeMapCanvasRef: RefObject<HTMLCanvasElement> | null = null, mapCanvasRoomId: number | null = null) => {
   const { settingsTestModeResult, updateSettings } = useSettings();
 
   const [errors, setErrors] = useState<string[]>([]);
   const [readyToTestLocation, setReadyToTestLocation] = useState(false);
   const [testPoints, setTestPoints] = useState<TestPoint[]>([]);
 
-  const drawTestModeMap = useCallback((result: SettingsTestModeResult | undefined) => {
+  const drawTestModeMap = useCallback((result: SettingsTestModeResult | undefined) => {
     const testModeMapContext = testModeMapCanvasRef?.current?.getContext('2d');
     if (testModeMapContext) {
       testModeMapContext.clearRect(0, 0, testModeMapCanvasSize, testModeMapCanvasSize);
@@ -45,9 +45,9 @@ export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HT
         });
 
         drawCurrentPosition(
-          testModeMapContext, 
-          testModeMapCanvasSize, 
-          mapCoordinate(result.positionX, testModeMapCanvasSize), 
+          testModeMapContext,
+          testModeMapCanvasSize,
+          mapCoordinate(result.positionX, testModeMapCanvasSize),
           mapCoordinate(result.positionY, testModeMapCanvasSize)
         );
       }
@@ -67,7 +67,7 @@ export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HT
 
       try {
         if (enabled) {
-          await updateSettings({ testMode: true, balance: true });
+          await updateSettings({ testMode: true, balance, testModeSpeaker: testModeSpeaker || undefined });
           disableHistoricVolume();
           setReadyToTestLocation(true);
         } else {
@@ -79,10 +79,10 @@ export const useTestMode = (enabled: boolean, testModeMapCanvasRef: RefObject<HT
     })();
 
     return () => {
-      updateSettings({ testMode: false });
+      updateSettings({ testMode: false, balance: false });
       setTestPoints([]);
     }
-  }, [enabled, updateSettings, testModeMapCanvasRef]);
+  }, [enabled, balance, testModeSpeaker, updateSettings, testModeMapCanvasRef]);
 
   useEffect(() => {
     if (!settingsTestModeResult) return;

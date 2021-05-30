@@ -123,6 +123,7 @@ type Settings = {
 type UpdateSettings = {
   balance?: boolean;
   testMode?: boolean;
+  testModeSpeaker?: string;
   nodeType?: 'master' | 'tracking';
   network?: CreateNetwork;
 }
