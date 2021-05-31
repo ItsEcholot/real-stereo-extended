@@ -7,12 +7,12 @@ from models.acknowledgment import Acknowledgment
 from api.validate import Validate
 from .networks import NetworksController
 from balancing.sonos import Sonos
-from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand
+from balancing.sonos_command import SonosPlayCalibrationSoundCommand, SonosStopCalibrationSoundCommand, SonosVolumeCommand
 
 
 class SettingsController(AsyncNamespace):
     """Controller for the /settings namespace.
-    
+
     :param Config config: The application config object.
     :param Sonos sonos: The sonos control instance
     """
@@ -22,6 +22,7 @@ class SettingsController(AsyncNamespace):
         self.config: Config = config
         self.sonos: Sonos = sonos
         self.networks_controller = networks_controller
+        self.restore_speaker_volumes_command = None
 
         # add settings repository change listener
         config.setting_repository.register_listener(self.send_settings)
@@ -52,11 +53,12 @@ class SettingsController(AsyncNamespace):
         """Gets called when the tracking repository contains new coordinates."""
         if not self.config.test_mode:
             return
-        
+
         result = []
         room: Room
         for room in self.config.rooms:
-            result.append({'room': room.to_json(), 'positionX': room.coordinates[0], 'positionY': room.coordinates[1]})
+            result.append(
+                {'room': room.to_json(), 'positionX': room.coordinates[0], 'positionY': room.coordinates[1]})
         await self.emit('testModeResult', result)
 
     def validate(self, data: dict) -> Acknowledgment:  # pylint: disable=no-self-use
@@ -71,11 +73,16 @@ class SettingsController(AsyncNamespace):
         balance = data.get('balance')
         node_type = data.get('nodeType')
         test_mode = data.get('testMode')
+        test_mode_speaker = data.get('testModeSpeaker')
 
         if balance is not None:
             validate.boolean(balance, label='Balance')
         if test_mode is not None:
             validate.boolean(test_mode, label='Test Mode')
+        if test_mode_speaker is not None and len(test_mode_speaker) > 0:
+            speaker = self.config.speaker_repository.get_speaker(test_mode_speaker)
+            if speaker is None:
+                ack.add_error('test mode speaker does not exist')
 
         if node_type is not None and node_type != 'master' and node_type != 'tracking':
             ack.add_error('nodeType must be either master or tracking')
@@ -113,7 +120,7 @@ class SettingsController(AsyncNamespace):
             elif data.get('testMode') == False and self.config.test_mode:
                 self.sonos.send_command(SonosStopCalibrationSoundCommand(self.config.speakers))
                 self.config.test_mode = False
-            
+
             # check if the balance setting has changed
             if data.get('balance') is not None and self.config.balance != data.get('balance'):
                 # check if all rooms are calibrated
@@ -125,6 +132,17 @@ class SettingsController(AsyncNamespace):
                 else:
                     self.config.balance = data['balance']
                     await self.config.setting_repository.call_listeners()
+
+            if data.get('testModeSpeaker') is not None and len(data.get('testModeSpeaker')) > 0:
+                if self.config.test_mode_speaker is None:
+                    self.config.test_mode_speaker = data.get('testModeSpeaker')
+                    if not self.config.balance:
+                        self.restore_speaker_volumes()
+                        self.mute_other_speakers(self.config.test_mode_speaker)
+            elif self.config.test_mode_speaker is not None:
+                self.config.test_mode_speaker = None
+                if not self.config.balance:
+                    self.restore_speaker_volumes()
 
             # check if node type has changed
             if data.get('nodeType') is not None:
@@ -147,3 +165,21 @@ class SettingsController(AsyncNamespace):
 
         await asyncio.sleep(5)
         exit(0)
+
+    def mute_other_speakers(self, speaker_id: str) -> None:
+        """Mutes all other speakers.
+
+        :param str speaker_id: Id of the speaker that should not get muted
+        """
+        volumes = []
+        for speaker in self.config.speakers:
+            volumes.append(self.sonos.sonos_adapter.get_volume(speaker))
+            if speaker.speaker_id != speaker_id:
+                self.sonos.sonos_adapter.set_volume(speaker, 0)
+        self.restore_speaker_volumes_command = SonosVolumeCommand(self.config.speakers, volumes)
+
+    def restore_speaker_volumes(self) -> None:
+        """Restores speaker volumes to the levels they were before they got muted."""
+        if self.restore_speaker_volumes_command is not None:
+            self.sonos.send_command(self.restore_speaker_volumes_command)
+            self.restore_speaker_volumes_command = None

@@ -16,6 +16,7 @@ export type UpdateSettings = {
   nodeType?: 'master' | 'tracking';
   network?: CreateNetwork;
   testMode?: boolean;
+  testModeSpeaker?: string;
 }
 
 export type SettingsTestModeResult = {
