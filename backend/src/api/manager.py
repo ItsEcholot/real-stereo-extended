@@ -54,7 +54,8 @@ class ApiManager:
         ])
 
         # register master routes
-        if self.config.type == NodeType.MASTER or self.config.type == NodeType.UNCONFIGURED:
+        if self.config.type == NodeType.MASTER or self.config.type == NodeType.UNCONFIGURED or \
+                config.network == 'adhoc':
             if frontend_path.exists() and (frontend_path / 'static').exists():
                 self.app.add_routes([
                     web.get('/{tail:(?!static|socket).*}', self.get_index),
@@ -215,7 +216,7 @@ class ApiManager:
         site = web.TCPSite(runner, '0.0.0.0', 8079)
         insecure_loop.run_until_complete(site.start())
         insecure_loop.run_forever()
-        
+
     async def start(self) -> None:
         """Start the API server."""
         ssl_generator = SSLGenerator()
