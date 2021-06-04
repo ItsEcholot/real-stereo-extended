@@ -50,9 +50,14 @@ class NetworksController(AsyncNamespace):
 
             self.networking_manager.wpa_supplicant.store_network(ssid, psk)
 
-            # if in the ad hoc networking mode, switch to the client again and try to connect
+            # if in the ad hoc networking mode, switch to the client again and try to connect
             if self.config.network == 'adhoc':
-                self.networking_manager.ad_hoc.disable()
+                asyncio.create_task(self.delayed_ad_hoc_disable())
                 asyncio.create_task(self.networking_manager.initial_check())
 
         return ack.to_json()
+
+    async def delayed_ad_hoc_disable(self) -> None:
+        """Disables the ad hoc network after a short delay to allow the ack message to still get delivered."""
+        await asyncio.sleep(5)
+        self.networking_manager.ad_hoc.disable()

@@ -60,6 +60,10 @@ class AdHocNetwork:
 
         self.config.network = 'adhoc'
 
+        if self.config.type != NodeType.UNCONFIGURED:
+            # restart service to allow frontend to be served for configuration
+            exit(0)
+
     def disable(self):
         """Disable the ad hoc network"""
         print('[AdHoc] Disabling the ad hoc network')

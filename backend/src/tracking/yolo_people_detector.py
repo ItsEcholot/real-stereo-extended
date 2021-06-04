@@ -9,6 +9,7 @@ from .people_detector import PeopleDetector
 YOLO_PATH: Path = (Path(__file__).resolve().parent / '..' / '..' / 'assets' / 'yolo').resolve()
 PERSON_CLASSIFICATION_ID = 0
 CONFIDENCE_THRESHOLD = 0.5
+GROUP_THRESHOLD_WIDTH = 150
 
 
 class YoloPeopleDetector(PeopleDetector):
@@ -19,6 +20,7 @@ class YoloPeopleDetector(PeopleDetector):
         super().__init__(frame_queue, frame_result_queue, return_frame, coordinate_queue,
                          people_group)
         self.name = "YOLO"
+        self.tracker.group_threshold_width = GROUP_THRESHOLD_WIDTH
         self.net = self.load_net()
 
     def load_net(self):
