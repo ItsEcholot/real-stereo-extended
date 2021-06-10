@@ -30,6 +30,17 @@ Usage: `./pi-update-frontend.sh <ip-address>`
 Synchronizes the local frontend code to the specified raspberry pi using rsync and builds the frontend.
 After an initial run, only changed files will get synced.
 
+## `pi-update-scripts.sh`
+
+Usage: `./pi-update-scripts.sh <ip-address>`
+
+Synchronizes the local scripts directory to the specified raspberry pi using rsync.
+After an initial run, only changed files will get synced.
+
 ## `pi-install.sh`
 
 See [documents/raspberry-pi-setup.md](../documents/raspberry-pi-setup.md) for more information.
+
+## `pi-optimize-opencv.sh`
+
+See [documents/raspberry-pi-setup.md#optimizing-opencv](../documents/raspberry-pi-setup.md#optimizing-opencv) for more information.
