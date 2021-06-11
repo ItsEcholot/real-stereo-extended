@@ -27,6 +27,6 @@ To then start the full backend, including the tracking, audio balancing and the 
 python src
 ```
 
-The API will then be available on [`http://localhost:8080/api`](http://localhost:8080/api).
+The API will then be available on [`https://localhost:8080/api`](https://localhost:8080/api).
 
-Additionally, the static build from the frontend will be served on [`http://localhost:8080`](http://localhost:8080).
+Additionally, the static build from the frontend will be served on [`https://localhost:8080`](https://localhost:8080).
