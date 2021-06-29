@@ -1,6 +1,6 @@
 """Handles the Ad Hoc Network used for initial setup and wifi configuration."""
 from os import system
-from config import Config
+from config import Config, NodeType
 
 
 DHCP_CONFIG = '/etc/dhcpcd.conf'
